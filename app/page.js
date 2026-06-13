@@ -1014,7 +1014,7 @@ export default function Home() {
 
                   {/* Quote Text */}
                   <p className="text-asa-text-muted text-sm md:text-base font-medium italic leading-relaxed mb-8">
-                    "{test.quote}"
+                    &ldquo;{test.quote}&rdquo;
                   </p>
                 </div>
 
