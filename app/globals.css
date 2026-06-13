@@ -1,0 +1,225 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --asa-bg: #FFF8F4;
+  --asa-bg-2: #FFF0E8;
+  --asa-surface: #FFFFFF;
+  --asa-surface-2: #FFF5EF;
+  --asa-border: #FFE4D4;
+  --asa-border-subtle: #F5E6DC;
+
+  --asa-orange: #FF5C1A;
+  --asa-orange-light: #FF7A40;
+  --asa-orange-deep: #CC3D00;
+  --asa-orange-glow: rgba(255, 92, 26, 0.12);
+  --asa-orange-glow-strong: rgba(255, 92, 26, 0.22);
+  --asa-orange-tint: #FFF0E8;
+
+  --asa-navy: #111111;
+  --asa-navy-2: #1C1C1C;
+
+  --asa-text: #1A1A1A;
+  --asa-text-muted: #6B6B6B;
+  --asa-text-faint: #A0A0A0;
+  --asa-white: #FFFFFF;
+
+  --asa-shadow-card: 0 4px 24px rgba(255, 92, 26, 0.08), 0 1px 4px rgba(0, 0, 0, 0.06);
+  --asa-shadow-orange: 0 8px 32px rgba(255, 92, 26, 0.25);
+  --asa-shadow-glow: 0 0 40px rgba(255, 92, 26, 0.15);
+
+  --asa-radius-sm: 8px;
+  --asa-radius-md: 14px;
+  --asa-radius-lg: 20px;
+  --asa-radius-xl: 28px;
+  --asa-radius-full: 9999px;
+}
+
+/* Global Reset & Base */
+html {
+  scroll-behavior: smooth;
+  background-color: var(--asa-bg);
+}
+
+html, body {
+  overflow-x: hidden;
+  background-color: var(--asa-bg);
+  font-family: 'Cairo', system-ui, sans-serif;
+  color: var(--asa-text);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hide Next.js Dev Portal */
+nextjs-portal {
+  display: none !important;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--asa-bg-2);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--asa-orange);
+  border-radius: var(--asa-radius-sm);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--asa-orange-light);
+}
+
+/* RTL / LTR layout settings */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Noise overlay utility */
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  content: "";
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Animated Warm Gradient Mesh for Hero background */
+@keyframes warm-mesh {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-warm-mesh {
+  background: linear-gradient(135deg, #FFF8F4, #FFE8D4, #FFF3EC, #FFF8F4, #FFE8D4);
+  background-size: 300% 300%;
+  animation: warm-mesh 20s ease infinite;
+}
+
+/* 3D Perspective & Float Keyframes */
+.hero-perspective {
+  perspective: 1200px;
+}
+
+@keyframes float-3d-1 {
+  0% {
+    transform: translateY(0px) rotateX(8deg) rotateY(8deg) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotateX(-8deg) rotateY(-8deg) rotate(4deg);
+  }
+  100% {
+    transform: translateY(0px) rotateX(8deg) rotateY(8deg) rotate(0deg);
+  }
+}
+
+@keyframes float-3d-2 {
+  0% {
+    transform: translateY(0px) rotateX(-6deg) rotateY(12deg) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) rotateX(6deg) rotateY(-12deg) rotate(180deg);
+  }
+  100% {
+    transform: translateY(0px) rotateX(-6deg) rotateY(12deg) rotate(360deg);
+  }
+}
+
+@keyframes float-3d-3 {
+  0% {
+    transform: translateY(0px) rotateX(12deg) rotateY(-6deg) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-25px) rotateX(-12deg) rotateY(6deg) rotate(-8deg);
+  }
+  100% {
+    transform: translateY(0px) rotateX(12deg) rotateY(-6deg) rotate(0deg);
+  }
+}
+
+@keyframes normal-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+.animate-float-3d-1 {
+  animation: float-3d-1 10s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.animate-float-3d-2 {
+  animation: float-3d-2 15s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.animate-float-3d-3 {
+  animation: float-3d-3 12s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.animate-float {
+  animation: normal-float 6s ease-in-out infinite;
+}
+
+/* Glassmorphism style cards (Light) */
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card-light:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 92, 26, 0.4);
+  box-shadow: var(--asa-shadow-glow), var(--asa-shadow-card);
+}
+
+/* Standard warm card with orange-tinted borders */
+.warm-card {
+  background-color: var(--asa-surface);
+  border: 1px solid var(--asa-border);
+  box-shadow: var(--asa-shadow-card);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.warm-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 92, 26, 0.40);
+  box-shadow: var(--asa-shadow-orange);
+}
+
+/* Section dividers */
+.gradient-divider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(to right, transparent, var(--asa-orange), transparent);
+}
