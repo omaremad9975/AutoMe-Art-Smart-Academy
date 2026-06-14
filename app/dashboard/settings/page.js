@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '../../../../lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 function Field({ label, labelAr, id, type = 'text', value, onChange, placeholder, helpText }) {
   return (

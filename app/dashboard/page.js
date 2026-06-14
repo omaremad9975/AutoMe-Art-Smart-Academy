@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 // ── Stat Card ──────────────────────────────────────────────────────────────────
 function StatCard({ icon, label, labelAr, value, sub, color = '#FF5C1A', loading }) {
