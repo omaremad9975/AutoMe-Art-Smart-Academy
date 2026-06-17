@@ -536,9 +536,28 @@ export default function Home() {
             {/* Language Toggle */}
             <button
               onClick={toggleLang}
-              className="px-4 py-2 text-xs font-bold text-asa-orange border border-[#FFE4D4] rounded-asa-radius-full hover:bg-[#FFF0E8] transition-all duration-300 font-cairo bg-[#FFF0E8]"
+              className="flex items-center rounded-full overflow-hidden border border-[#FFE4D4] text-xs font-bold font-cairo transition-all duration-300"
+              style={{ background: '#FFF0E8' }}
+              title="Switch Language"
             >
-              {currentTranslations.langToggleLabel}
+              <span
+                className="px-3 py-2 transition-all duration-200"
+                style={{
+                  background: lang === 'ar' ? '#FF5C1A' : 'transparent',
+                  color: lang === 'ar' ? '#fff' : '#A0A0A0',
+                }}
+              >
+                عر
+              </span>
+              <span
+                className="px-3 py-2 transition-all duration-200"
+                style={{
+                  background: lang === 'en' ? '#FF5C1A' : 'transparent',
+                  color: lang === 'en' ? '#fff' : '#A0A0A0',
+                }}
+              >
+                EN
+              </span>
             </button>
             {/* CTA Button */}
             <a
@@ -615,13 +634,22 @@ export default function Home() {
           </div>
           <div className="flex flex-col gap-4 mt-auto">
             <button
-              onClick={() => {
-                toggleLang()
-                setMobileMenuOpen(false)
-              }}
-              className="w-full py-3 text-sm font-bold text-asa-orange border border-[#FFE4D4] rounded-asa-radius-full hover:bg-[#FFF0E8] bg-[#FFF0E8] transition-all duration-300 font-cairo"
+              onClick={() => { toggleLang(); setMobileMenuOpen(false) }}
+              className="w-full flex items-center justify-center rounded-full overflow-hidden border border-[#FFE4D4] text-sm font-bold font-cairo transition-all duration-300"
+              style={{ background: '#FFF0E8' }}
             >
-              {currentTranslations.langToggleLabel}
+              <span
+                className="flex-1 py-3 transition-all duration-200"
+                style={{ background: lang === 'ar' ? '#FF5C1A' : 'transparent', color: lang === 'ar' ? '#fff' : '#A0A0A0' }}
+              >
+                عربي
+              </span>
+              <span
+                className="flex-1 py-3 transition-all duration-200"
+                style={{ background: lang === 'en' ? '#FF5C1A' : 'transparent', color: lang === 'en' ? '#fff' : '#A0A0A0' }}
+              >
+                English
+              </span>
             </button>
             <a
               href="#contact"
