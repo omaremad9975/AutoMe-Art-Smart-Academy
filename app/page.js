@@ -1102,9 +1102,9 @@ export default function Home() {
                 {currentTranslations.footerTagline}
               </p>
               {/* Social Icons */}
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 <a
-                  href="https://facebook.com"
+                  href="https://www.facebook.com/share/1LGfL92Qxb/?mibextid=wwXIfr"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full border border-[#FFE4D4] hover:border-asa-orange bg-white flex items-center justify-center text-[#6B6B6B] hover:text-asa-orange hover:bg-asa-orange-light/10 transition-all duration-300"
@@ -1113,7 +1113,7 @@ export default function Home() {
                   <Icon name="facebook" className="w-5 h-5" />
                 </a>
                 <a
-                  href="https://instagram.com"
+                  href="https://www.instagram.com/ai.conference10?igsh=eWJjZWZtOWJhbHp5"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full border border-[#FFE4D4] hover:border-asa-orange bg-white flex items-center justify-center text-[#6B6B6B] hover:text-asa-orange hover:bg-asa-orange-light/10 transition-all duration-300"
@@ -1122,13 +1122,22 @@ export default function Home() {
                   <Icon name="instagram" className="w-5 h-5" />
                 </a>
                 <a
-                  href="https://tiktok.com"
+                  href="https://www.tiktok.com/@ai.conference?_r=1&_t=ZS-97HcMz3ixcu"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full border border-[#FFE4D4] hover:border-asa-orange bg-white flex items-center justify-center text-[#6B6B6B] hover:text-asa-orange hover:bg-asa-orange-light/10 transition-all duration-300"
                   aria-label="TikTok"
                 >
                   <Icon name="tiktok" className="w-5 h-5" />
+                </a>
+                <a
+                  href="https://youtube.com/@ai.conference?si=a9EKjWIq-3TaYtq4"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full border border-[#FFE4D4] hover:border-asa-orange bg-white flex items-center justify-center text-[#6B6B6B] hover:text-asa-orange hover:bg-asa-orange-light/10 transition-all duration-300"
+                  aria-label="YouTube"
+                >
+                  <Icon name="youtube" className="w-5 h-5" />
                 </a>
                 <a
                   href="https://wa.me/201000000000"

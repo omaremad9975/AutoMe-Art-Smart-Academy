@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useDashboardLang } from '@/lib/dashboard-lang'
+import { formatDateTime, exportToXLSX, exportToPDF } from '@/lib/export'
 // import { supabase } from '@/lib/supabase' // TODO: re-enable when Supabase is connected
 
 const MOCK_PAYMENTS = [
@@ -226,16 +227,78 @@ export default function PaymentsPage() {
     setPayments(prev => prev.map(p => p.id === id ? { ...p, payment_status: 'paid', payment_reference: reference || p.payment_reference } : p))
   }
 
-  const COLUMNS = ['Student', 'Email', 'Phone', 'Product', 'Amount', 'Method', 'Transaction ID', 'Reference', 'Status', 'Date', 'Action']
+  const PDF_COLUMNS = [
+    { header: 'Student',        key: 'student_name',      width: 32 },
+    { header: 'Email',          key: 'email',             width: 38 },
+    { header: 'Phone',          key: 'phone',             width: 24 },
+    { header: 'Product',        key: 'product_name',      width: 36 },
+    { header: 'Type',           key: 'product_type',      width: 18 },
+    { header: 'Amount (EGP)',   key: 'amount',            width: 20 },
+    { header: 'Method',         key: 'payment_method',    width: 22 },
+    { header: 'Transaction ID', key: 'transaction_id',    width: 36 },
+    { header: 'Reference',      key: 'payment_reference', width: 24 },
+    { header: 'Status',         key: 'payment_status',    width: 16 },
+    { header: 'Date',           key: '_date_fmt',         width: 24 },
+  ]
+
+  const handleExportXLSX = () => {
+    const rows = filtered.map(p => ({
+      'Student Name':   p.student_name,
+      'Email':          p.email || '',
+      'Phone':          p.phone || '',
+      'Product Name':   p.product_name,
+      'Product Type':   p.product_type,
+      'Amount (EGP)':   p.amount,
+      'Currency':       p.currency,
+      'Payment Method': p.payment_method,
+      'Transaction ID': p.transaction_id || '',
+      'Reference':      p.payment_reference || '',
+      'Status':         p.payment_status,
+      'Date':           formatDateTime(p.payment_date),
+    }))
+    exportToXLSX(rows, `payments_${new Date().toISOString().slice(0,10)}`)
+  }
+
+  const handleExportPDF = () => {
+    const rows = filtered.map(p => ({
+      ...p,
+      payment_method: METHOD_COLORS[p.payment_method]?.label || p.payment_method,
+      _date_fmt: formatDateTime(p.payment_date),
+    }))
+    exportToPDF(rows, PDF_COLUMNS, `payments_${new Date().toISOString().slice(0,10)}`, 'Payments Report')
+  }
+
+  const TABLE_COLUMNS = ['Student', 'Email', 'Phone', 'Product', 'Amount', 'Method', 'Transaction ID', 'Reference', 'Status', 'Date', 'Action']
 
   return (
     <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
       {/* Header */}
-      <div>
-        <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.paymentsTitle}</h1>
-        <p className="text-[#6B6B6B] text-sm font-cairo mt-1">
-          {filtered.length} records · EGP {paidAmount.toLocaleString()} collected of EGP {totalAmount.toLocaleString()} total
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.paymentsTitle}</h1>
+          <p className="text-[#6B6B6B] text-sm font-cairo mt-1">
+            {filtered.length} records · EGP {paidAmount.toLocaleString()} collected of EGP {totalAmount.toLocaleString()} total
+          </p>
+        </div>
+        {/* Export buttons */}
+        <div className="flex gap-2 flex-shrink-0">
+          <button onClick={handleExportXLSX} disabled={filtered.length === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-xs font-bold font-cairo transition-all duration-200"
+            style={{ background: '#E8F5E9', color: '#2E7D32', border: '1.5px solid #A5D6A7' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#C8E6C9'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#E8F5E9'}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            XLSX
+          </button>
+          <button onClick={handleExportPDF} disabled={filtered.length === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-xs font-bold font-cairo transition-all duration-200"
+            style={{ background: 'rgba(255,92,26,0.08)', color: '#FF5C1A', border: '1.5px solid rgba(255,92,26,0.25)' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,92,26,0.15)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,92,26,0.08)'}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            PDF
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -292,12 +355,13 @@ export default function PaymentsPage() {
           <table className="w-full" style={{ minWidth: '1100px' }}>
             <thead>
               <tr style={{ background: '#FFF8F4', borderBottom: '1px solid #FFE4D4' }}>
-                {COLUMNS.map((h) => (
+                {TABLE_COLUMNS.map((h) => (
                   <th key={h} className="px-4 py-3 text-[11px] font-bold text-[#A0A0A0] uppercase tracking-wider font-cairo whitespace-nowrap"
                     style={{ textAlign: isRTL ? 'right' : 'left' }}>
                     {h}
                   </th>
                 ))}
+
               </tr>
             </thead>
             <tbody>
@@ -363,7 +427,7 @@ export default function PaymentsPage() {
                     <td className="px-4 py-3"><StatusBadge status={p.payment_status} /></td>
                     {/* Date */}
                     <td className="px-4 py-3 text-xs text-[#A0A0A0] font-cairo whitespace-nowrap">
-                      {p.payment_date ? new Date(p.payment_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                      {formatDateTime(p.payment_date)}
                     </td>
                     {/* Action */}
                     <td className="px-4 py-3">
