@@ -54,7 +54,8 @@ const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration: '', seats: '
 export default function CoursesPage() {
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modal, setModal] = useState(null) // null | 'add' | 'edit' | 'delete'
+  const [error, setError] = useState(null)
+  const [modal, setModal] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -62,8 +63,13 @@ export default function CoursesPage() {
 
   const fetchCourses = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase.from('courses').select('*').order('created_at', { ascending: false })
-    setCourses(data || [])
+    setError(null)
+    const { data, error } = await supabase
+      .from('courses')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) setError(error.message)
+    else setCourses(data || [])
     setLoading(false)
   }, [])
 
@@ -79,6 +85,7 @@ export default function CoursesPage() {
 
   const handleSave = async () => {
     setSaving(true)
+    setError(null)
     const payload = {
       name_ar: form.name_ar,
       name_en: form.name_en,
@@ -87,28 +94,34 @@ export default function CoursesPage() {
       seats: parseInt(form.seats) || 0,
       is_active: form.is_active,
     }
+
+    let error
     if (modal === 'add') {
-      await supabase.from('courses').insert([payload])
+      ({ error } = await supabase.from('courses').insert([payload]))
     } else {
-      await supabase.from('courses').update(payload).eq('id', selectedCourse.id)
+      ({ error } = await supabase.from('courses').update(payload).eq('id', selectedCourse.id))
     }
+
+    if (error) setError(error.message)
+    else { await fetchCourses(); setModal(null) }
     setSaving(false)
-    setModal(null)
-    fetchCourses()
   }
 
   const handleDelete = async () => {
     setSaving(true)
-    await supabase.from('courses').delete().eq('id', selectedCourse.id)
+    const { error } = await supabase.from('courses').delete().eq('id', selectedCourse.id)
+    if (error) setError(error.message)
+    else { await fetchCourses(); setModal(null) }
     setSaving(false)
-    setModal(null)
-    fetchCourses()
   }
 
   const toggleActive = async (course) => {
     setTogglingId(course.id)
-    await supabase.from('courses').update({ is_active: !course.is_active }).eq('id', course.id)
-    setCourses((prev) => prev.map((c) => c.id === course.id ? { ...c, is_active: !c.is_active } : c))
+    const { error } = await supabase
+      .from('courses')
+      .update({ is_active: !course.is_active })
+      .eq('id', course.id)
+    if (!error) setCourses((prev) => prev.map((c) => c.id === course.id ? { ...c, is_active: !c.is_active } : c))
     setTogglingId(null)
   }
 
@@ -130,6 +143,13 @@ export default function CoursesPage() {
           + Add Course
         </button>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="rounded-[12px] p-4 text-sm font-cairo text-red-700" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.20)' }}>
+          ⚠️ {error}
+        </div>
+      )}
 
       {/* Courses Grid */}
       {loading ? (
@@ -155,16 +175,10 @@ export default function CoursesPage() {
             <div
               key={course.id}
               className="relative overflow-hidden rounded-[16px] p-5 flex flex-col gap-4 transition-all duration-200"
-              style={{
-                background: '#FFFFFF',
-                border: '1px solid #FFE4D4',
-                boxShadow: '0 4px 20px rgba(255,92,26,0.06)',
-              }}
+              style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}
             >
-              {/* Top bar */}
               <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: course.is_active ? 'linear-gradient(to right, #FF5C1A, #FF7A40)' : '#E5E7EB' }} />
 
-              {/* Active badge + toggle */}
               <div className="flex items-center justify-between">
                 <span
                   className="text-xs font-bold px-2.5 py-1 rounded-full font-cairo"
@@ -188,13 +202,11 @@ export default function CoursesPage() {
                 </button>
               </div>
 
-              {/* Title */}
               <div>
                 <h3 className="font-bold text-[#1A1A1A] text-base font-cairo leading-tight">{course.name_ar}</h3>
                 <p className="text-[#6B6B6B] text-sm font-cairo mt-0.5">{course.name_en}</p>
               </div>
 
-              {/* Meta */}
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: 'Price', value: `EGP ${Number(course.price).toLocaleString()}` },
@@ -208,7 +220,6 @@ export default function CoursesPage() {
                 ))}
               </div>
 
-              {/* Actions */}
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => openEdit(course)}
@@ -286,7 +297,7 @@ export default function CoursesPage() {
             <div className="rounded-[12px] p-4 text-center" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
               <p className="text-2xl mb-2">⚠️</p>
               <p className="font-semibold text-[#1A1A1A] font-cairo text-sm">
-                Are you sure you want to delete <strong>"{selectedCourse?.name_en}"</strong>?
+                Are you sure you want to delete <strong>&ldquo;{selectedCourse?.name_en}&rdquo;</strong>?
               </p>
               <p className="text-xs text-[#A0A0A0] font-cairo mt-1">This action cannot be undone.</p>
             </div>

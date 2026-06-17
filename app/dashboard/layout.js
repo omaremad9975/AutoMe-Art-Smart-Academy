@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 function Icon({ name, className = 'w-5 h-5' }) {
@@ -159,22 +158,9 @@ export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.replace('/login')
-        return
-      }
-      setUser(session.user)
-      setAuthChecked(true)
-    }
-    checkAuth()
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) router.replace('/login')
-      else setUser(session.user)
-    })
-    return () => listener.subscription.unsubscribe()
+    // TODO: Re-enable auth when Supabase is connected
+    setUser({ email: 'admin@artsmart.com' })
+    setAuthChecked(true)
   }, [router])
 
   const handleLogout = async () => {

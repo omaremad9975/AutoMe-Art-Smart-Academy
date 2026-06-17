@@ -1,7 +1,20 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+// import { supabase } from '@/lib/supabase' // TODO: re-enable when Supabase is connected
+
+const MOCK_REGISTRATIONS = [
+  { id: 1,  student_name: 'Ahmed Hassan',     phone: '01012345678', email: 'ahmed@gmail.com',    payment_method: 'fawry',         payment_status: 'confirmed', created_at: '2026-06-01', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
+  { id: 2,  student_name: 'Sara Mohamed',     phone: '01198765432', email: 'sara@gmail.com',     payment_method: 'vodafone_cash', payment_status: 'pending',   created_at: '2026-06-02', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
+  { id: 3,  student_name: 'Omar Ali',         phone: '01234567890', email: 'omar@gmail.com',     payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-03', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
+  { id: 4,  student_name: 'Nour Khaled',      phone: '01556789012', email: 'nour@gmail.com',     payment_method: 'fawry',         payment_status: 'pending',   created_at: '2026-06-04', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
+  { id: 5,  student_name: 'Yasmine Tarek',    phone: '01067891234', email: 'yasmine@gmail.com',  payment_method: 'vodafone_cash', payment_status: 'confirmed', created_at: '2026-06-05', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
+  { id: 6,  student_name: 'Karim Mahmoud',    phone: '01189012345', email: 'karim@gmail.com',    payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-06', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
+  { id: 7,  student_name: 'Hana Samir',       phone: '01290123456', email: 'hana@gmail.com',     payment_method: 'fawry',         payment_status: 'pending',   created_at: '2026-06-07', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
+  { id: 8,  student_name: 'Mostafa Adel',     phone: '01301234567', email: 'mostafa@gmail.com',  payment_method: 'vodafone_cash', payment_status: 'confirmed', created_at: '2026-06-08', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
+  { id: 9,  student_name: 'Rania Ibrahim',    phone: '01412345678', email: 'rania@gmail.com',    payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-09', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
+  { id: 10, student_name: 'Ziad Osama',       phone: '01523456789', email: 'ziad@gmail.com',     payment_method: 'fawry',         payment_status: 'confirmed', created_at: '2026-06-10', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
+]
 
 // ── Status Badge ───────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
@@ -51,16 +64,10 @@ export default function RegistrationsPage() {
 
   const fetchRegistrations = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('registrations')
-      .select(`
-        id, student_name, phone, email, payment_method, payment_status, created_at,
-        courses(name_en, name_ar)
-      `)
-      .order('created_at', { ascending: false })
-
-    if (!error) setRegistrations(data || [])
-    setLoading(false)
+    setTimeout(() => {
+      setRegistrations(MOCK_REGISTRATIONS)
+      setLoading(false)
+    }, 400)
   }, [])
 
   useEffect(() => { fetchRegistrations() }, [fetchRegistrations])
@@ -68,17 +75,12 @@ export default function RegistrationsPage() {
   const toggleStatus = async (reg) => {
     const newStatus = reg.payment_status === 'confirmed' ? 'pending' : 'confirmed'
     setUpdating(reg.id)
-    const { error } = await supabase
-      .from('registrations')
-      .update({ payment_status: newStatus })
-      .eq('id', reg.id)
-
-    if (!error) {
+    setTimeout(() => {
       setRegistrations((prev) =>
         prev.map((r) => r.id === reg.id ? { ...r, payment_status: newStatus } : r)
       )
-    }
-    setUpdating(null)
+      setUpdating(null)
+    }, 300)
   }
 
   const filtered = registrations.filter((r) => {

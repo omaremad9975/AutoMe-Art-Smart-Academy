@@ -1,7 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+// import { supabase } from '@/lib/supabase' // TODO: re-enable when Supabase is connected
+
+const MOCK_STATS = {
+  totalRegistrations: 10,
+  totalRevenue: 14500,
+  activeCourses: 2,
+  pendingPayments: 3,
+}
+
+const MOCK_RECENT = [
+  { id: 1, student_name: 'Ahmed Hassan',    courses: { name_en: 'Digital Art Fundamentals' }, payment_method: 'fawry',         payment_status: 'confirmed', created_at: '2026-06-10' },
+  { id: 2, student_name: 'Sara Mohamed',    courses: { name_en: 'UI/UX Design Bootcamp'    }, payment_method: 'vodafone_cash', payment_status: 'pending',   created_at: '2026-06-11' },
+  { id: 3, student_name: 'Omar Ali',        courses: { name_en: 'Digital Art Fundamentals' }, payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-12' },
+  { id: 4, student_name: 'Nour Khaled',     courses: { name_en: 'UI/UX Design Bootcamp'    }, payment_method: 'fawry',         payment_status: 'pending',   created_at: '2026-06-13' },
+  { id: 5, student_name: 'Yasmine Tarek',   courses: { name_en: 'Digital Art Fundamentals' }, payment_method: 'vodafone_cash', payment_status: 'confirmed', created_at: '2026-06-14' },
+]
 
 // ── Stat Card ──────────────────────────────────────────────────────────────────
 function StatCard({ icon, label, labelAr, value, sub, color = '#FF5C1A', loading }) {
@@ -100,54 +115,12 @@ export default function DashboardOverview() {
 
   async function fetchStats() {
     setLoading(true)
-    try {
-      // Total registrations
-      const { count: totalRegs } = await supabase
-        .from('registrations')
-        .select('*', { count: 'exact', head: true })
-
-      // Pending payments count
-      const { count: pendingCount } = await supabase
-        .from('registrations')
-        .select('*', { count: 'exact', head: true })
-        .eq('payment_status', 'pending')
-
-      // Active courses
-      const { count: activeCourses } = await supabase
-        .from('courses')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true)
-
-      // Total revenue (sum of confirmed payments)
-      const { data: revenueData } = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('status', 'confirmed')
-
-      const totalRevenue = revenueData?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0
-
-      // Recent registrations (last 5)
-      const { data: recent } = await supabase
-        .from('registrations')
-        .select(`
-          id, student_name, phone, payment_method, payment_status, created_at,
-          courses(name_en)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      setStats({
-        totalRegistrations: totalRegs || 0,
-        totalRevenue,
-        activeCourses: activeCourses || 0,
-        pendingPayments: pendingCount || 0,
-      })
-      setRecentRegs(recent || [])
-    } catch (err) {
-      console.error('Stats fetch error:', err)
-    } finally {
+    // Mock data — replace with Supabase queries when connected
+    setTimeout(() => {
+      setStats(MOCK_STATS)
+      setRecentRegs(MOCK_RECENT)
       setLoading(false)
-    }
+    }, 600)
   }
 
   const formatCurrency = (n) =>

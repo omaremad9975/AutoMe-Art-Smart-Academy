@@ -1,7 +1,20 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+// import { supabase } from '@/lib/supabase' // TODO: re-enable when Supabase is connected
+
+const MOCK_PAYMENTS = [
+  { id: 1,  amount: 1500, method: 'fawry',         reference: 'FWR-20260601-001', status: 'confirmed', created_at: '2026-06-01', registrations: { student_name: 'Ahmed Hassan'  } },
+  { id: 2,  amount: 2000, method: 'vodafone_cash', reference: 'VCH-20260602-002', status: 'pending',   created_at: '2026-06-02', registrations: { student_name: 'Sara Mohamed'  } },
+  { id: 3,  amount: 1500, method: 'instapay',      reference: 'INP-20260603-003', status: 'confirmed', created_at: '2026-06-03', registrations: { student_name: 'Omar Ali'      } },
+  { id: 4,  amount: 2000, method: 'fawry',         reference: 'FWR-20260604-004', status: 'pending',   created_at: '2026-06-04', registrations: { student_name: 'Nour Khaled'   } },
+  { id: 5,  amount: 1500, method: 'vodafone_cash', reference: 'VCH-20260605-005', status: 'confirmed', created_at: '2026-06-05', registrations: { student_name: 'Yasmine Tarek' } },
+  { id: 6,  amount: 2000, method: 'instapay',      reference: 'INP-20260606-006', status: 'confirmed', created_at: '2026-06-06', registrations: { student_name: 'Karim Mahmoud' } },
+  { id: 7,  amount: 1500, method: 'fawry',         reference: 'FWR-20260607-007', status: 'pending',   created_at: '2026-06-07', registrations: { student_name: 'Hana Samir'    } },
+  { id: 8,  amount: 2000, method: 'vodafone_cash', reference: 'VCH-20260608-008', status: 'confirmed', created_at: '2026-06-08', registrations: { student_name: 'Mostafa Adel'  } },
+  { id: 9,  amount: 1500, method: 'instapay',      reference: 'INP-20260609-009', status: 'confirmed', created_at: '2026-06-09', registrations: { student_name: 'Rania Ibrahim' } },
+  { id: 10, amount: 2000, method: 'fawry',         reference: 'FWR-20260610-010', status: 'confirmed', created_at: '2026-06-10', registrations: { student_name: 'Ziad Osama'    } },
+]
 
 const methodColors = {
   fawry:         { bg: 'rgba(99,102,241,0.10)',  color: '#6366F1', border: 'rgba(99,102,241,0.20)' },
@@ -42,15 +55,7 @@ export default function PaymentsPage() {
 
   const fetchPayments = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from('payments')
-      .select(`
-        id, amount, method, reference, status, created_at,
-        registrations(student_name)
-      `)
-      .order('created_at', { ascending: false })
-    setPayments(data || [])
-    setLoading(false)
+    setTimeout(() => { setPayments(MOCK_PAYMENTS); setLoading(false) }, 400)
   }, [])
 
   useEffect(() => { fetchPayments() }, [fetchPayments])
