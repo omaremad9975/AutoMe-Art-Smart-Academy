@@ -19,7 +19,7 @@ function Field({ label, sublabel, id, type = 'text', value, onChange, placeholde
         onChange={onChange}
         placeholder={placeholder}
         className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none transition-all duration-200"
-        style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4' }}
+        style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }}
         onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
         onBlur={(e) => { e.target.style.borderColor = '#FFE4D4'; e.target.style.boxShadow = 'none' }}
       />
@@ -71,7 +71,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6 max-w-2xl" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
         <div>
           <div className="h-8 w-48 rounded-lg animate-pulse" style={{ background: '#FFE4D4' }} />
           <div className="h-4 w-32 rounded mt-2 animate-pulse" style={{ background: '#FFE4D4' }} />
@@ -84,7 +84,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-2xl" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+    <div className="space-y-8" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
       {/* Header */}
       <div>
         <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.settingsTitle}</h1>
@@ -171,7 +171,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Save Button */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4" style={{ justifyContent: isRTL ? 'flex-end' : 'flex-start' }}>
         <button
           onClick={handleSave}
           disabled={saving}
