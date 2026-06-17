@@ -37,8 +37,11 @@ export default function RegistrationsPage() {
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [filterMethod, setFilterMethod] = useState('all')
+  const [filterStatus, setFilterStatus]   = useState('all')
+  const [filterMethod, setFilterMethod]   = useState('all')
+  const [filterCourse, setFilterCourse]   = useState('all')
+  const [filterDateFrom, setFilterDateFrom] = useState('')
+  const [filterDateTo,   setFilterDateTo]   = useState('')
   const [updating, setUpdating] = useState(null)
 
   const fetchRegistrations = useCallback(async () => {
@@ -81,15 +84,32 @@ export default function RegistrationsPage() {
     setUpdating(null)
   }
 
+  // Unique courses derived from loaded data
+  const uniqueCourses = Array.from(
+    new Map(registrations.map(r => [r.course_id, r.courses])).entries()
+  ).filter(([id, c]) => id && c).map(([id, c]) => ({ id, name_ar: c.name_ar, name_en: c.name_en }))
+
   const filtered = registrations.filter((r) => {
     if (filterStatus !== 'all' && r.payment_status !== filterStatus) return false
     if (filterMethod !== 'all' && r.payment_method !== filterMethod) return false
+    if (filterCourse !== 'all' && r.course_id !== filterCourse) return false
+    if (filterDateFrom) {
+      const from = new Date(filterDateFrom + 'T00:00:00')
+      if (new Date(r.created_at) < from) return false
+    }
+    if (filterDateTo) {
+      const to = new Date(filterDateTo + 'T23:59:59')
+      if (new Date(r.created_at) > to) return false
+    }
     if (search) {
       const q = search.toLowerCase()
       if (!r.student_name?.toLowerCase().includes(q) && !r.email?.toLowerCase().includes(q) && !r.phone?.includes(q)) return false
     }
     return true
   })
+
+  const hasActiveFilter = filterStatus !== 'all' || filterMethod !== 'all' || filterCourse !== 'all' || filterDateFrom || filterDateTo || search
+  const clearFilters = () => { setSearch(''); setFilterStatus('all'); setFilterMethod('all'); setFilterCourse('all'); setFilterDateFrom(''); setFilterDateTo('') }
 
   const PDF_COLUMNS = [
     { header: 'Student',        key: 'student_name',   width: 36 },
@@ -146,7 +166,7 @@ export default function RegistrationsPage() {
             onMouseEnter={(e) => e.currentTarget.style.background = '#C8E6C9'}
             onMouseLeave={(e) => e.currentTarget.style.background = '#E8F5E9'}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            XLSX
+            XLSX ({filtered.length})
           </button>
           <button onClick={handleExportPDF} disabled={filtered.length === 0}
             className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-xs font-bold font-cairo transition-all duration-200"
@@ -154,43 +174,95 @@ export default function RegistrationsPage() {
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,92,26,0.15)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,92,26,0.08)'}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            PDF
+            PDF ({filtered.length})
           </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-        {/* Search */}
-        <div className="relative flex-1" style={{ minWidth: '220px' }}>
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0A0A0]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35"/>
-          </svg>
-          <input type="text" placeholder={t.searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-[10px] text-sm font-cairo outline-none"
-            style={{ border: '1.5px solid #FFE4D4', background: '#FFFFFF' }}
-            onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
-            onBlur={(e) => { e.target.style.borderColor = '#FFE4D4'; e.target.style.boxShadow = 'none' }} />
+      <div className="rounded-[14px] p-4 space-y-3" style={{ background: '#FFFFFF', border: '1px solid #FFE4D4' }}>
+        {/* Row 1: Search + Date range */}
+        <div className="flex flex-wrap gap-3">
+          {/* Search */}
+          <div className="relative" style={{ flex: '1 1 220px' }}>
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0A0A0]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" placeholder={t.searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-[10px] text-sm font-cairo outline-none"
+              style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4' }}
+              onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
+              onBlur={(e) => { e.target.style.borderColor = '#FFE4D4'; e.target.style.boxShadow = 'none' }} />
+          </div>
+          {/* Date from */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#A0A0A0] font-cairo whitespace-nowrap">{isRTL ? 'من' : 'From'}</span>
+            <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)}
+              className="px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none"
+              style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }}
+              onFocus={(e) => { e.target.style.borderColor = '#FF5C1A' }}
+              onBlur={(e) => { e.target.style.borderColor = '#FFE4D4' }} />
+          </div>
+          {/* Date to */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#A0A0A0] font-cairo whitespace-nowrap">{isRTL ? 'إلى' : 'To'}</span>
+            <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)}
+              className="px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none"
+              style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }}
+              onFocus={(e) => { e.target.style.borderColor = '#FF5C1A' }}
+              onBlur={(e) => { e.target.style.borderColor = '#FFE4D4' }} />
+          </div>
         </div>
-        {/* Status filter */}
-        <div className="flex gap-2 flex-wrap">
-          {['all', 'pending', 'confirmed'].map((s) => (
-            <button key={s} onClick={() => setFilterStatus(s)}
-              className="px-4 py-2.5 rounded-[10px] text-xs font-bold font-cairo capitalize transition-all duration-200"
-              style={{ background: filterStatus === s ? 'rgba(255,92,26,0.10)' : '#FFFFFF', color: filterStatus === s ? '#FF5C1A' : '#6B6B6B', border: filterStatus === s ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #FFE4D4' }}>
-              {s === 'all' ? t.all : s === 'pending' ? t.pending : t.confirmed}
+
+        {/* Row 2: Status + Method + Course + Clear */}
+        <div className="flex flex-wrap gap-3 items-center">
+          {/* Status */}
+          <div className="flex gap-1.5 flex-wrap">
+            {['all', 'pending', 'confirmed'].map((s) => (
+              <button key={s} onClick={() => setFilterStatus(s)}
+                className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo capitalize transition-all duration-200"
+                style={{ background: filterStatus === s ? 'rgba(255,92,26,0.10)' : '#F9FAFB', color: filterStatus === s ? '#FF5C1A' : '#6B6B6B', border: filterStatus === s ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #E5E7EB' }}>
+                {s === 'all' ? (isRTL ? 'الكل' : 'All Status') : s === 'pending' ? t.pending : t.confirmed}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ width: '1px', height: '20px', background: '#FFE4D4', flexShrink: 0 }} />
+
+          {/* Method */}
+          <div className="flex gap-1.5 flex-wrap">
+            {['all', 'fawry', 'instapay', 'vodafone_cash'].map((m) => (
+              <button key={m} onClick={() => setFilterMethod(m)}
+                className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo transition-all duration-200"
+                style={{ background: filterMethod === m ? 'rgba(255,92,26,0.10)' : '#F9FAFB', color: filterMethod === m ? '#FF5C1A' : '#6B6B6B', border: filterMethod === m ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #E5E7EB' }}>
+                {m === 'all' ? (isRTL ? 'كل الطرق' : 'All Methods') : METHOD_COLORS[m]?.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Course dropdown — only show if courses loaded */}
+          {uniqueCourses.length > 0 && (
+            <>
+              <div style={{ width: '1px', height: '20px', background: '#FFE4D4', flexShrink: 0 }} />
+              <select value={filterCourse} onChange={(e) => setFilterCourse(e.target.value)}
+                className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo outline-none transition-all"
+                style={{ border: filterCourse !== 'all' ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #E5E7EB', background: filterCourse !== 'all' ? 'rgba(255,92,26,0.08)' : '#F9FAFB', color: filterCourse !== 'all' ? '#FF5C1A' : '#6B6B6B', direction: 'ltr' }}>
+                <option value="all">{isRTL ? 'كل الكورسات' : 'All Courses'}</option>
+                {uniqueCourses.map((c) => (
+                  <option key={c.id} value={c.id}>{lang === 'ar' ? c.name_ar : c.name_en}</option>
+                ))}
+              </select>
+            </>
+          )}
+
+          {/* Clear all */}
+          {hasActiveFilter && (
+            <button onClick={clearFilters}
+              className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo transition-all ml-auto"
+              style={{ background: 'rgba(220,38,38,0.07)', color: '#DC2626', border: '1.5px solid rgba(220,38,38,0.20)' }}>
+              ✕ {isRTL ? 'مسح الفلاتر' : 'Clear filters'}
             </button>
-          ))}
-        </div>
-        {/* Method filter */}
-        <div className="flex gap-2 flex-wrap">
-          {['all', 'fawry', 'instapay', 'vodafone_cash'].map((m) => (
-            <button key={m} onClick={() => setFilterMethod(m)}
-              className="px-4 py-2.5 rounded-[10px] text-xs font-bold font-cairo transition-all duration-200"
-              style={{ background: filterMethod === m ? 'rgba(255,92,26,0.10)' : '#FFFFFF', color: filterMethod === m ? '#FF5C1A' : '#6B6B6B', border: filterMethod === m ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #FFE4D4' }}>
-              {m === 'all' ? t.all : METHOD_COLORS[m]?.label}
-            </button>
-          ))}
+          )}
         </div>
       </div>
 

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useDashboardLang } from '@/lib/dashboard-lang'
 
-function Field({ label, sublabel, id, type = 'text', value, onChange, placeholder, helpText, isRTL }) {
+function Field({ label, sublabel, id, type = 'text', value, onChange, placeholder, helpText, isRTL, currentValue }) {
+  const isDirty = currentValue !== undefined && value !== currentValue
   return (
     <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
       <label htmlFor={id} className="block text-[#1A1A1A] font-bold text-sm mb-1 font-cairo" style={{ display: 'block', textAlign: isRTL ? 'right' : 'left' }}>
@@ -19,10 +20,19 @@ function Field({ label, sublabel, id, type = 'text', value, onChange, placeholde
         onChange={onChange}
         placeholder={placeholder}
         className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none transition-all duration-200"
-        style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr', textAlign: 'left' }}
+        style={{ border: isDirty ? '1.5px solid #F59E0B' : '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr', textAlign: 'left' }}
         onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
-        onBlur={(e) => { e.target.style.borderColor = '#FFE4D4'; e.target.style.boxShadow = 'none' }}
+        onBlur={(e) => { e.target.style.borderColor = isDirty ? '#F59E0B' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
       />
+      {currentValue && (
+        <p className="text-xs font-cairo mt-1.5 flex items-center gap-1.5" style={{ textAlign: isRTL ? 'right' : 'left', direction: 'ltr' }}>
+          <span style={{ color: '#A0A0A0' }}>{isRTL ? 'الحالي:' : 'Current:'}</span>
+          <span style={{ color: isDirty ? '#F59E0B' : '#6B6B6B', fontWeight: isDirty ? 600 : 400, textDecoration: isDirty ? 'line-through' : 'none' }}>
+            {currentValue}
+          </span>
+          {isDirty && <span style={{ color: '#FF5C1A', fontWeight: 600 }}>→ {value}</span>}
+        </p>
+      )}
     </div>
   )
 }
@@ -37,10 +47,11 @@ const DEFAULT_SETTINGS = {
 
 export default function SettingsPage() {
   const { t, isRTL } = useDashboardLang()
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [settings, setSettings]           = useState(DEFAULT_SETTINGS)
+  const [savedSettings, setSavedSettings] = useState(DEFAULT_SETTINGS) // what's actually in DB
+  const [loading, setLoading]             = useState(true)
+  const [saving, setSaving]               = useState(false)
+  const [saved, setSaved]                 = useState(false)
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -49,6 +60,7 @@ export default function SettingsPage() {
         const map = {}
         data.forEach((row) => { map[row.key] = row.value })
         setSettings((prev) => ({ ...prev, ...map }))
+        setSavedSettings((prev) => ({ ...prev, ...map }))
       }
       setLoading(false)
     }
@@ -62,6 +74,7 @@ export default function SettingsPage() {
     const { error } = await supabase.from('settings').upsert(rows, { onConflict: 'key' })
     setSaving(false)
     if (!error) {
+      setSavedSettings(settings) // update "current" baseline after successful save
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     }
@@ -108,6 +121,7 @@ export default function SettingsPage() {
             onChange={setField('academy_name')}
             placeholder="Art Smart Academy | أرت سمارت اكاديمي"
             isRTL={isRTL}
+            currentValue={savedSettings.academy_name}
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <Field
@@ -118,6 +132,7 @@ export default function SettingsPage() {
               onChange={setField('phone')}
               placeholder="+20 100 000 0000"
               isRTL={isRTL}
+              currentValue={savedSettings.phone}
             />
             <Field
               id="whatsapp"
@@ -127,6 +142,7 @@ export default function SettingsPage() {
               onChange={setField('whatsapp')}
               placeholder="+20 100 000 0000"
               isRTL={isRTL}
+              currentValue={savedSettings.whatsapp}
             />
           </div>
           <Field
@@ -137,6 +153,7 @@ export default function SettingsPage() {
             onChange={setField('email')}
             placeholder="info@artsmartacademy.com"
             isRTL={isRTL}
+            currentValue={savedSettings.email}
           />
         </div>
       </div>
@@ -159,6 +176,7 @@ export default function SettingsPage() {
             placeholder="ASA-[COURSE]-[YEAR]-[NUMBER]"
             helpText={t.certHelp}
             isRTL={isRTL}
+            currentValue={savedSettings.cert_id_format}
           />
           {/* Preview */}
           <div className="rounded-[10px] p-4 flex items-center gap-4" style={{ background: '#FFF8F4', border: '1px solid #FFE4D4' }}>

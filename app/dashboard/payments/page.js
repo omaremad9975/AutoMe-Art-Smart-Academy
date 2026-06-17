@@ -190,10 +190,12 @@ export default function PaymentsPage() {
   const { t, isRTL } = useDashboardLang()
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filterMethod, setFilterMethod] = useState('all')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [filterType, setFilterType] = useState('all')
-  const [search, setSearch] = useState('')
+  const [filterMethod, setFilterMethod]     = useState('all')
+  const [filterStatus, setFilterStatus]     = useState('all')
+  const [filterType, setFilterType]         = useState('all')
+  const [filterDateFrom, setFilterDateFrom] = useState('')
+  const [filterDateTo,   setFilterDateTo]   = useState('')
+  const [search, setSearch]                 = useState('')
   const [markingPayment, setMarkingPayment] = useState(null)
 
   const fetchPayments = useCallback(async () => {
@@ -207,6 +209,14 @@ export default function PaymentsPage() {
     if (filterMethod !== 'all' && p.payment_method !== filterMethod) return false
     if (filterStatus !== 'all' && p.payment_status !== filterStatus) return false
     if (filterType !== 'all' && p.product_type !== filterType) return false
+    if (filterDateFrom) {
+      const from = new Date(filterDateFrom + 'T00:00:00')
+      if (new Date(p.payment_date) < from) return false
+    }
+    if (filterDateTo) {
+      const to = new Date(filterDateTo + 'T23:59:59')
+      if (new Date(p.payment_date) > to) return false
+    }
     if (search) {
       const q = search.toLowerCase()
       if (!p.student_name?.toLowerCase().includes(q) &&
@@ -218,6 +228,9 @@ export default function PaymentsPage() {
     }
     return true
   })
+
+  const hasActiveFilter = filterMethod !== 'all' || filterStatus !== 'all' || filterType !== 'all' || filterDateFrom || filterDateTo || search
+  const clearFilters = () => { setSearch(''); setFilterMethod('all'); setFilterStatus('all'); setFilterType('all'); setFilterDateFrom(''); setFilterDateTo('') }
 
   const totalAmount = filtered.reduce((s, p) => s + (p.amount || 0), 0)
   const paidAmount  = filtered.filter(p => p.payment_status === 'paid').reduce((s, p) => s + (p.amount || 0), 0)
@@ -288,7 +301,7 @@ export default function PaymentsPage() {
             onMouseEnter={(e) => e.currentTarget.style.background = '#C8E6C9'}
             onMouseLeave={(e) => e.currentTarget.style.background = '#E8F5E9'}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            XLSX
+            XLSX ({filtered.length})
           </button>
           <button onClick={handleExportPDF} disabled={filtered.length === 0}
             className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-xs font-bold font-cairo transition-all duration-200"
@@ -296,56 +309,90 @@ export default function PaymentsPage() {
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,92,26,0.15)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,92,26,0.08)'}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            PDF
+            PDF ({filtered.length})
           </button>
         </div>
       </div>
 
-      {/* Search */}
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search by name, email, phone, product or transaction ID..."
-        className="w-full px-4 py-3 rounded-[12px] text-sm font-cairo outline-none transition-all"
-        style={{ background: '#FFFFFF', border: '1.5px solid #FFE4D4', maxWidth: '480px', display: 'block' }}
-        onFocus={(e) => e.currentTarget.style.borderColor = '#FF5C1A'}
-        onBlur={(e) => e.currentTarget.style.borderColor = '#FFE4D4'}
-      />
-
       {/* Filters */}
-      <div className="flex flex-col gap-3">
-        {/* Method */}
-        <div className="flex gap-2 flex-wrap items-center">
-          <span className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest font-cairo w-14">Method</span>
-          {['all', 'fawry', 'instapay', 'vodafone_cash'].map((m) => (
-            <button key={m} onClick={() => setFilterMethod(m)}
-              className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo transition-all duration-200"
-              style={{ background: filterMethod === m ? 'rgba(255,92,26,0.10)' : '#FFFFFF', color: filterMethod === m ? '#FF5C1A' : '#6B6B6B', border: filterMethod === m ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #FFE4D4' }}>
-              {m === 'all' ? 'All' : METHOD_COLORS[m]?.label}
-            </button>
-          ))}
+      <div className="rounded-[14px] p-4 space-y-3" style={{ background: '#FFFFFF', border: '1px solid #FFE4D4' }}>
+        {/* Row 1: Search + Date range */}
+        <div className="flex flex-wrap gap-3">
+          <div className="relative" style={{ flex: '1 1 260px' }}>
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0A0A0]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name, email, phone, product, transaction ID..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-[10px] text-sm font-cairo outline-none"
+              style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4' }}
+              onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
+              onBlur={(e) => { e.target.style.borderColor = '#FFE4D4'; e.target.style.boxShadow = 'none' }} />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#A0A0A0] font-cairo whitespace-nowrap">From</span>
+            <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)}
+              className="px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none"
+              style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }}
+              onFocus={(e) => e.target.style.borderColor = '#FF5C1A'}
+              onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#A0A0A0] font-cairo whitespace-nowrap">To</span>
+            <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)}
+              className="px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none"
+              style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }}
+              onFocus={(e) => e.target.style.borderColor = '#FF5C1A'}
+              onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+          </div>
         </div>
-        {/* Status */}
-        <div className="flex gap-2 flex-wrap items-center">
-          <span className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest font-cairo w-14">Status</span>
-          {['all', 'paid', 'pending', 'failed'].map((s) => (
-            <button key={s} onClick={() => setFilterStatus(s)}
-              className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo capitalize transition-all duration-200"
-              style={{ background: filterStatus === s ? 'rgba(255,92,26,0.10)' : '#FFFFFF', color: filterStatus === s ? '#FF5C1A' : '#6B6B6B', border: filterStatus === s ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #FFE4D4' }}>
-              {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+
+        {/* Row 2: Method + Status + Type + Clear */}
+        <div className="flex flex-wrap gap-3 items-center">
+          {/* Method */}
+          <div className="flex gap-1.5 flex-wrap">
+            {['all', 'fawry', 'instapay', 'vodafone_cash'].map((m) => (
+              <button key={m} onClick={() => setFilterMethod(m)}
+                className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo transition-all duration-200"
+                style={{ background: filterMethod === m ? 'rgba(255,92,26,0.10)' : '#F9FAFB', color: filterMethod === m ? '#FF5C1A' : '#6B6B6B', border: filterMethod === m ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #E5E7EB' }}>
+                {m === 'all' ? 'All Methods' : METHOD_COLORS[m]?.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ width: '1px', height: '20px', background: '#FFE4D4', flexShrink: 0 }} />
+
+          {/* Status */}
+          <div className="flex gap-1.5 flex-wrap">
+            {['all', 'paid', 'pending', 'failed'].map((s) => (
+              <button key={s} onClick={() => setFilterStatus(s)}
+                className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo capitalize transition-all duration-200"
+                style={{ background: filterStatus === s ? 'rgba(255,92,26,0.10)' : '#F9FAFB', color: filterStatus === s ? '#FF5C1A' : '#6B6B6B', border: filterStatus === s ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #E5E7EB' }}>
+                {s === 'all' ? 'All Status' : s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ width: '1px', height: '20px', background: '#FFE4D4', flexShrink: 0 }} />
+
+          {/* Type */}
+          <div className="flex gap-1.5 flex-wrap">
+            {['all', 'course', 'workshop', 'certificate', 'event'].map((type) => (
+              <button key={type} onClick={() => setFilterType(type)}
+                className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo capitalize transition-all duration-200"
+                style={{ background: filterType === type ? 'rgba(255,92,26,0.10)' : '#F9FAFB', color: filterType === type ? '#FF5C1A' : '#6B6B6B', border: filterType === type ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #E5E7EB' }}>
+                {type === 'all' ? 'All Types' : type.charAt(0).toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {hasActiveFilter && (
+            <button onClick={clearFilters}
+              className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo transition-all ml-auto"
+              style={{ background: 'rgba(220,38,38,0.07)', color: '#DC2626', border: '1.5px solid rgba(220,38,38,0.20)' }}>
+              ✕ Clear filters
             </button>
-          ))}
-        </div>
-        {/* Type */}
-        <div className="flex gap-2 flex-wrap items-center">
-          <span className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest font-cairo w-14">Type</span>
-          {['all', 'course', 'workshop', 'certificate', 'event'].map((type) => (
-            <button key={type} onClick={() => setFilterType(type)}
-              className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo capitalize transition-all duration-200"
-              style={{ background: filterType === type ? 'rgba(255,92,26,0.10)' : '#FFFFFF', color: filterType === type ? '#FF5C1A' : '#6B6B6B', border: filterType === type ? '1.5px solid rgba(255,92,26,0.30)' : '1.5px solid #FFE4D4' }}>
-              {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
-            </button>
-          ))}
+          )}
         </div>
       </div>
 
