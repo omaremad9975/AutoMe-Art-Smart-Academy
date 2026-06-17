@@ -114,6 +114,8 @@ CREATE POLICY "Authenticated read admins"
 CREATE POLICY "Authenticated write admins"
   ON admins FOR ALL TO authenticated USING (TRUE) WITH CHECK (TRUE);
 
+CREATE POLICY "Public read settings"
+  ON settings FOR SELECT TO anon USING (TRUE);
 CREATE POLICY "Authenticated read settings"
   ON settings FOR SELECT TO authenticated USING (TRUE);
 CREATE POLICY "Authenticated write settings"

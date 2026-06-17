@@ -50,7 +50,9 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
     }
 
-    // ── 4. Create Supabase Auth user ───────────────────────────────────────────
+    // ── 4. Create Supabase Auth user (or find existing) ───────────────────────
+    let authUserId = null
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -58,21 +60,29 @@ export async function POST(request) {
     })
 
     if (authError) {
-      // Handle common errors with a friendly message
-      if (authError.message.includes('already been registered')) {
-        return NextResponse.json({ error: 'This email already has an account' }, { status: 400 })
+      if (authError.message.includes('already been registered') || authError.message.includes('already exists')) {
+        // User already exists in Supabase Auth — look up their ID and add to admins
+        const { data: userList } = await supabaseAdmin.auth.admin.listUsers()
+        const existing = userList?.users?.find((u) => u.email === email)
+        if (!existing) {
+          return NextResponse.json({ error: 'Auth user not found' }, { status: 400 })
+        }
+        authUserId = existing.id
+      } else {
+        return NextResponse.json({ error: authError.message }, { status: 400 })
       }
-      return NextResponse.json({ error: authError.message }, { status: 400 })
+    } else {
+      authUserId = authData.user.id
     }
 
     // ── 5. Insert into admins table ────────────────────────────────────────────
     const { error: dbError } = await supabaseAdmin
       .from('admins')
-      .insert([{ email, role, auth_id: authData.user.id }])
+      .insert([{ email, role, auth_id: authUserId }])
 
     if (dbError) {
-      // Cleanup: delete the auth user we just created to keep things consistent
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
+      // Cleanup: delete the auth user only if WE just created it (not a pre-existing user)
+      if (authData?.user?.id) await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
 
       if (dbError.message.includes('duplicate') || dbError.code === '23505') {
         return NextResponse.json({ error: 'This email is already in the admins list' }, { status: 400 })
@@ -80,7 +90,7 @@ export async function POST(request) {
       return NextResponse.json({ error: dbError.message }, { status: 400 })
     }
 
-    return NextResponse.json({ success: true, userId: authData.user.id })
+    return NextResponse.json({ success: true, userId: authUserId })
 
   } catch (err) {
     console.error('[create-user]', err)

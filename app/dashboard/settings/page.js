@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useDashboardLang } from '@/lib/dashboard-lang'
 
-function Field({ label, sublabel, id, type = 'text', value, onChange, placeholder, helpText }) {
+function Field({ label, sublabel, id, type = 'text', value, onChange, placeholder, helpText, isRTL }) {
   return (
-    <div>
-      <label htmlFor={id} className="block text-[#1A1A1A] font-bold text-sm mb-1 font-cairo">
+    <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
+      <label htmlFor={id} className="block text-[#1A1A1A] font-bold text-sm mb-1 font-cairo" style={{ display: 'block', textAlign: isRTL ? 'right' : 'left' }}>
         {label}
         {sublabel && <span className="text-[#A0A0A0] font-normal mx-2 text-xs">{sublabel}</span>}
       </label>
-      {helpText && <p className="text-xs text-[#A0A0A0] font-cairo mb-2">{helpText}</p>}
+      {helpText && <p className="text-xs text-[#A0A0A0] font-cairo mb-2" style={{ textAlign: isRTL ? 'right' : 'left' }}>{helpText}</p>}
       <input
         id={id}
         type={type}
@@ -19,7 +19,7 @@ function Field({ label, sublabel, id, type = 'text', value, onChange, placeholde
         onChange={onChange}
         placeholder={placeholder}
         className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none transition-all duration-200"
-        style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }}
+        style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr', textAlign: 'left' }}
         onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
         onBlur={(e) => { e.target.style.borderColor = '#FFE4D4'; e.target.style.boxShadow = 'none' }}
       />
@@ -86,7 +86,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
       {/* Header */}
-      <div>
+      <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
         <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.settingsTitle}</h1>
         <p className="text-[#6B6B6B] text-sm font-cairo mt-1">{t.settingsSub}</p>
       </div>
@@ -96,7 +96,7 @@ export default function SettingsPage() {
         className="rounded-[16px] overflow-hidden"
         style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}
       >
-        <div className="px-6 py-4" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4' }}>
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4', textAlign: isRTL ? 'right' : 'left' }}>
           <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">{t.sectionAcademy}</h2>
           <p className="text-xs text-[#A0A0A0] font-cairo">{t.sectionAcademySub}</p>
         </div>
@@ -107,6 +107,7 @@ export default function SettingsPage() {
             value={settings.academy_name}
             onChange={setField('academy_name')}
             placeholder="Art Smart Academy | أرت سمارت اكاديمي"
+            isRTL={isRTL}
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <Field
@@ -116,6 +117,7 @@ export default function SettingsPage() {
               value={settings.phone}
               onChange={setField('phone')}
               placeholder="+20 100 000 0000"
+              isRTL={isRTL}
             />
             <Field
               id="whatsapp"
@@ -124,6 +126,7 @@ export default function SettingsPage() {
               value={settings.whatsapp}
               onChange={setField('whatsapp')}
               placeholder="+20 100 000 0000"
+              isRTL={isRTL}
             />
           </div>
           <Field
@@ -133,6 +136,7 @@ export default function SettingsPage() {
             value={settings.email}
             onChange={setField('email')}
             placeholder="info@artsmartacademy.com"
+            isRTL={isRTL}
           />
         </div>
       </div>
@@ -142,7 +146,7 @@ export default function SettingsPage() {
         className="rounded-[16px] overflow-hidden"
         style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}
       >
-        <div className="px-6 py-4" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4' }}>
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4', textAlign: isRTL ? 'right' : 'left' }}>
           <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">{t.sectionCert}</h2>
           <p className="text-xs text-[#A0A0A0] font-cairo">{t.sectionCertSub}</p>
         </div>
@@ -154,6 +158,7 @@ export default function SettingsPage() {
             onChange={setField('cert_id_format')}
             placeholder="ASA-[COURSE]-[YEAR]-[NUMBER]"
             helpText={t.certHelp}
+            isRTL={isRTL}
           />
           {/* Preview */}
           <div className="rounded-[10px] p-4 flex items-center gap-4" style={{ background: '#FFF8F4', border: '1px solid #FFE4D4' }}>

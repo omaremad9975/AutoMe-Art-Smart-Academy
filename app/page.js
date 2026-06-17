@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
 // ==========================================
 // BILINGUAL TRANSLATION DATA
@@ -463,9 +464,24 @@ export default function Home() {
   const [lang, setLang] = useState('ar')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [siteSettings, setSiteSettings] = useState({})
 
   const currentTranslations = t[lang]
   const isRTL = lang === 'ar'
+
+  // Fetch live settings from Supabase (phone, email, whatsapp, social links)
+  useEffect(() => {
+    supabase
+      .from('settings')
+      .select('key, value')
+      .then(({ data }) => {
+        if (data) {
+          const map = {}
+          data.forEach((r) => { map[r.key] = r.value })
+          setSiteSettings(map)
+        }
+      })
+  }, [])
 
   useEffect(() => {
     // Synchronize HTML attributes for proper multilingual reading flow
@@ -1077,7 +1093,7 @@ export default function Home() {
 
             {/* WhatsApp — white outline, keeps green icon accent */}
             <a
-              href="https://wa.me/201000000000"
+              href={`https://wa.me/${(siteSettings.whatsapp || '+20 100 000 0000').replace(/[^0-9]/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="border-2 border-white/60 hover:border-white bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-3.5 rounded-asa-radius-full transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-0.5 whitespace-nowrap font-cairo text-sm md:text-base"
@@ -1195,13 +1211,13 @@ export default function Home() {
                   <div className="w-8 h-8 rounded-full bg-white border border-[#FFE4D4] flex items-center justify-center text-asa-orange flex-shrink-0">
                     <Icon name="phone" className="w-4 h-4" />
                   </div>
-                  <span className="text-[#6B6B6B] text-sm font-semibold font-cairo">{currentTranslations.footerPhone}</span>
+                  <span className="text-[#6B6B6B] text-sm font-semibold font-cairo">{siteSettings.phone || currentTranslations.footerPhone}</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-white border border-[#FFE4D4] flex items-center justify-center text-asa-orange flex-shrink-0">
                     <Icon name="mail" className="w-4 h-4" />
                   </div>
-                  <span className="text-[#6B6B6B] text-sm font-semibold font-cairo">{currentTranslations.footerEmail}</span>
+                  <span className="text-[#6B6B6B] text-sm font-semibold font-cairo">{siteSettings.email || currentTranslations.footerEmail}</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-white border border-[#FFE4D4] flex items-center justify-center text-asa-orange flex-shrink-0">
