@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { DashboardLangProvider, useDashboardLang } from '@/lib/dashboard-lang'
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+// ── Icons ──────────────────────────────────────────────────────────────────────
 function Icon({ name, className = 'w-5 h-5' }) {
   const icons = {
     overview: (
@@ -60,80 +61,52 @@ function Icon({ name, className = 'w-5 h-5' }) {
   return icons[name] || null
 }
 
-// ── Nav items ──────────────────────────────────────────────────────────────────
-const navItems = [
-  { label: 'Overview',          labelAr: 'نظرة عامة',        href: '/dashboard',               icon: 'overview' },
-  { label: 'Registrations',     labelAr: 'التسجيلات',         href: '/dashboard/registrations', icon: 'registrations' },
-  { label: 'Courses',           labelAr: 'الكورسات',          href: '/dashboard/courses',       icon: 'courses' },
-  { label: 'Payments',          labelAr: 'المدفوعات',         href: '/dashboard/payments',      icon: 'payments' },
-  { label: 'Users',             labelAr: 'المستخدمون',        href: '/dashboard/users',         icon: 'users' },
-  { label: 'Settings',          labelAr: 'الإعدادات',         href: '/dashboard/settings',      icon: 'settings' },
-]
+// ── Sidebar ────────────────────────────────────────────────────────────────────
+function Sidebar({ pathname, onNavigate, user, onLogout }) {
+  const { t, lang, toggleLang } = useDashboardLang()
 
-// ── Sidebar Component ──────────────────────────────────────────────────────────
-function Sidebar({ pathname, onNavigate }) {
+  const navItems = [
+    { key: 'overview',      href: '/dashboard',               icon: 'overview' },
+    { key: 'registrations', href: '/dashboard/registrations', icon: 'registrations' },
+    { key: 'courses',       href: '/dashboard/courses',       icon: 'courses' },
+    { key: 'payments',      href: '/dashboard/payments',      icon: 'payments' },
+    { key: 'users',         href: '/dashboard/users',         icon: 'users' },
+    { key: 'settings',      href: '/dashboard/settings',      icon: 'settings' },
+  ]
+
   return (
-    <aside
-      className="flex flex-col h-full"
-      style={{ background: '#FFFFFF', borderRight: '1px solid #FFE4D4' }}
-    >
+    <aside className="flex flex-col h-full" style={{ background: '#FFFFFF', borderRight: '1px solid #FFE4D4' }}>
       {/* Logo */}
-      <div
-        className="flex items-center gap-3 px-5 py-5"
-        style={{ borderBottom: '1px solid #FFE4D4' }}
-      >
-        <img
-          src="/logo_mark_blue.png"
-          alt="Art Smart Academy"
-          className="h-8 w-auto object-contain"
-          style={{ filter: 'brightness(0) saturate(100%)' }}
-        />
+      <div className="flex items-center gap-3 px-5 py-5" style={{ borderBottom: '1px solid #FFE4D4' }}>
+        <img src="/logo_mark_blue.png" alt="Art Smart Academy" className="h-8 w-auto object-contain" style={{ filter: 'brightness(0) saturate(100%)' }} />
         <div className="flex flex-col">
-          <span className="font-extrabold text-xs tracking-widest uppercase text-[#1A1A1A] font-cairo leading-tight">
-            SMART ACADEMY
-          </span>
-          <span className="text-[10px] font-semibold text-[#A0A0A0] font-cairo">
-            Admin Panel
-          </span>
+          <span className="font-extrabold text-xs tracking-widest uppercase text-[#1A1A1A] font-cairo leading-tight">SMART ACADEMY</span>
+          <span className="text-[10px] font-semibold text-[#A0A0A0] font-cairo">{t.adminPanel}</span>
         </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
-        <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest px-3 mb-3 font-cairo">
-          Navigation
-        </p>
+        <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest px-3 mb-3 font-cairo">{t.navigation}</p>
         <ul className="space-y-1">
           {navItems.map((item) => {
-            const isActive =
-              item.href === '/dashboard'
-                ? pathname === '/dashboard'
-                : pathname.startsWith(item.href)
+            const isActive = item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href)
             return (
               <li key={item.href}>
                 <a
                   href={item.href}
                   onClick={(e) => { e.preventDefault(); onNavigate(item.href) }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm font-semibold font-cairo transition-all duration-200 group"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm font-semibold font-cairo transition-all duration-200"
                   style={{
                     background: isActive ? 'rgba(255,92,26,0.10)' : 'transparent',
                     color: isActive ? '#FF5C1A' : '#6B6B6B',
                     border: isActive ? '1px solid rgba(255,92,26,0.20)' : '1px solid transparent',
                   }}
                 >
-                  <span
-                    className="transition-colors duration-200"
-                    style={{ color: isActive ? '#FF5C1A' : '#A0A0A0' }}
-                  >
+                  <span style={{ color: isActive ? '#FF5C1A' : '#A0A0A0' }}>
                     <Icon name={item.icon} className="w-5 h-5" />
                   </span>
-                  <span className="flex-1">{item.label}</span>
-                  <span
-                    className="text-[10px] font-semibold"
-                    style={{ color: isActive ? '#FF5C1A' : '#C0C0C0' }}
-                  >
-                    {item.labelAr}
-                  </span>
+                  <span>{t.nav[item.key]}</span>
                 </a>
               </li>
             )
@@ -141,19 +114,55 @@ function Sidebar({ pathname, onNavigate }) {
         </ul>
       </nav>
 
-      {/* Orange accent bar at bottom */}
-      <div
-        className="h-1 w-full"
-        style={{ background: 'linear-gradient(to right, #FF5C1A, #FF7A40, #FF5C1A)' }}
-      />
+      {/* Bottom: User info + Lang toggle + Logout */}
+      <div className="px-3 py-4 space-y-3" style={{ borderTop: '1px solid #FFE4D4' }}>
+        {/* Language Toggle */}
+        <button
+          onClick={toggleLang}
+          className="w-full flex items-center rounded-full overflow-hidden border border-[#FFE4D4] text-xs font-bold font-cairo"
+          style={{ background: '#FFF0E8' }}
+        >
+          <span className="flex-1 py-2 text-center transition-all duration-200" style={{ background: lang === 'ar' ? '#FF5C1A' : 'transparent', color: lang === 'ar' ? '#fff' : '#A0A0A0' }}>
+            عربي
+          </span>
+          <span className="flex-1 py-2 text-center transition-all duration-200" style={{ background: lang === 'en' ? '#FF5C1A' : 'transparent', color: lang === 'en' ? '#fff' : '#A0A0A0' }}>
+            English
+          </span>
+        </button>
+
+        {/* User info + Logout */}
+        <div className="flex items-center gap-3 px-2 py-2 rounded-[10px]" style={{ background: '#FFF8F4', border: '1px solid #FFE4D4' }}>
+          <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm font-cairo" style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
+            {user?.email?.[0]?.toUpperCase() || 'A'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-[#1A1A1A] font-cairo">{t.admin}</p>
+            <p className="text-[10px] text-[#A0A0A0] font-cairo truncate">{user?.email}</p>
+          </div>
+          <button
+            onClick={onLogout}
+            title={t.logout}
+            className="p-1.5 rounded-[6px] transition-all duration-200 flex-shrink-0"
+            style={{ color: '#A0A0A0' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,92,26,0.10)'; e.currentTarget.style.color = '#FF5C1A' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A0A0A0' }}
+          >
+            <Icon name="logout" className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Orange accent bar */}
+      <div className="h-1 w-full" style={{ background: 'linear-gradient(to right, #FF5C1A, #FF7A40, #FF5C1A)' }} />
     </aside>
   )
 }
 
-// ── Dashboard Layout ───────────────────────────────────────────────────────────
-export default function DashboardLayout({ children }) {
+// ── Inner Layout (uses context) ────────────────────────────────────────────────
+function DashboardInner({ children }) {
   const router = useRouter()
   const pathname = usePathname()
+  const { t } = useDashboardLang()
   const [user, setUser] = useState(null)
   const [authChecked, setAuthChecked] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -181,23 +190,24 @@ export default function DashboardLayout({ children }) {
     router.push(href)
   }, [router])
 
-  // Current section label
-  const currentSection = navItems.find(
-    (item) => item.href === '/dashboard'
-      ? pathname === '/dashboard'
-      : pathname.startsWith(item.href)
+  const navItems = [
+    { key: 'overview',      href: '/dashboard' },
+    { key: 'registrations', href: '/dashboard/registrations' },
+    { key: 'courses',       href: '/dashboard/courses' },
+    { key: 'payments',      href: '/dashboard/payments' },
+    { key: 'users',         href: '/dashboard/users' },
+    { key: 'settings',      href: '/dashboard/settings' },
+  ]
+
+  const currentSection = navItems.find((item) =>
+    item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href)
   )
 
   if (!authChecked) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: '#FFF8F4' }}
-      >
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FFF8F4' }}>
         <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-10 h-10 rounded-full border-4 border-[#FFE4D4] border-t-[#FF5C1A] animate-spin"
-          />
+          <div className="w-10 h-10 rounded-full border-4 border-[#FFE4D4] border-t-[#FF5C1A] animate-spin" />
           <p className="text-[#6B6B6B] text-sm font-semibold font-cairo">Loading...</p>
         </div>
       </div>
@@ -206,92 +216,38 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#FFF8F4', direction: 'ltr' }}>
-      {/* ── Desktop Sidebar ── */}
+      {/* Desktop Sidebar */}
       <div className="hidden lg:block w-64 flex-shrink-0 h-full">
-        <Sidebar pathname={pathname} onNavigate={handleNavigate} />
+        <Sidebar pathname={pathname} onNavigate={handleNavigate} user={user} onLogout={handleLogout} />
       </div>
 
-      {/* ── Mobile Sidebar Overlay ── */}
+      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
           <div className="relative w-72 h-full z-10">
-            <Sidebar pathname={pathname} onNavigate={handleNavigate} />
+            <Sidebar pathname={pathname} onNavigate={handleNavigate} user={user} onLogout={handleLogout} />
           </div>
         </div>
       )}
 
-      {/* ── Main Content ── */}
+      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Header */}
+        {/* Header — simplified, just page title */}
         <header
-          className="flex-shrink-0 h-16 flex items-center justify-between px-6"
-          style={{
-            background: '#FFFFFF',
-            borderBottom: '1px solid #FFE4D4',
-            boxShadow: '0 2px 8px rgba(255,92,26,0.06)',
-          }}
+          className="flex-shrink-0 h-16 flex items-center px-6 gap-4"
+          style={{ background: '#FFFFFF', borderBottom: '1px solid #FFE4D4', boxShadow: '0 2px 8px rgba(255,92,26,0.06)' }}
         >
-          <div className="flex items-center gap-4">
-            {/* Mobile menu button */}
-            <button
-              className="lg:hidden p-2 rounded-[8px] text-[#6B6B6B] hover:bg-[#FFF0E8] transition-colors"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open sidebar"
-            >
-              <Icon name="menu" className="w-5 h-5" />
-            </button>
-
-            <div>
-              <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo leading-tight">
-                {currentSection?.label || 'Dashboard'}
-              </h2>
-              <p className="text-[11px] text-[#A0A0A0] font-cairo">
-                {currentSection?.labelAr || 'لوحة التحكم'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Admin info */}
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-xs font-bold text-[#1A1A1A] font-cairo">Admin</span>
-              <span className="text-[11px] text-[#A0A0A0] font-cairo truncate max-w-[160px]">
-                {user?.email}
-              </span>
-            </div>
-
-            {/* Avatar */}
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm font-cairo"
-              style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}
-            >
-              {user?.email?.[0]?.toUpperCase() || 'A'}
-            </div>
-
-            {/* Logout */}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-[8px] text-xs font-semibold font-cairo transition-all duration-200"
-              style={{ color: '#6B6B6B', border: '1px solid #FFE4D4' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#FFF0E8'
-                e.currentTarget.style.color = '#FF5C1A'
-                e.currentTarget.style.borderColor = 'rgba(255,92,26,0.30)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-                e.currentTarget.style.color = '#6B6B6B'
-                e.currentTarget.style.borderColor = '#FFE4D4'
-              }}
-              title="Logout"
-            >
-              <Icon name="logout" className="w-4 h-4" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
+          <button
+            className="lg:hidden p-2 rounded-[8px] text-[#6B6B6B] hover:bg-[#FFF0E8] transition-colors"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Icon name="menu" className="w-5 h-5" />
+          </button>
+          <div>
+            <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo leading-tight">
+              {currentSection ? t.nav[currentSection.key] : t.adminPanel}
+            </h2>
           </div>
         </header>
 
@@ -301,5 +257,14 @@ export default function DashboardLayout({ children }) {
         </main>
       </div>
     </div>
+  )
+}
+
+// ── Root Layout Export ─────────────────────────────────────────────────────────
+export default function DashboardLayout({ children }) {
+  return (
+    <DashboardLangProvider>
+      <DashboardInner>{children}</DashboardInner>
+    </DashboardLangProvider>
   )
 }
