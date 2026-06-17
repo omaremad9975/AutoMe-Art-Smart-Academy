@@ -8,105 +8,116 @@ import { DashboardLangProvider, useDashboardLang } from '@/lib/dashboard-lang'
 // ── Icons ──────────────────────────────────────────────────────────────────────
 function Icon({ name, className = 'w-5 h-5' }) {
   const icons = {
-    overview: (
-      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <rect x="3" y="3" width="7" height="7" rx="1.5" />
-        <rect x="14" y="3" width="7" height="7" rx="1.5" />
-        <rect x="3" y="14" width="7" height="7" rx="1.5" />
-        <rect x="14" y="14" width="7" height="7" rx="1.5" />
-      </svg>
-    ),
-    registrations: (
-      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z" />
-      </svg>
-    ),
-    courses: (
-      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-      </svg>
-    ),
-    payments: (
-      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
-      </svg>
-    ),
-    users: (
-      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-      </svg>
-    ),
-    settings: (
-      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-      </svg>
-    ),
-    logout: (
-      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
-      </svg>
-    ),
-    menu: (
-      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-        <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
-      </svg>
-    ),
-    close: (
-      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-      </svg>
-    ),
+    overview: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
+    registrations: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>,
+    courses: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg>,
+    payments: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>,
+    users: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg>,
+    settings: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>,
+    logout: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/></svg>,
+    menu: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
   }
   return icons[name] || null
 }
 
-// ── Sidebar ────────────────────────────────────────────────────────────────────
-function Sidebar({ pathname, onNavigate, user, onLogout }) {
-  const { t, lang, toggleLang } = useDashboardLang()
+function PinIcon({ pinned }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill={pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="17" x2="12" y2="22"/>
+      <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>
+    </svg>
+  )
+}
 
-  const navItems = [
-    { key: 'overview',      href: '/dashboard',               icon: 'overview' },
-    { key: 'registrations', href: '/dashboard/registrations', icon: 'registrations' },
-    { key: 'courses',       href: '/dashboard/courses',       icon: 'courses' },
-    { key: 'payments',      href: '/dashboard/payments',      icon: 'payments' },
-    { key: 'users',         href: '/dashboard/users',         icon: 'users' },
-    { key: 'settings',      href: '/dashboard/settings',      icon: 'settings' },
-  ]
+const NAV_ITEMS = [
+  { key: 'overview',      href: '/dashboard',               icon: 'overview' },
+  { key: 'registrations', href: '/dashboard/registrations', icon: 'registrations' },
+  { key: 'courses',       href: '/dashboard/courses',       icon: 'courses' },
+  { key: 'payments',      href: '/dashboard/payments',      icon: 'payments' },
+  { key: 'users',         href: '/dashboard/users',         icon: 'users' },
+  { key: 'settings',      href: '/dashboard/settings',      icon: 'settings' },
+]
+
+// ── Sidebar ────────────────────────────────────────────────────────────────────
+function Sidebar({ pathname, onNavigate, user, onLogout, isExpanded, pinned, onTogglePin, onMouseEnter, onMouseLeave }) {
+  const { t } = useDashboardLang()
 
   return (
-    <aside className="flex flex-col h-full" style={{ background: '#FFFFFF', borderRight: '1px solid #FFE4D4' }}>
+    <aside
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      className="flex flex-col h-full flex-shrink-0"
+      style={{
+        width: isExpanded ? '256px' : '64px',
+        transition: 'width 0.25s cubic-bezier(0.4,0,0.2,1)',
+        overflow: 'hidden',
+        background: '#FFFFFF',
+        borderRight: '1px solid #FFE4D4',
+      }}
+    >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-5" style={{ borderBottom: '1px solid #FFE4D4' }}>
-        <img src="/logo_mark_blue.png" alt="Art Smart Academy" className="h-8 w-auto object-contain" style={{ filter: 'brightness(0) saturate(100%)' }} />
-        <div className="flex flex-col">
-          <span className="font-extrabold text-xs tracking-widest uppercase text-[#1A1A1A] font-cairo leading-tight">SMART ACADEMY</span>
-          <span className="text-[10px] font-semibold text-[#A0A0A0] font-cairo">{t.adminPanel}</span>
+      <div
+        className="flex items-center px-4 py-5 gap-3 flex-shrink-0"
+        style={{ borderBottom: '1px solid #FFE4D4', minHeight: '72px' }}
+      >
+        <img
+          src="/logo_mark_blue.png"
+          alt="Art Smart Academy"
+          className="flex-shrink-0 object-contain"
+          style={{ height: '32px', width: '32px', filter: 'brightness(0) saturate(100%)' }}
+        />
+        <div className="flex items-center justify-between flex-1 min-w-0" style={{ opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s', pointerEvents: isExpanded ? 'auto' : 'none' }}>
+          <div className="flex flex-col overflow-hidden">
+            <span className="font-extrabold text-xs tracking-widest uppercase text-[#1A1A1A] font-cairo leading-tight whitespace-nowrap">SMART ACADEMY</span>
+            <span className="text-[10px] font-semibold text-[#A0A0A0] font-cairo whitespace-nowrap">{t.adminPanel}</span>
+          </div>
+          <button
+            onClick={onTogglePin}
+            title={pinned ? 'Unpin sidebar' : 'Pin sidebar'}
+            className="flex-shrink-0 p-1.5 rounded-[6px] transition-all duration-200 ml-2"
+            style={{ color: pinned ? '#FF5C1A' : '#C0C0C0' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,92,26,0.08)'; e.currentTarget.style.color = '#FF5C1A' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = pinned ? '#FF5C1A' : '#C0C0C0' }}
+          >
+            <PinIcon pinned={pinned} />
+          </button>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto">
-        <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest px-3 mb-3 font-cairo">{t.navigation}</p>
+      <nav className="flex-1 py-4 overflow-y-auto overflow-x-hidden" style={{ padding: isExpanded ? '16px 12px' : '16px 8px' }}>
+        {isExpanded && (
+          <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest px-3 mb-3 font-cairo whitespace-nowrap" style={{ opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s' }}>
+            {t.navigation}
+          </p>
+        )}
         <ul className="space-y-1">
-          {navItems.map((item) => {
+          {NAV_ITEMS.map((item) => {
             const isActive = item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href)
             return (
               <li key={item.href}>
                 <a
                   href={item.href}
                   onClick={(e) => { e.preventDefault(); onNavigate(item.href) }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm font-semibold font-cairo transition-all duration-200"
+                  title={!isExpanded ? t.nav[item.key] : undefined}
+                  className="flex items-center rounded-[10px] text-sm font-semibold font-cairo transition-all duration-200"
                   style={{
+                    gap: isExpanded ? '12px' : '0',
+                    padding: isExpanded ? '10px 12px' : '10px',
+                    justifyContent: isExpanded ? 'flex-start' : 'center',
                     background: isActive ? 'rgba(255,92,26,0.10)' : 'transparent',
                     color: isActive ? '#FF5C1A' : '#6B6B6B',
                     border: isActive ? '1px solid rgba(255,92,26,0.20)' : '1px solid transparent',
                   }}
                 >
-                  <span style={{ color: isActive ? '#FF5C1A' : '#A0A0A0' }}>
+                  <span style={{ color: isActive ? '#FF5C1A' : '#A0A0A0', flexShrink: 0 }}>
                     <Icon name={item.icon} className="w-5 h-5" />
                   </span>
-                  <span>{t.nav[item.key]}</span>
+                  {isExpanded && (
+                    <span className="whitespace-nowrap overflow-hidden" style={{ opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s' }}>
+                      {t.nav[item.key]}
+                    </span>
+                  )}
                 </a>
               </li>
             )
@@ -114,58 +125,65 @@ function Sidebar({ pathname, onNavigate, user, onLogout }) {
         </ul>
       </nav>
 
-      {/* Bottom: User info + Lang toggle + Logout */}
-      <div className="px-3 py-4 space-y-3" style={{ borderTop: '1px solid #FFE4D4' }}>
-        {/* Language Toggle */}
-        <button
-          onClick={toggleLang}
-          className="w-full flex items-center rounded-full overflow-hidden border border-[#FFE4D4] text-xs font-bold font-cairo"
-          style={{ background: '#FFF0E8' }}
-        >
-          <span className="flex-1 py-2 text-center transition-all duration-200" style={{ background: lang === 'ar' ? '#FF5C1A' : 'transparent', color: lang === 'ar' ? '#fff' : '#A0A0A0' }}>
-            عربي
-          </span>
-          <span className="flex-1 py-2 text-center transition-all duration-200" style={{ background: lang === 'en' ? '#FF5C1A' : 'transparent', color: lang === 'en' ? '#fff' : '#A0A0A0' }}>
-            English
-          </span>
-        </button>
-
-        {/* User info + Logout */}
-        <div className="flex items-center gap-3 px-2 py-2 rounded-[10px]" style={{ background: '#FFF8F4', border: '1px solid #FFE4D4' }}>
-          <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm font-cairo" style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
-            {user?.email?.[0]?.toUpperCase() || 'A'}
+      {/* Bottom: user info + logout */}
+      <div className="flex-shrink-0 py-3" style={{ borderTop: '1px solid #FFE4D4', padding: isExpanded ? '12px' : '12px 8px' }}>
+        {isExpanded ? (
+          <div className="flex items-center gap-3 px-2 py-2 rounded-[10px]" style={{ background: '#FFF8F4', border: '1px solid #FFE4D4', opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s' }}>
+            <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm font-cairo" style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
+              {user?.email?.[0]?.toUpperCase() || 'A'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-[#1A1A1A] font-cairo">{t.admin}</p>
+              <p className="text-[10px] text-[#A0A0A0] font-cairo truncate">{user?.email}</p>
+            </div>
+            <button
+              onClick={onLogout}
+              title={t.logout}
+              className="p-1.5 rounded-[6px] transition-all duration-200 flex-shrink-0"
+              style={{ color: '#A0A0A0' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,92,26,0.10)'; e.currentTarget.style.color = '#FF5C1A' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A0A0A0' }}
+            >
+              <Icon name="logout" className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-[#1A1A1A] font-cairo">{t.admin}</p>
-            <p className="text-[10px] text-[#A0A0A0] font-cairo truncate">{user?.email}</p>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm font-cairo" style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
+              {user?.email?.[0]?.toUpperCase() || 'A'}
+            </div>
+            <button
+              onClick={onLogout}
+              title={t.logout}
+              className="p-1.5 rounded-[6px] transition-all duration-200"
+              style={{ color: '#A0A0A0' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,92,26,0.10)'; e.currentTarget.style.color = '#FF5C1A' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A0A0A0' }}
+            >
+              <Icon name="logout" className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            onClick={onLogout}
-            title={t.logout}
-            className="p-1.5 rounded-[6px] transition-all duration-200 flex-shrink-0"
-            style={{ color: '#A0A0A0' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,92,26,0.10)'; e.currentTarget.style.color = '#FF5C1A' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A0A0A0' }}
-          >
-            <Icon name="logout" className="w-4 h-4" />
-          </button>
-        </div>
+        )}
       </div>
 
-      {/* Orange accent bar */}
-      <div className="h-1 w-full" style={{ background: 'linear-gradient(to right, #FF5C1A, #FF7A40, #FF5C1A)' }} />
+      <div className="h-1 w-full flex-shrink-0" style={{ background: 'linear-gradient(to right, #FF5C1A, #FF7A40, #FF5C1A)' }} />
     </aside>
   )
 }
 
-// ── Inner Layout (uses context) ────────────────────────────────────────────────
+// ── Inner Layout ───────────────────────────────────────────────────────────────
 function DashboardInner({ children }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { t } = useDashboardLang()
+  const { t, lang, toggleLang } = useDashboardLang()
+
   const [user, setUser] = useState(null)
   const [authChecked, setAuthChecked] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [pinned, setPinned] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
+  const isExpanded = pinned || hovered
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -186,20 +204,11 @@ function DashboardInner({ children }) {
   }
 
   const handleNavigate = useCallback((href) => {
-    setSidebarOpen(false)
+    setMobileSidebarOpen(false)
     router.push(href)
   }, [router])
 
-  const navItems = [
-    { key: 'overview',      href: '/dashboard' },
-    { key: 'registrations', href: '/dashboard/registrations' },
-    { key: 'courses',       href: '/dashboard/courses' },
-    { key: 'payments',      href: '/dashboard/payments' },
-    { key: 'users',         href: '/dashboard/users' },
-    { key: 'settings',      href: '/dashboard/settings' },
-  ]
-
-  const currentSection = navItems.find((item) =>
+  const currentSection = NAV_ITEMS.find((item) =>
     item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href)
   )
 
@@ -216,39 +225,80 @@ function DashboardInner({ children }) {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#FFF8F4', direction: 'ltr' }}>
+
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block w-64 flex-shrink-0 h-full">
-        <Sidebar pathname={pathname} onNavigate={handleNavigate} user={user} onLogout={handleLogout} />
+      <div className="hidden lg:block h-full flex-shrink-0">
+        <Sidebar
+          pathname={pathname}
+          onNavigate={handleNavigate}
+          user={user}
+          onLogout={handleLogout}
+          isExpanded={isExpanded}
+          pinned={pinned}
+          onTogglePin={() => setPinned((p) => !p)}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        />
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
+      {/* Mobile Sidebar */}
+      {mobileSidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <div className="relative w-72 h-full z-10">
-            <Sidebar pathname={pathname} onNavigate={handleNavigate} user={user} onLogout={handleLogout} />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileSidebarOpen(false)} />
+          <div className="relative h-full z-10">
+            <Sidebar
+              pathname={pathname}
+              onNavigate={handleNavigate}
+              user={user}
+              onLogout={handleLogout}
+              isExpanded={true}
+              pinned={true}
+              onTogglePin={() => setMobileSidebarOpen(false)}
+            />
           </div>
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header — simplified, just page title */}
+        {/* Header */}
         <header
-          className="flex-shrink-0 h-16 flex items-center px-6 gap-4"
+          className="flex-shrink-0 h-16 flex items-center justify-between px-6"
           style={{ background: '#FFFFFF', borderBottom: '1px solid #FFE4D4', boxShadow: '0 2px 8px rgba(255,92,26,0.06)' }}
         >
-          <button
-            className="lg:hidden p-2 rounded-[8px] text-[#6B6B6B] hover:bg-[#FFF0E8] transition-colors"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Icon name="menu" className="w-5 h-5" />
-          </button>
-          <div>
-            <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo leading-tight">
-              {currentSection ? t.nav[currentSection.key] : t.adminPanel}
-            </h2>
+          <div className="flex items-center gap-4">
+            <button
+              className="lg:hidden p-2 rounded-[8px] text-[#6B6B6B] hover:bg-[#FFF0E8] transition-colors"
+              onClick={() => setMobileSidebarOpen(true)}
+            >
+              <Icon name="menu" className="w-5 h-5" />
+            </button>
+            <div>
+              <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">
+                {currentSection ? t.nav[currentSection.key] : t.adminPanel}
+              </h2>
+            </div>
           </div>
+
+          {/* Language Toggle — top right */}
+          <button
+            onClick={toggleLang}
+            className="flex items-center rounded-full overflow-hidden border border-[#FFE4D4] text-xs font-bold font-cairo"
+            style={{ background: '#FFF0E8' }}
+          >
+            <span
+              className="px-4 py-2 transition-all duration-200"
+              style={{ background: lang === 'ar' ? '#FF5C1A' : 'transparent', color: lang === 'ar' ? '#fff' : '#A0A0A0' }}
+            >
+              عربي
+            </span>
+            <span
+              className="px-4 py-2 transition-all duration-200"
+              style={{ background: lang === 'en' ? '#FF5C1A' : 'transparent', color: lang === 'en' ? '#fff' : '#A0A0A0' }}
+            >
+              English
+            </span>
+          </button>
         </header>
 
         {/* Page Content */}
@@ -260,7 +310,7 @@ function DashboardInner({ children }) {
   )
 }
 
-// ── Root Layout Export ─────────────────────────────────────────────────────────
+// ── Export ─────────────────────────────────────────────────────────────────────
 export default function DashboardLayout({ children }) {
   return (
     <DashboardLangProvider>
