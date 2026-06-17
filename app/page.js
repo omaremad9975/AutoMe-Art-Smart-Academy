@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 
 // ==========================================
@@ -411,15 +411,21 @@ const MODAL_T = {
     course: 'الكورس المطلوب', selectCourse: '— اختر الكورس —',
     payment: 'طريقة الدفع',
     submit: 'إرسال الطلب', submitting: 'جارٍ الإرسال...',
-    successTitle: '🎉 تم استلام طلبك!',
-    successFawry: 'تحقق من بريدك الإلكتروني — أرسلنا لك تعليمات الدفع عبر فوري. بمجرد الدفع، يتم تأكيد تسجيلك تلقائياً.',
-    successManual: 'تحقق من بريدك الإلكتروني — أرسلنا لك تعليمات الدفع. بعد إرسال الإيصال سيقوم الفريق بتأكيد تسجيلك خلال 24 ساعة.',
-    close: 'إغلاق', required: 'هذا الحقل مطلوب',
+    successTitle: 'شكراً لك! 🎉',
+    successSub: 'تم استلام طلب تسجيلك بنجاح.',
+    successCard: 'سيصلك إيميل تأكيد قريباً يحتوي على تعليمات الدفع بالبطاقة. بمجرد الدفع سيتم تأكيد تسجيلك تلقائياً.',
+    successManual: 'سيصلك إيميل تأكيد قريباً يحتوي على تعليمات الدفع. بعد إرسال الإيصال، سيقوم فريق الأكاديمية بتأكيد تسجيلك خلال 24 ساعة.',
+    nextTitle: 'الخطوات القادمة',
+    nextEmail: 'تحقق من بريدك الإلكتروني — سيصلك الإيميل خلال دقائق.',
+    nextContact: 'سيتواصل معك فريقنا لتأكيد موعد بدء الكورس.',
+    nextSpam: 'تحقق من مجلد Spam إذا لم يصل الإيميل.',
+    close: 'رائع، شكراً!', required: 'هذا الحقل مطلوب',
     loadingCourses: 'جارٍ تحميل الكورسات...',
     noCourses: 'لا توجد كورسات متاحة حالياً',
+    spamNote: 'تحقق من مجلد الرسائل غير المرغوب فيها إذا لم يصلك الإيميل.',
   },
   en: {
-    title: 'Register for a Course', sub: 'Fill in your details and we\'ll be in touch soon',
+    title: 'Register for a Course', sub: "Fill in your details and we'll be in touch soon",
     name: 'Full Name', namePh: 'e.g. Mohamed Ahmed',
     phone: 'Phone Number', phonePh: '+20 1XX XXX XXXX',
     email: 'Email Address', emailPh: 'example@email.com',
@@ -428,39 +434,110 @@ const MODAL_T = {
     course: 'Course', selectCourse: '— Select a course —',
     payment: 'Payment Method',
     submit: 'Submit Registration', submitting: 'Submitting...',
-    successTitle: '🎉 Registration Received!',
-    successFawry: 'Check your email — we sent you Fawry payment instructions. Once paid, your registration is auto-confirmed.',
-    successManual: 'Check your email — we sent you payment instructions. After sending the receipt, our team confirms your registration within 24 hours.',
-    close: 'Close', required: 'This field is required',
+    successTitle: 'Thank You! 🎉',
+    successSub: 'Your registration has been received successfully.',
+    successCard: "A confirmation email is on its way with your card payment instructions. Once paid, your registration will be auto-confirmed.",
+    successManual: "A confirmation email is on its way with your payment instructions. After sending the receipt, our team will confirm your registration within 24 hours.",
+    nextTitle: "What's next",
+    nextEmail: 'Check your inbox — the email will arrive within a few minutes.',
+    nextContact: 'Our team will reach out to confirm your course start date.',
+    nextSpam: "Check your Spam folder if the email doesn't show up.",
+    close: 'Got it, thank you!', required: 'This field is required',
     loadingCourses: 'Loading courses...',
     noCourses: 'No courses available right now',
+    spamNote: "Check your spam folder too if the email doesn't arrive within a few minutes.",
   },
 }
 
+// ── Payment Logos ────────────────────────────────────────────────────────────
+
+function CardLogo() {
+  // Visa + Mastercard side by side
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'center', height: '28px' }}>
+      {/* Visa */}
+      <svg width="38" height="12" viewBox="0 0 216 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#1A1F71" d="M87.5 1.4L58.6 66.6H38.8L24.5 17.1c-.9-3.4-1.6-4.7-4.3-6.1C14.6 8.7 5.8 6.5.9 5.1L1.4 1.4h33.1c4.2 0 8 2.8 9 7.4l8.2 43.5L76.2 1.4h11.3zm44.3 43.9c.1-18.8-26-19.8-25.8-28.2.1-2.6 2.5-5.3 7.8-6 2.7-.3 10-.5 18.4 3.2l3.3-15.2C131.8.5 127-.6 121.1 0 101.9 0 88.4 11 88.3 26.7c-.1 12.5 11.2 19.4 19.7 23.5 8.8 4.3 11.7 7 11.7 10.9 0 5.9-7 8.5-13.5 8.6-11.3.2-17.8-3-23-5.5l-4.1 19C83.5 85.5 91 87.2 100 87.3c20.3 0 33.5-10 33.5-25.6l.3-16.4zm73.7 21.3H188l-19.3-65.2h-16c-3.7 0-6.8 2.1-8.2 5.4L116.4 66.6H136l4.1-11.4h24.5l2.3 11.4zm-21-30.5l10-27.5 5.8 27.5h-15.8zM94.7 1.4L79.3 66.6H60.5L75.9 1.4h18.8z"/>
+      </svg>
+      {/* Mastercard */}
+      <svg width="30" height="19" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="12" r="12" fill="#EB001B"/>
+        <circle cx="24" cy="12" r="12" fill="#F79E1B"/>
+        <path fill="#FF5F00" d="M19 3.5A12 12 0 0 1 23.2 12 12 12 0 0 1 19 20.5 12 12 0 0 1 14.8 12 12 12 0 0 1 19 3.5z"/>
+      </svg>
+    </div>
+  )
+}
+
+function VodafoneCashLogo() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="48" fill="#E60000"/>
+      {/* Vodafone speech-bubble/quote mark */}
+      <path fill="white" d="M67 30 C80 30 80 50 67 50 C62 50 58 47 55 44 L48 52 L51 44 C38 42 38 30 54 30 Z"/>
+      <circle cx="54" cy="40" r="5" fill="#E60000"/>
+    </svg>
+  )
+}
+
+function InstaPayLogo() {
+  return (
+    <svg width="72" height="22" viewBox="0 0 180 55" xmlns="http://www.w3.org/2000/svg">
+      <rect width="180" height="55" rx="8" fill="#6B2FA0"/>
+      <text x="90" y="38" textAnchor="middle" fill="white" fontSize="26" fontWeight="800" fontFamily="Arial, sans-serif" letterSpacing="-0.5">instaPay</text>
+    </svg>
+  )
+}
+
 const PAYMENT_OPTIONS = [
-  { key: 'fawry',         ar: 'فوري',          en: 'Fawry',          icon: '⚡', noteAr: 'تأكيد تلقائي',  noteEn: 'Auto-confirmed',   color: '#F59E0B', bg: '#FFFBEB' },
-  { key: 'vodafone_cash', ar: 'فودافون كاش',   en: 'Vodafone Cash',  icon: '📱', noteAr: 'تأكيد يدوي',     noteEn: 'Manual confirm',   color: '#E11D48', bg: '#FFF1F2' },
-  { key: 'instapay',      ar: 'إنستاباي',      en: 'InstaPay',       icon: '💳', noteAr: 'تأكيد يدوي',     noteEn: 'Manual confirm',   color: '#7C3AED', bg: '#F5F3FF' },
+  { key: 'fawry',         ar: 'بطاقة',          en: 'Card',           noteAr: 'تأكيد تلقائي',  noteEn: 'Auto-confirmed', color: '#1A1F71', bg: '#EEF2FF', Logo: CardLogo },
+  { key: 'vodafone_cash', ar: 'فودافون كاش',    en: 'Vodafone Cash',  noteAr: 'تأكيد يدوي',    noteEn: 'Manual confirm', color: '#E60000', bg: '#FFF1F1', Logo: VodafoneCashLogo },
+  { key: 'instapay',      ar: 'إنستاباي',       en: 'InstaPay',       noteAr: 'تأكيد يدوي',    noteEn: 'Manual confirm', color: '#6B2FA0', bg: '#F5F0FF', Logo: InstaPayLogo },
 ]
 
 const EMPTY_FORM = { name: '', phone: '', email: '', sameWhatsapp: true, whatsapp: '', courseId: '', paymentMethod: 'fawry' }
 
+// ── ModalField is outside RegistrationModal so React never remounts inputs ──
+function ModalField({ label, error, isRTL, children }) {
+  return (
+    <div>
+      <label className="block text-sm font-bold text-[#1A1A1A] mb-1.5 font-cairo" style={{ display: 'block', textAlign: isRTL ? 'right' : 'left' }}>
+        {label} <span style={{ color: '#FF5C1A' }}>*</span>
+      </label>
+      {children}
+      {error && <p className="text-xs text-red-500 mt-1 font-cairo" style={{ textAlign: isRTL ? 'right' : 'left' }}>{error}</p>}
+    </div>
+  )
+}
+
+const INPUT_CLASS = 'w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] transition-all duration-200 outline-none'
+const INPUT_STYLE = { border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }
+function onFocusIn(e)  { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }
+function onFocusOut(e) { e.target.style.borderColor = '#FFE4D4'; e.target.style.boxShadow = 'none' }
+
 function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
   const mt = MODAL_T[lang]
-  const [form, setForm]         = useState(EMPTY_FORM)
-  const [errors, setErrors]     = useState({})
-  const [submitting, setSubmit] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [form, setForm]           = useState(EMPTY_FORM)
+  const [errors, setErrors]       = useState({})
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted]   = useState(false)
   const [serverError, setServerError] = useState('')
 
-  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
+  // Stable handler — uses data-formkey attribute, never recreated between renders
+  const handleChange = useCallback((e) => {
+    const key   = e.target.dataset.formkey
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
+    setForm((f) => ({ ...f, [key]: value }))
+  }, [])
+
+  const setPayment = useCallback((key) => () => setForm((f) => ({ ...f, paymentMethod: key })), [])
 
   function validate() {
     const e = {}
-    if (!form.name.trim())    e.name    = mt.required
-    if (!form.phone.trim())   e.phone   = mt.required
-    if (!form.email.trim())   e.email   = mt.required
-    if (!form.courseId)       e.courseId = mt.required
+    if (!form.name.trim())  e.name     = mt.required
+    if (!form.phone.trim()) e.phone    = mt.required
+    if (!form.email.trim()) e.email    = mt.required
+    if (!form.courseId)     e.courseId = mt.required
     if (!form.sameWhatsapp && !form.whatsapp.trim()) e.whatsapp = mt.required
     return e
   }
@@ -470,7 +547,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
     setErrors({})
-    setSubmit(true)
+    setSubmitting(true)
     setServerError('')
     try {
       const res  = await fetch('/api/register', {
@@ -486,181 +563,161 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
         }),
       })
       const data = await res.json()
-      if (!res.ok) { setServerError(data.error || 'Something went wrong'); setSubmit(false); return }
+      if (!res.ok) { setServerError(data.error || 'Something went wrong'); setSubmitting(false); return }
       setSubmitted(true)
     } catch {
       setServerError('Network error. Please try again.')
-      setSubmit(false)
+      setSubmitting(false)
     }
   }
 
-  const selectedPayment = PAYMENT_OPTIONS.find((p) => p.key === form.paymentMethod)
-  const isFawry = form.paymentMethod === 'fawry'
-
-  // Field helper
-  const Field = ({ id, label, error, children }) => (
-    <div>
-      <label className="block text-sm font-bold text-[#1A1A1A] mb-1.5 font-cairo" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-        {label} <span className="text-[#FF5C1A]">*</span>
-      </label>
-      {children}
-      {error && <p className="text-xs text-red-500 mt-1 font-cairo" style={{ textAlign: isRTL ? 'right' : 'left' }}>{error}</p>}
-    </div>
-  )
-
-  const inputStyle = { border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr', outline: 'none' }
-  const inputClass = 'w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] transition-all duration-200'
+  const isCard = form.paymentMethod === 'fawry'
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-
-      {/* Modal */}
       <div
         className="relative w-full max-w-lg rounded-[24px] overflow-hidden z-10 flex flex-col"
-        style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 24px 80px rgba(255,92,26,0.20)', maxHeight: '90vh' }}
+        style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 24px 80px rgba(255,92,26,0.22)', maxHeight: '90vh' }}
       >
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)', padding: '24px 28px', flexShrink: 0 }}>
+        <div style={{ background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', padding: '22px 28px', flexShrink: 0 }}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-white font-extrabold text-xl font-cairo">{mt.title}</h2>
-              <p className="text-white/75 text-sm font-cairo mt-1">{mt.sub}</p>
+              <p className="text-white/75 text-sm font-cairo mt-0.5">{mt.sub}</p>
             </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors flex-shrink-0 mt-0.5"
-            >✕</button>
+            <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors flex-shrink-0">✕</button>
           </div>
         </div>
 
-        {/* Body — scrollable */}
-        <div className="overflow-y-auto flex-1" style={{ padding: '28px' }}>
-
+        {/* Scrollable body */}
+        <div className="overflow-y-auto flex-1" style={{ padding: '24px 28px' }}>
           {submitted ? (
-            /* ── Success State ── */
-            <div className="text-center py-4">
-              <div className="text-5xl mb-4">🎉</div>
-              <h3 className="font-extrabold text-[#1A1A1A] text-xl font-cairo mb-3">{mt.successTitle}</h3>
-              <p className="text-[#6B6B6B] text-sm font-cairo leading-relaxed mb-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-                {isFawry ? mt.successFawry : mt.successManual}
-              </p>
-              <div
-                className="rounded-[12px] p-4 mb-6 text-sm font-cairo text-[#6B6B6B] leading-relaxed"
-                style={{ background: '#FFF8F4', border: '1px solid #FFE4D4', direction: isRTL ? 'rtl' : 'ltr' }}
-              >
-                {isRTL ? '📧 تحقق من صندوق الوارد أو مجلد الرسائل غير المرغوب فيها إذا لم يصلك الإيميل.' : '📧 Check your spam folder too if the email doesn\'t arrive within a few minutes.'}
+            <div style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+              {/* Checkmark + title */}
+              <div className="text-center" style={{ paddingBottom: '20px', borderBottom: '1px solid #FFE4D4', marginBottom: '20px' }}>
+                <div style={{ width: '68px', height: '68px', background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: '0 8px 24px rgba(255,92,26,0.30)' }}>
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <h3 className="font-extrabold text-[#1A1A1A] text-xl font-cairo mb-1">{mt.successTitle}</h3>
+                <p className="text-[#6B6B6B] text-sm font-cairo">{mt.successSub}</p>
               </div>
-              <button
-                onClick={onClose}
-                className="px-8 py-3 rounded-[10px] text-sm font-bold text-white font-cairo"
-                style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)', boxShadow: '0 4px 16px rgba(255,92,26,0.30)' }}
-              >{mt.close}</button>
+
+              {/* Email on its way — highlighted */}
+              <div style={{ background: 'linear-gradient(135deg,#FFF8F4,#FFF3ED)', border: '1.5px solid #FFD4B8', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexDirection: isRTL ? 'row' : 'row-reverse', justifyContent: 'flex-end' }}>
+                  <div>
+                    <p className="text-sm font-bold font-cairo" style={{ color: '#FF5C1A', textAlign: isRTL ? 'right' : 'left' }}>
+                      {isRTL ? '📧 إيميل تأكيد في طريقه إليك الآن!' : '📧 A confirmation email is on its way!'}
+                    </p>
+                    <p className="text-xs text-[#6B6B6B] font-cairo mt-0.5" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                      {isCard ? mt.successCard : mt.successManual}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* What's next steps */}
+              <div style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '12px', padding: '14px 16px', marginBottom: '20px' }}>
+                <p className="text-xs font-bold text-[#6B6B6B] font-cairo mb-3" style={{ textTransform: 'uppercase', letterSpacing: '1px', textAlign: isRTL ? 'right' : 'left' }}>
+                  {mt.nextTitle}
+                </p>
+                {[
+                  { icon: '📬', text: mt.nextEmail },
+                  { icon: '📞', text: mt.nextContact },
+                  { icon: '🗂️', text: mt.nextSpam },
+                ].map((step, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: i < 2 ? '10px' : 0, flexDirection: isRTL ? 'row' : 'row-reverse' }}>
+                    <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>{step.icon}</span>
+                    <p className="text-xs text-[#4B5563] font-cairo leading-relaxed" style={{ textAlign: isRTL ? 'right' : 'left' }}>{step.text}</p>
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={onClose} className="w-full py-3 rounded-[10px] text-sm font-bold text-white font-cairo"
+                style={{ background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', boxShadow: '0 4px 16px rgba(255,92,26,0.30)' }}>
+                {mt.close}
+              </button>
             </div>
           ) : (
-            /* ── Form ── */
-            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
               {/* Name */}
-              <Field label={mt.name} error={errors.name}>
-                <input
-                  type="text" value={form.name} onChange={set('name')}
-                  placeholder={mt.namePh} className={inputClass} style={inputStyle}
-                  onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
-                  onBlur={(e)  => { e.target.style.borderColor = errors.name ? '#EF4444' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
-                />
-              </Field>
+              <ModalField label={mt.name} error={errors.name} isRTL={isRTL}>
+                <input data-formkey="name" type="text" value={form.name} onChange={handleChange}
+                  placeholder={mt.namePh} className={INPUT_CLASS} style={INPUT_STYLE}
+                  onFocus={onFocusIn} onBlur={onFocusOut} />
+              </ModalField>
 
               {/* Phone */}
-              <Field label={mt.phone} error={errors.phone}>
-                <input
-                  type="tel" value={form.phone} onChange={set('phone')}
-                  placeholder={mt.phonePh} className={inputClass} style={inputStyle}
-                  onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
-                  onBlur={(e)  => { e.target.style.borderColor = errors.phone ? '#EF4444' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
-                />
-              </Field>
+              <ModalField label={mt.phone} error={errors.phone} isRTL={isRTL}>
+                <input data-formkey="phone" type="tel" value={form.phone} onChange={handleChange}
+                  placeholder={mt.phonePh} className={INPUT_CLASS} style={INPUT_STYLE}
+                  onFocus={onFocusIn} onBlur={onFocusOut} />
+              </ModalField>
 
               {/* Email */}
-              <Field label={mt.email} error={errors.email}>
-                <input
-                  type="email" value={form.email} onChange={set('email')}
-                  placeholder={mt.emailPh} className={inputClass} style={inputStyle}
-                  onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
-                  onBlur={(e)  => { e.target.style.borderColor = errors.email ? '#EF4444' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
-                />
-              </Field>
+              <ModalField label={mt.email} error={errors.email} isRTL={isRTL}>
+                <input data-formkey="email" type="email" value={form.email} onChange={handleChange}
+                  placeholder={mt.emailPh} className={INPUT_CLASS} style={INPUT_STYLE}
+                  onFocus={onFocusIn} onBlur={onFocusOut} />
+              </ModalField>
 
-              {/* WhatsApp same as phone checkbox */}
+              {/* WhatsApp same as phone */}
               <label className="flex items-center gap-3 cursor-pointer select-none" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <input
-                  type="checkbox" checked={form.sameWhatsapp}
-                  onChange={set('sameWhatsapp')}
-                  className="w-4 h-4 rounded accent-[#FF5C1A]"
-                />
+                <input data-formkey="sameWhatsapp" type="checkbox" checked={form.sameWhatsapp} onChange={handleChange}
+                  className="w-4 h-4 rounded" style={{ accentColor: '#FF5C1A' }} />
                 <span className="text-sm text-[#6B6B6B] font-cairo">{mt.sameWa}</span>
               </label>
 
-              {/* WhatsApp field — only if not same */}
               {!form.sameWhatsapp && (
-                <Field label={mt.whatsapp} error={errors.whatsapp}>
-                  <input
-                    type="tel" value={form.whatsapp} onChange={set('whatsapp')}
-                    placeholder={mt.whatsappPh} className={inputClass} style={inputStyle}
-                    onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
-                    onBlur={(e)  => { e.target.style.borderColor = errors.whatsapp ? '#EF4444' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
-                  />
-                </Field>
+                <ModalField label={mt.whatsapp} error={errors.whatsapp} isRTL={isRTL}>
+                  <input data-formkey="whatsapp" type="tel" value={form.whatsapp} onChange={handleChange}
+                    placeholder={mt.whatsappPh} className={INPUT_CLASS} style={INPUT_STYLE}
+                    onFocus={onFocusIn} onBlur={onFocusOut} />
+                </ModalField>
               )}
 
               {/* Course dropdown */}
-              <Field label={mt.course} error={errors.courseId}>
-                {coursesLoading ? (
-                  <div className="text-sm text-[#A0A0A0] font-cairo py-2">{mt.loadingCourses}</div>
-                ) : courses.length === 0 ? (
-                  <div className="text-sm text-[#A0A0A0] font-cairo py-2">{mt.noCourses}</div>
-                ) : (
-                  <select
-                    value={form.courseId} onChange={set('courseId')}
-                    className={inputClass}
-                    style={{ ...inputStyle, direction: 'ltr', cursor: 'pointer' }}
-                    onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
-                    onBlur={(e)  => { e.target.style.borderColor = errors.courseId ? '#EF4444' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
-                  >
-                    <option value="">{mt.selectCourse}</option>
-                    {courses.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {lang === 'ar' ? c.name_ar : c.name_en} — {c.price} EGP
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </Field>
+              <ModalField label={mt.course} error={errors.courseId} isRTL={isRTL}>
+                {coursesLoading
+                  ? <p className="text-sm text-[#A0A0A0] font-cairo py-2">{mt.loadingCourses}</p>
+                  : courses.length === 0
+                  ? <p className="text-sm text-[#A0A0A0] font-cairo py-2">{mt.noCourses}</p>
+                  : <select data-formkey="courseId" value={form.courseId} onChange={handleChange}
+                      className={INPUT_CLASS} style={{ ...INPUT_STYLE, cursor: 'pointer' }}
+                      onFocus={onFocusIn} onBlur={onFocusOut}>
+                      <option value="">{mt.selectCourse}</option>
+                      {courses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {lang === 'ar' ? c.name_ar : c.name_en} — {c.price} EGP
+                        </option>
+                      ))}
+                    </select>
+                }
+              </ModalField>
 
               {/* Payment method */}
               <div>
                 <p className="text-sm font-bold text-[#1A1A1A] mb-3 font-cairo" style={{ textAlign: isRTL ? 'right' : 'left' }}>{mt.payment}</p>
                 <div className="grid grid-cols-3 gap-2">
-                  {PAYMENT_OPTIONS.map((p) => {
-                    const selected = form.paymentMethod === p.key
+                  {PAYMENT_OPTIONS.map(({ key, ar, en, noteAr, noteEn, color, bg, Logo }) => {
+                    const sel = form.paymentMethod === key
                     return (
-                      <button
-                        key={p.key} type="button"
-                        onClick={() => setForm((f) => ({ ...f, paymentMethod: p.key }))}
-                        className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-[12px] text-center transition-all duration-200"
-                        style={{
-                          background:  selected ? p.bg   : '#FFF8F4',
-                          border:      selected ? `2px solid ${p.color}` : '2px solid #FFE4D4',
-                          boxShadow:   selected ? `0 4px 16px ${p.color}25` : 'none',
-                        }}
-                      >
-                        <span className="text-2xl">{p.icon}</span>
-                        <span className="text-xs font-bold font-cairo" style={{ color: selected ? p.color : '#6B6B6B' }}>
-                          {lang === 'ar' ? p.ar : p.en}
+                      <button key={key} type="button" onClick={setPayment(key)}
+                        className="flex flex-col items-center gap-2 py-3 px-2 rounded-[12px] text-center transition-all duration-200"
+                        style={{ background: sel ? bg : '#FFF8F4', border: sel ? `2px solid ${color}` : '2px solid #FFE4D4', boxShadow: sel ? `0 4px 14px ${color}22` : 'none' }}>
+                        <div style={{ height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Logo />
+                        </div>
+                        <span className="text-xs font-bold font-cairo leading-tight" style={{ color: sel ? color : '#6B6B6B' }}>
+                          {lang === 'ar' ? ar : en}
                         </span>
-                        <span className="text-[10px] font-cairo" style={{ color: selected ? p.color : '#A0A0A0' }}>
-                          {lang === 'ar' ? p.noteAr : p.noteEn}
+                        <span className="text-[10px] font-cairo" style={{ color: sel ? color : '#A0A0A0' }}>
+                          {lang === 'ar' ? noteAr : noteEn}
                         </span>
                       </button>
                     )
@@ -668,23 +725,15 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                 </div>
               </div>
 
-              {/* Server error */}
               {serverError && (
                 <div className="text-sm text-red-600 font-cairo rounded-[10px] p-3" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
                   {serverError}
                 </div>
               )}
 
-              {/* Submit */}
-              <button
-                type="submit" disabled={submitting}
+              <button type="submit" disabled={submitting}
                 className="w-full py-3.5 rounded-[10px] text-sm font-bold text-white font-cairo transition-all duration-200"
-                style={{
-                  background:  submitting ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)',
-                  boxShadow:   submitting ? 'none' : '0 4px 16px rgba(255,92,26,0.35)',
-                  marginTop:   '8px',
-                }}
-              >
+                style={{ background: submitting ? '#FFB89A' : 'linear-gradient(135deg,#FF5C1A,#FF7A40)', boxShadow: submitting ? 'none' : '0 4px 16px rgba(255,92,26,0.35)', marginTop: '4px' }}>
                 {submitting ? mt.submitting : mt.submit}
               </button>
 
