@@ -368,7 +368,7 @@ export default function PaymentsPage() {
               {loading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid #FFF0E8' }}>
-                    {COLUMNS.map((_, j) => (
+                    {TABLE_COLUMNS.map((_, j) => (
                       <td key={j} className="px-4 py-4">
                         <div className="h-4 rounded animate-pulse" style={{ background: '#FFE4D4', width: j === 0 ? '120px' : '70px' }} />
                       </td>

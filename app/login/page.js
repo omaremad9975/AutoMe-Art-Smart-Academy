@@ -8,6 +8,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -101,27 +102,51 @@ export default function LoginPage() {
               <label className="block text-[#1A1A1A] font-bold text-sm mb-2 font-cairo" htmlFor="password">
                 كلمة المرور
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none transition-all duration-200"
-                style={{
-                  border: '1.5px solid #FFE4D4',
-                  background: '#FFF8F4',
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#FF5C1A'
-                  e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)'
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#FFE4D4'
-                  e.target.style.boxShadow = 'none'
-                }}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 pr-12 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none transition-all duration-200"
+                  style={{
+                    border: '1.5px solid #FFE4D4',
+                    background: '#FFF8F4',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#FF5C1A'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#FFE4D4'
+                    e.target.style.boxShadow = 'none'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded transition-colors"
+                  style={{ color: '#A0A0A0' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#FF5C1A'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             {error && (
