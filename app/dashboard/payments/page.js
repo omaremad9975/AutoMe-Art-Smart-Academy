@@ -377,7 +377,7 @@ export default function PaymentsPage() {
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={COLUMNS.length} className="px-6 py-14 text-center text-[#A0A0A0] font-cairo text-sm">
+                  <td colSpan={TABLE_COLUMNS.length} className="px-6 py-14 text-center text-[#A0A0A0] font-cairo text-sm">
                     {t.noPayments}
                   </td>
                 </tr>

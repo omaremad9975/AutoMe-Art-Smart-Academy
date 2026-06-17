@@ -3,20 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useDashboardLang } from '@/lib/dashboard-lang'
 import { formatDateTime, exportToXLSX, exportToPDF } from '@/lib/export'
-// import { supabase } from '@/lib/supabase' // TODO: re-enable when Supabase is connected
-
-const MOCK_REGISTRATIONS = [
-  { id: 1,  student_name: 'Ahmed Hassan',  phone: '01012345678', email: 'ahmed@gmail.com',   payment_method: 'fawry',         payment_status: 'confirmed', created_at: '2026-06-01T09:14:00.000Z', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
-  { id: 2,  student_name: 'Sara Mohamed',  phone: '01198765432', email: 'sara@gmail.com',    payment_method: 'vodafone_cash', payment_status: 'pending',   created_at: '2026-06-02T11:32:00.000Z', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
-  { id: 3,  student_name: 'Omar Ali',      phone: '01234567890', email: 'omar@gmail.com',    payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-03T14:05:00.000Z', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
-  { id: 4,  student_name: 'Nour Khaled',   phone: '01556789012', email: 'nour@gmail.com',    payment_method: 'fawry',         payment_status: 'pending',   created_at: '2026-06-04T16:48:00.000Z', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
-  { id: 5,  student_name: 'Yasmine Tarek', phone: '01067891234', email: 'yasmine@gmail.com', payment_method: 'vodafone_cash', payment_status: 'confirmed', created_at: '2026-06-05T10:20:00.000Z', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
-  { id: 6,  student_name: 'Karim Mahmoud', phone: '01189012345', email: 'karim@gmail.com',   payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-06T13:55:00.000Z', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
-  { id: 7,  student_name: 'Hana Samir',    phone: '01290123456', email: 'hana@gmail.com',    payment_method: 'fawry',         payment_status: 'pending',   created_at: '2026-06-07T08:41:00.000Z', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
-  { id: 8,  student_name: 'Mostafa Adel',  phone: '01301234567', email: 'mostafa@gmail.com', payment_method: 'vodafone_cash', payment_status: 'confirmed', created_at: '2026-06-08T15:17:00.000Z', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
-  { id: 9,  student_name: 'Rania Ibrahim', phone: '01412345678', email: 'rania@gmail.com',   payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-09T12:03:00.000Z', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
-  { id: 10, student_name: 'Ziad Osama',    phone: '01523456789', email: 'ziad@gmail.com',    payment_method: 'fawry',         payment_status: 'confirmed', created_at: '2026-06-10T17:29:00.000Z', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
-]
+import { supabase } from '@/lib/supabase'
 
 const METHOD_COLORS = {
   fawry:         { bg: 'rgba(99,102,241,0.10)',  color: '#6366F1', border: 'rgba(99,102,241,0.20)', label: 'Fawry' },
@@ -56,18 +43,42 @@ export default function RegistrationsPage() {
 
   const fetchRegistrations = useCallback(async () => {
     setLoading(true)
-    setTimeout(() => { setRegistrations(MOCK_REGISTRATIONS); setLoading(false) }, 400)
+    const { data, error } = await supabase
+      .from('registrations')
+      .select('*, courses(name_ar, name_en)')
+      .order('created_at', { ascending: false })
+    if (!error && data) setRegistrations(data)
+    setLoading(false)
   }, [])
 
   useEffect(() => { fetchRegistrations() }, [fetchRegistrations])
 
   const toggleStatus = async (reg) => {
-    const newStatus = reg.payment_status === 'confirmed' ? 'pending' : 'confirmed'
     setUpdating(reg.id)
-    setTimeout(() => {
-      setRegistrations(prev => prev.map(r => r.id === reg.id ? { ...r, payment_status: newStatus } : r))
-      setUpdating(null)
-    }, 300)
+    const newStatus = reg.payment_status === 'confirmed' ? 'pending' : 'confirmed'
+
+    if (newStatus === 'confirmed') {
+      // Confirm via API — this sends the confirmation email
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin/confirm-registration', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body:    JSON.stringify({ registrationId: reg.id }),
+      })
+      if (res.ok) {
+        setRegistrations(prev => prev.map(r => r.id === reg.id ? { ...r, payment_status: 'confirmed' } : r))
+      }
+    } else {
+      // Unconfirm — just update DB, no email
+      const { error } = await supabase
+        .from('registrations')
+        .update({ payment_status: 'pending' })
+        .eq('id', reg.id)
+      if (!error) {
+        setRegistrations(prev => prev.map(r => r.id === reg.id ? { ...r, payment_status: 'pending' } : r))
+      }
+    }
+    setUpdating(null)
   }
 
   const filtered = registrations.filter((r) => {

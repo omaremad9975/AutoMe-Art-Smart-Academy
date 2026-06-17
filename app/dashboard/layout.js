@@ -84,21 +84,11 @@ function Sidebar({ pathname, onNavigate, user, userRole, onLogout, isExpanded, p
           className="flex-shrink-0 object-contain"
           style={{ height: '32px', width: '32px', filter: 'brightness(0) saturate(100%)' }}
         />
-        <div className="flex items-center justify-between flex-1 min-w-0" style={{ opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s', pointerEvents: isExpanded ? 'auto' : 'none' }}>
+        <div className="flex items-center flex-1 min-w-0" style={{ opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s', pointerEvents: isExpanded ? 'auto' : 'none' }}>
           <div className="flex flex-col overflow-hidden">
             <span className="font-extrabold text-xs tracking-widest uppercase text-[#1A1A1A] font-cairo leading-tight whitespace-nowrap">SMART ACADEMY</span>
             <span className="text-[10px] font-semibold text-[#A0A0A0] font-cairo whitespace-nowrap">{t.adminPanel}</span>
           </div>
-          <button
-            onClick={onTogglePin}
-            title={pinned ? 'Unpin sidebar' : 'Pin sidebar'}
-            className="flex-shrink-0 p-1.5 rounded-[6px] transition-all duration-200 ml-2"
-            style={{ color: pinned ? '#FF5C1A' : '#C0C0C0' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,92,26,0.08)'; e.currentTarget.style.color = '#FF5C1A' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = pinned ? '#FF5C1A' : '#C0C0C0' }}
-          >
-            <PinIcon pinned={pinned} />
-          </button>
         </div>
       </div>
 
@@ -146,7 +136,7 @@ function Sidebar({ pathname, onNavigate, user, userRole, onLogout, isExpanded, p
       {/* Bottom: user info + logout */}
       <div className="flex-shrink-0 py-3" style={{ borderTop: '1px solid #FFE4D4', padding: isExpanded ? '12px' : '12px 8px' }}>
         {isExpanded ? (
-          <div className="flex items-center gap-3 px-2 py-2 rounded-[10px]" style={{ background: '#FFF8F4', border: '1px solid #FFE4D4', opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s' }}>
+          <div className="flex items-center gap-2 px-2 py-2 rounded-[10px]" style={{ background: '#FFF8F4', border: '1px solid #FFE4D4', opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s' }}>
             <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm font-cairo" style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
               {user?.email?.[0]?.toUpperCase() || 'A'}
             </div>
@@ -154,6 +144,18 @@ function Sidebar({ pathname, onNavigate, user, userRole, onLogout, isExpanded, p
               <p className="text-xs font-bold text-[#1A1A1A] font-cairo">{t.admin}</p>
               <p className="text-[10px] text-[#A0A0A0] font-cairo truncate">{user?.email}</p>
             </div>
+            {/* Pin button */}
+            <button
+              onClick={onTogglePin}
+              title={pinned ? 'Unpin sidebar' : 'Pin sidebar'}
+              className="p-1.5 rounded-[6px] transition-all duration-200 flex-shrink-0"
+              style={{ color: pinned ? '#FF5C1A' : '#C0C0C0' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,92,26,0.08)'; e.currentTarget.style.color = '#FF5C1A' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = pinned ? '#FF5C1A' : '#C0C0C0' }}
+            >
+              <PinIcon pinned={pinned} />
+            </button>
+            {/* Logout button */}
             <button
               onClick={onLogout}
               title={t.logout}
@@ -170,6 +172,18 @@ function Sidebar({ pathname, onNavigate, user, userRole, onLogout, isExpanded, p
             <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm font-cairo" style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
               {user?.email?.[0]?.toUpperCase() || 'A'}
             </div>
+            {/* Pin button (collapsed) */}
+            <button
+              onClick={onTogglePin}
+              title={pinned ? 'Unpin sidebar' : 'Pin sidebar'}
+              className="p-1.5 rounded-[6px] transition-all duration-200"
+              style={{ color: pinned ? '#FF5C1A' : '#C0C0C0' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,92,26,0.08)'; e.currentTarget.style.color = '#FF5C1A' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = pinned ? '#FF5C1A' : '#C0C0C0' }}
+            >
+              <PinIcon pinned={pinned} />
+            </button>
+            {/* Logout button (collapsed) */}
             <button
               onClick={onLogout}
               title={t.logout}

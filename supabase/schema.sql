@@ -29,10 +29,14 @@ CREATE TABLE IF NOT EXISTS registrations (
   phone           TEXT NOT NULL,
   email           TEXT,
   course_id       UUID REFERENCES courses(id) ON DELETE SET NULL,
+  whatsapp        TEXT,                            -- optional, if different from phone
   payment_method  TEXT NOT NULL DEFAULT 'fawry',  -- fawry | vodafone_cash | instapay
   payment_status  TEXT NOT NULL DEFAULT 'pending', -- pending | confirmed
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ⚠️ If registrations table already exists, run this migration:
+-- ALTER TABLE registrations ADD COLUMN IF NOT EXISTS whatsapp TEXT;
 
 -- ============================================================
 -- TABLE: payments
@@ -94,11 +98,17 @@ ALTER TABLE settings       ENABLE ROW LEVEL SECURITY;
 -- Policy: Only authenticated users can read/write
 -- (In production, you'd check the admins table too)
 
+-- Public (anon) can read active courses — needed for the registration modal
+CREATE POLICY "Public read active courses"
+  ON courses FOR SELECT TO anon USING (is_active = TRUE);
 CREATE POLICY "Authenticated read courses"
   ON courses FOR SELECT TO authenticated USING (TRUE);
 CREATE POLICY "Authenticated write courses"
   ON courses FOR ALL TO authenticated USING (TRUE) WITH CHECK (TRUE);
 
+-- Public (anon) can insert registrations — the public form submits without auth
+CREATE POLICY "Public insert registrations"
+  ON registrations FOR INSERT TO anon WITH CHECK (TRUE);
 CREATE POLICY "Authenticated read registrations"
   ON registrations FOR SELECT TO authenticated USING (TRUE);
 CREATE POLICY "Authenticated write registrations"

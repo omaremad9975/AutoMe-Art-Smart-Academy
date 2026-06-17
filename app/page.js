@@ -397,6 +397,305 @@ const conferencePhotos = [
   { src: '/conference/conf3.jpg', caption: 'Highlights from the International AI Conference' },
 ]
 
+// ==========================================
+// REGISTRATION MODAL
+// ==========================================
+const MODAL_T = {
+  ar: {
+    title: 'سجّل في الكورس', sub: 'أدخل بياناتك وسنتواصل معك قريباً',
+    name: 'الاسم الكامل', namePh: 'مثال: محمد أحمد',
+    phone: 'رقم الهاتف', phonePh: '+20 1XX XXX XXXX',
+    email: 'البريد الإلكتروني', emailPh: 'example@email.com',
+    sameWa: 'واتساب نفس رقم الهاتف',
+    whatsapp: 'رقم واتساب', whatsappPh: '+20 1XX XXX XXXX',
+    course: 'الكورس المطلوب', selectCourse: '— اختر الكورس —',
+    payment: 'طريقة الدفع',
+    submit: 'إرسال الطلب', submitting: 'جارٍ الإرسال...',
+    successTitle: '🎉 تم استلام طلبك!',
+    successFawry: 'تحقق من بريدك الإلكتروني — أرسلنا لك تعليمات الدفع عبر فوري. بمجرد الدفع، يتم تأكيد تسجيلك تلقائياً.',
+    successManual: 'تحقق من بريدك الإلكتروني — أرسلنا لك تعليمات الدفع. بعد إرسال الإيصال سيقوم الفريق بتأكيد تسجيلك خلال 24 ساعة.',
+    close: 'إغلاق', required: 'هذا الحقل مطلوب',
+    loadingCourses: 'جارٍ تحميل الكورسات...',
+    noCourses: 'لا توجد كورسات متاحة حالياً',
+  },
+  en: {
+    title: 'Register for a Course', sub: 'Fill in your details and we\'ll be in touch soon',
+    name: 'Full Name', namePh: 'e.g. Mohamed Ahmed',
+    phone: 'Phone Number', phonePh: '+20 1XX XXX XXXX',
+    email: 'Email Address', emailPh: 'example@email.com',
+    sameWa: 'WhatsApp is same as phone',
+    whatsapp: 'WhatsApp Number', whatsappPh: '+20 1XX XXX XXXX',
+    course: 'Course', selectCourse: '— Select a course —',
+    payment: 'Payment Method',
+    submit: 'Submit Registration', submitting: 'Submitting...',
+    successTitle: '🎉 Registration Received!',
+    successFawry: 'Check your email — we sent you Fawry payment instructions. Once paid, your registration is auto-confirmed.',
+    successManual: 'Check your email — we sent you payment instructions. After sending the receipt, our team confirms your registration within 24 hours.',
+    close: 'Close', required: 'This field is required',
+    loadingCourses: 'Loading courses...',
+    noCourses: 'No courses available right now',
+  },
+}
+
+const PAYMENT_OPTIONS = [
+  { key: 'fawry',         ar: 'فوري',          en: 'Fawry',          icon: '⚡', noteAr: 'تأكيد تلقائي',  noteEn: 'Auto-confirmed',   color: '#F59E0B', bg: '#FFFBEB' },
+  { key: 'vodafone_cash', ar: 'فودافون كاش',   en: 'Vodafone Cash',  icon: '📱', noteAr: 'تأكيد يدوي',     noteEn: 'Manual confirm',   color: '#E11D48', bg: '#FFF1F2' },
+  { key: 'instapay',      ar: 'إنستاباي',      en: 'InstaPay',       icon: '💳', noteAr: 'تأكيد يدوي',     noteEn: 'Manual confirm',   color: '#7C3AED', bg: '#F5F3FF' },
+]
+
+const EMPTY_FORM = { name: '', phone: '', email: '', sameWhatsapp: true, whatsapp: '', courseId: '', paymentMethod: 'fawry' }
+
+function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
+  const mt = MODAL_T[lang]
+  const [form, setForm]         = useState(EMPTY_FORM)
+  const [errors, setErrors]     = useState({})
+  const [submitting, setSubmit] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [serverError, setServerError] = useState('')
+
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
+
+  function validate() {
+    const e = {}
+    if (!form.name.trim())    e.name    = mt.required
+    if (!form.phone.trim())   e.phone   = mt.required
+    if (!form.email.trim())   e.email   = mt.required
+    if (!form.courseId)       e.courseId = mt.required
+    if (!form.sameWhatsapp && !form.whatsapp.trim()) e.whatsapp = mt.required
+    return e
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    const errs = validate()
+    if (Object.keys(errs).length) { setErrors(errs); return }
+    setErrors({})
+    setSubmit(true)
+    setServerError('')
+    try {
+      const res  = await fetch('/api/register', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          name:          form.name,
+          phone:         form.phone,
+          email:         form.email,
+          whatsapp:      form.sameWhatsapp ? form.phone : form.whatsapp,
+          courseId:      form.courseId,
+          paymentMethod: form.paymentMethod,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setServerError(data.error || 'Something went wrong'); setSubmit(false); return }
+      setSubmitted(true)
+    } catch {
+      setServerError('Network error. Please try again.')
+      setSubmit(false)
+    }
+  }
+
+  const selectedPayment = PAYMENT_OPTIONS.find((p) => p.key === form.paymentMethod)
+  const isFawry = form.paymentMethod === 'fawry'
+
+  // Field helper
+  const Field = ({ id, label, error, children }) => (
+    <div>
+      <label className="block text-sm font-bold text-[#1A1A1A] mb-1.5 font-cairo" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+        {label} <span className="text-[#FF5C1A]">*</span>
+      </label>
+      {children}
+      {error && <p className="text-xs text-red-500 mt-1 font-cairo" style={{ textAlign: isRTL ? 'right' : 'left' }}>{error}</p>}
+    </div>
+  )
+
+  const inputStyle = { border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr', outline: 'none' }
+  const inputClass = 'w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] transition-all duration-200'
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Modal */}
+      <div
+        className="relative w-full max-w-lg rounded-[24px] overflow-hidden z-10 flex flex-col"
+        style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 24px 80px rgba(255,92,26,0.20)', maxHeight: '90vh' }}
+      >
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)', padding: '24px 28px', flexShrink: 0 }}>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-white font-extrabold text-xl font-cairo">{mt.title}</h2>
+              <p className="text-white/75 text-sm font-cairo mt-1">{mt.sub}</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors flex-shrink-0 mt-0.5"
+            >✕</button>
+          </div>
+        </div>
+
+        {/* Body — scrollable */}
+        <div className="overflow-y-auto flex-1" style={{ padding: '28px' }}>
+
+          {submitted ? (
+            /* ── Success State ── */
+            <div className="text-center py-4">
+              <div className="text-5xl mb-4">🎉</div>
+              <h3 className="font-extrabold text-[#1A1A1A] text-xl font-cairo mb-3">{mt.successTitle}</h3>
+              <p className="text-[#6B6B6B] text-sm font-cairo leading-relaxed mb-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+                {isFawry ? mt.successFawry : mt.successManual}
+              </p>
+              <div
+                className="rounded-[12px] p-4 mb-6 text-sm font-cairo text-[#6B6B6B] leading-relaxed"
+                style={{ background: '#FFF8F4', border: '1px solid #FFE4D4', direction: isRTL ? 'rtl' : 'ltr' }}
+              >
+                {isRTL ? '📧 تحقق من صندوق الوارد أو مجلد الرسائل غير المرغوب فيها إذا لم يصلك الإيميل.' : '📧 Check your spam folder too if the email doesn\'t arrive within a few minutes.'}
+              </div>
+              <button
+                onClick={onClose}
+                className="px-8 py-3 rounded-[10px] text-sm font-bold text-white font-cairo"
+                style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)', boxShadow: '0 4px 16px rgba(255,92,26,0.30)' }}
+              >{mt.close}</button>
+            </div>
+          ) : (
+            /* ── Form ── */
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+
+              {/* Name */}
+              <Field label={mt.name} error={errors.name}>
+                <input
+                  type="text" value={form.name} onChange={set('name')}
+                  placeholder={mt.namePh} className={inputClass} style={inputStyle}
+                  onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
+                  onBlur={(e)  => { e.target.style.borderColor = errors.name ? '#EF4444' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
+                />
+              </Field>
+
+              {/* Phone */}
+              <Field label={mt.phone} error={errors.phone}>
+                <input
+                  type="tel" value={form.phone} onChange={set('phone')}
+                  placeholder={mt.phonePh} className={inputClass} style={inputStyle}
+                  onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
+                  onBlur={(e)  => { e.target.style.borderColor = errors.phone ? '#EF4444' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
+                />
+              </Field>
+
+              {/* Email */}
+              <Field label={mt.email} error={errors.email}>
+                <input
+                  type="email" value={form.email} onChange={set('email')}
+                  placeholder={mt.emailPh} className={inputClass} style={inputStyle}
+                  onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
+                  onBlur={(e)  => { e.target.style.borderColor = errors.email ? '#EF4444' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
+                />
+              </Field>
+
+              {/* WhatsApp same as phone checkbox */}
+              <label className="flex items-center gap-3 cursor-pointer select-none" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                <input
+                  type="checkbox" checked={form.sameWhatsapp}
+                  onChange={set('sameWhatsapp')}
+                  className="w-4 h-4 rounded accent-[#FF5C1A]"
+                />
+                <span className="text-sm text-[#6B6B6B] font-cairo">{mt.sameWa}</span>
+              </label>
+
+              {/* WhatsApp field — only if not same */}
+              {!form.sameWhatsapp && (
+                <Field label={mt.whatsapp} error={errors.whatsapp}>
+                  <input
+                    type="tel" value={form.whatsapp} onChange={set('whatsapp')}
+                    placeholder={mt.whatsappPh} className={inputClass} style={inputStyle}
+                    onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
+                    onBlur={(e)  => { e.target.style.borderColor = errors.whatsapp ? '#EF4444' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
+                  />
+                </Field>
+              )}
+
+              {/* Course dropdown */}
+              <Field label={mt.course} error={errors.courseId}>
+                {coursesLoading ? (
+                  <div className="text-sm text-[#A0A0A0] font-cairo py-2">{mt.loadingCourses}</div>
+                ) : courses.length === 0 ? (
+                  <div className="text-sm text-[#A0A0A0] font-cairo py-2">{mt.noCourses}</div>
+                ) : (
+                  <select
+                    value={form.courseId} onChange={set('courseId')}
+                    className={inputClass}
+                    style={{ ...inputStyle, direction: 'ltr', cursor: 'pointer' }}
+                    onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
+                    onBlur={(e)  => { e.target.style.borderColor = errors.courseId ? '#EF4444' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
+                  >
+                    <option value="">{mt.selectCourse}</option>
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {lang === 'ar' ? c.name_ar : c.name_en} — {c.price} EGP
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </Field>
+
+              {/* Payment method */}
+              <div>
+                <p className="text-sm font-bold text-[#1A1A1A] mb-3 font-cairo" style={{ textAlign: isRTL ? 'right' : 'left' }}>{mt.payment}</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {PAYMENT_OPTIONS.map((p) => {
+                    const selected = form.paymentMethod === p.key
+                    return (
+                      <button
+                        key={p.key} type="button"
+                        onClick={() => setForm((f) => ({ ...f, paymentMethod: p.key }))}
+                        className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-[12px] text-center transition-all duration-200"
+                        style={{
+                          background:  selected ? p.bg   : '#FFF8F4',
+                          border:      selected ? `2px solid ${p.color}` : '2px solid #FFE4D4',
+                          boxShadow:   selected ? `0 4px 16px ${p.color}25` : 'none',
+                        }}
+                      >
+                        <span className="text-2xl">{p.icon}</span>
+                        <span className="text-xs font-bold font-cairo" style={{ color: selected ? p.color : '#6B6B6B' }}>
+                          {lang === 'ar' ? p.ar : p.en}
+                        </span>
+                        <span className="text-[10px] font-cairo" style={{ color: selected ? p.color : '#A0A0A0' }}>
+                          {lang === 'ar' ? p.noteAr : p.noteEn}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Server error */}
+              {serverError && (
+                <div className="text-sm text-red-600 font-cairo rounded-[10px] p-3" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+                  {serverError}
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit" disabled={submitting}
+                className="w-full py-3.5 rounded-[10px] text-sm font-bold text-white font-cairo transition-all duration-200"
+                style={{
+                  background:  submitting ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)',
+                  boxShadow:   submitting ? 'none' : '0 4px 16px rgba(255,92,26,0.35)',
+                  marginTop:   '8px',
+                }}
+              >
+                {submitting ? mt.submitting : mt.submit}
+              </button>
+
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ConferenceCarousel() {
   const [current, setCurrent] = useState(0)
   const total = conferencePhotos.length
@@ -465,11 +764,17 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [siteSettings, setSiteSettings] = useState({})
+  const [showModal, setShowModal] = useState(false)
+  const [modalCourses, setModalCourses] = useState([])
+  const [modalCoursesLoading, setModalCoursesLoading] = useState(true)
 
   const currentTranslations = t[lang]
   const isRTL = lang === 'ar'
 
-  // Fetch live settings from Supabase (phone, email, whatsapp, social links)
+  const openModal = () => setShowModal(true)
+  const closeModal = () => setShowModal(false)
+
+  // Fetch live settings from Supabase (phone, email, whatsapp)
   useEffect(() => {
     supabase
       .from('settings')
@@ -480,6 +785,19 @@ export default function Home() {
           data.forEach((r) => { map[r.key] = r.value })
           setSiteSettings(map)
         }
+      })
+  }, [])
+
+  // Fetch active courses for the registration modal dropdown
+  useEffect(() => {
+    supabase
+      .from('courses')
+      .select('id, name_ar, name_en, price')
+      .eq('is_active', true)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (data) setModalCourses(data)
+        setModalCoursesLoading(false)
       })
   }, [])
 
@@ -562,12 +880,12 @@ export default function Home() {
               {currentTranslations.langToggleLabel}
             </button>
             {/* CTA Button */}
-            <a
-              href="#contact"
-              className="bg-asa-orange hover:bg-asa-orange-light text-white font-bold px-6 py-2.5 rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange hover:shadow-[0_8px_36px_rgba(255,92,26,0.4)] hover:-translate-y-0.5 whitespace-nowrap"
+            <button
+              onClick={openModal}
+              className="bg-asa-orange hover:bg-asa-orange-light text-white font-bold px-6 py-2.5 rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange hover:shadow-[0_8px_36px_rgba(255,92,26,0.4)] hover:-translate-y-0.5 whitespace-nowrap font-cairo"
             >
               {currentTranslations.ctaRegister}
-            </a>
+            </button>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -644,13 +962,12 @@ export default function Home() {
             >
               {currentTranslations.langToggleLabel}
             </button>
-            <a
-              href="#contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full py-3 bg-asa-orange hover:bg-asa-orange-light text-white font-bold text-center rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange"
+            <button
+              onClick={() => { setMobileMenuOpen(false); openModal() }}
+              className="w-full py-3 bg-asa-orange hover:bg-asa-orange-light text-white font-bold text-center rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange font-cairo"
             >
               {currentTranslations.ctaRegister}
-            </a>
+            </button>
           </div>
         </div>
       )}
@@ -722,12 +1039,12 @@ export default function Home() {
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-md">
-            <a
-              href="#contact"
-              className="w-full sm:w-auto bg-asa-orange hover:bg-asa-orange-light text-white font-bold px-8 py-3.5 rounded-asa-radius-full transition-all duration-300 shadow-asa-shadow-orange hover:shadow-[0_8px_36px_rgba(255,92,26,0.4)] hover:-translate-y-1 text-center whitespace-nowrap"
+            <button
+              onClick={openModal}
+              className="w-full sm:w-auto bg-asa-orange hover:bg-asa-orange-light text-white font-bold px-8 py-3.5 rounded-asa-radius-full transition-all duration-300 shadow-asa-shadow-orange hover:shadow-[0_8px_36px_rgba(255,92,26,0.4)] hover:-translate-y-1 text-center whitespace-nowrap font-cairo"
             >
               {currentTranslations.heroBtnPrimary}
-            </a>
+            </button>
             <a
               href="#courses"
               className="w-full sm:w-auto border border-asa-orange/30 hover:border-asa-orange/60 bg-white/70 hover:bg-asa-orange/10 text-asa-orange font-bold px-8 py-3.5 rounded-asa-radius-full transition-all duration-300 text-center backdrop-blur-md hover:-translate-y-1 whitespace-nowrap"
@@ -836,12 +1153,12 @@ export default function Home() {
                 </div>
 
                 {/* Enroll Now Button */}
-                <a
-                  href="#contact"
-                  className="w-full bg-asa-orange hover:bg-asa-orange-light text-white text-center font-bold py-3 rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange hover:shadow-[0_8px_24px_rgba(255,92,26,0.35)]"
+                <button
+                  onClick={openModal}
+                  className="w-full bg-asa-orange hover:bg-asa-orange-light text-white text-center font-bold py-3 rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange hover:shadow-[0_8px_24px_rgba(255,92,26,0.35)] font-cairo"
                 >
                   {currentTranslations.coursesEnroll}
-                </a>
+                </button>
               </div>
             ))}
           </div>
@@ -1084,12 +1401,12 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             {/* Primary — solid white */}
-            <a
-              href="#contact"
+            <button
+              onClick={openModal}
               className="bg-white text-asa-orange hover:bg-[#FFF0E8] font-extrabold px-8 py-3.5 rounded-asa-radius-full transition-all duration-300 text-sm md:text-base shadow-lg hover:shadow-xl hover:-translate-y-0.5 whitespace-nowrap font-cairo"
             >
               {currentTranslations.ctaPrimary}
-            </a>
+            </button>
 
             {/* WhatsApp — white outline, keeps green icon accent */}
             <a
@@ -1237,6 +1554,17 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Registration Modal */}
+      {showModal && (
+        <RegistrationModal
+          onClose={closeModal}
+          lang={lang}
+          isRTL={isRTL}
+          courses={modalCourses}
+          coursesLoading={modalCoursesLoading}
+        />
+      )}
     </main>
   )
 }
