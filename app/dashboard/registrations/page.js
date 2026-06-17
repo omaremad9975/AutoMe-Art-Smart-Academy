@@ -6,16 +6,16 @@ import { formatDateTime, exportToXLSX, exportToPDF } from '@/lib/export'
 // import { supabase } from '@/lib/supabase' // TODO: re-enable when Supabase is connected
 
 const MOCK_REGISTRATIONS = [
-  { id: 1,  student_name: 'Ahmed Hassan',  phone: '01012345678', email: 'ahmed@gmail.com',   payment_method: 'fawry',         payment_status: 'confirmed', created_at: '2026-06-01', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
-  { id: 2,  student_name: 'Sara Mohamed',  phone: '01198765432', email: 'sara@gmail.com',    payment_method: 'vodafone_cash', payment_status: 'pending',   created_at: '2026-06-02', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
-  { id: 3,  student_name: 'Omar Ali',      phone: '01234567890', email: 'omar@gmail.com',    payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-03', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
-  { id: 4,  student_name: 'Nour Khaled',   phone: '01556789012', email: 'nour@gmail.com',    payment_method: 'fawry',         payment_status: 'pending',   created_at: '2026-06-04', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
-  { id: 5,  student_name: 'Yasmine Tarek', phone: '01067891234', email: 'yasmine@gmail.com', payment_method: 'vodafone_cash', payment_status: 'confirmed', created_at: '2026-06-05', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
-  { id: 6,  student_name: 'Karim Mahmoud', phone: '01189012345', email: 'karim@gmail.com',   payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-06', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
-  { id: 7,  student_name: 'Hana Samir',    phone: '01290123456', email: 'hana@gmail.com',    payment_method: 'fawry',         payment_status: 'pending',   created_at: '2026-06-07', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
-  { id: 8,  student_name: 'Mostafa Adel',  phone: '01301234567', email: 'mostafa@gmail.com', payment_method: 'vodafone_cash', payment_status: 'confirmed', created_at: '2026-06-08', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
-  { id: 9,  student_name: 'Rania Ibrahim', phone: '01412345678', email: 'rania@gmail.com',   payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-09', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
-  { id: 10, student_name: 'Ziad Osama',    phone: '01523456789', email: 'ziad@gmail.com',    payment_method: 'fawry',         payment_status: 'confirmed', created_at: '2026-06-10', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
+  { id: 1,  student_name: 'Ahmed Hassan',  phone: '01012345678', email: 'ahmed@gmail.com',   payment_method: 'fawry',         payment_status: 'confirmed', created_at: '2026-06-01T09:14:00.000Z', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
+  { id: 2,  student_name: 'Sara Mohamed',  phone: '01198765432', email: 'sara@gmail.com',    payment_method: 'vodafone_cash', payment_status: 'pending',   created_at: '2026-06-02T11:32:00.000Z', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
+  { id: 3,  student_name: 'Omar Ali',      phone: '01234567890', email: 'omar@gmail.com',    payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-03T14:05:00.000Z', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
+  { id: 4,  student_name: 'Nour Khaled',   phone: '01556789012', email: 'nour@gmail.com',    payment_method: 'fawry',         payment_status: 'pending',   created_at: '2026-06-04T16:48:00.000Z', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
+  { id: 5,  student_name: 'Yasmine Tarek', phone: '01067891234', email: 'yasmine@gmail.com', payment_method: 'vodafone_cash', payment_status: 'confirmed', created_at: '2026-06-05T10:20:00.000Z', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
+  { id: 6,  student_name: 'Karim Mahmoud', phone: '01189012345', email: 'karim@gmail.com',   payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-06T13:55:00.000Z', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
+  { id: 7,  student_name: 'Hana Samir',    phone: '01290123456', email: 'hana@gmail.com',    payment_method: 'fawry',         payment_status: 'pending',   created_at: '2026-06-07T08:41:00.000Z', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
+  { id: 8,  student_name: 'Mostafa Adel',  phone: '01301234567', email: 'mostafa@gmail.com', payment_method: 'vodafone_cash', payment_status: 'confirmed', created_at: '2026-06-08T15:17:00.000Z', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
+  { id: 9,  student_name: 'Rania Ibrahim', phone: '01412345678', email: 'rania@gmail.com',   payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-09T12:03:00.000Z', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' } },
+  { id: 10, student_name: 'Ziad Osama',    phone: '01523456789', email: 'ziad@gmail.com',    payment_method: 'fawry',         payment_status: 'confirmed', created_at: '2026-06-10T17:29:00.000Z', courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم واجهات' } },
 ]
 
 const METHOD_COLORS = {
@@ -239,16 +239,24 @@ export default function RegistrationsPage() {
                       {formatDateTime(reg.created_at)}
                     </td>
                     <td className="px-5 py-4">
-                      <button onClick={() => toggleStatus(reg)} disabled={updating === reg.id}
-                        className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo transition-all duration-200"
-                        style={{
-                          background: reg.payment_status === 'confirmed' ? 'rgba(220,38,38,0.08)' : 'rgba(16,185,129,0.08)',
-                          color:      reg.payment_status === 'confirmed' ? '#DC2626'              : '#059669',
-                          border:     `1px solid ${reg.payment_status === 'confirmed' ? 'rgba(220,38,38,0.20)' : 'rgba(16,185,129,0.20)'}`,
-                          opacity: updating === reg.id ? 0.6 : 1,
-                        }}>
-                        {updating === reg.id ? '...' : reg.payment_status === 'confirmed' ? '↩ Unconfirm' : '✓ Confirm'}
-                      </button>
+                      {reg.payment_method === 'fawry' ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo"
+                          style={{ background: 'rgba(99,102,241,0.07)', color: '#9CA3AF', border: '1px solid rgba(99,102,241,0.15)' }}
+                          title="Fawry auto-confirms payments — no manual action needed">
+                          ⚡ Auto
+                        </span>
+                      ) : (
+                        <button onClick={() => toggleStatus(reg)} disabled={updating === reg.id}
+                          className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo transition-all duration-200"
+                          style={{
+                            background: reg.payment_status === 'confirmed' ? 'rgba(220,38,38,0.08)' : 'rgba(16,185,129,0.08)',
+                            color:      reg.payment_status === 'confirmed' ? '#DC2626'              : '#059669',
+                            border:     `1px solid ${reg.payment_status === 'confirmed' ? 'rgba(220,38,38,0.20)' : 'rgba(16,185,129,0.20)'}`,
+                            opacity: updating === reg.id ? 0.6 : 1,
+                          }}>
+                          {updating === reg.id ? '...' : reg.payment_status === 'confirmed' ? '↩ Unconfirm' : '✓ Confirm'}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

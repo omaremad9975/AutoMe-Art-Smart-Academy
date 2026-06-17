@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useDashboardLang } from '@/lib/dashboard-lang'
 
-function Field({ label, labelAr, id, type = 'text', value, onChange, placeholder, helpText }) {
+function Field({ label, sublabel, id, type = 'text', value, onChange, placeholder, helpText }) {
   return (
     <div>
       <label htmlFor={id} className="block text-[#1A1A1A] font-bold text-sm mb-1 font-cairo">
         {label}
-        {labelAr && <span className="text-[#A0A0A0] font-normal mr-2 text-xs">{labelAr}</span>}
+        {sublabel && <span className="text-[#A0A0A0] font-normal mx-2 text-xs">{sublabel}</span>}
       </label>
       {helpText && <p className="text-xs text-[#A0A0A0] font-cairo mb-2">{helpText}</p>}
       <input
@@ -35,6 +36,7 @@ const DEFAULT_SETTINGS = {
 }
 
 export default function SettingsPage() {
+  const { t, isRTL } = useDashboardLang()
   const [settings, setSettings] = useState(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -57,11 +59,7 @@ export default function SettingsPage() {
     setSaving(true)
     setSaved(false)
     const rows = Object.entries(settings).map(([key, value]) => ({ key, value }))
-
-    const { error } = await supabase
-      .from('settings')
-      .upsert(rows, { onConflict: 'key' })
-
+    const { error } = await supabase.from('settings').upsert(rows, { onConflict: 'key' })
     setSaving(false)
     if (!error) {
       setSaved(true)
@@ -73,7 +71,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6" style={{ direction: 'ltr' }}>
+      <div className="space-y-6 max-w-2xl" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
         <div>
           <div className="h-8 w-48 rounded-lg animate-pulse" style={{ background: '#FFE4D4' }} />
           <div className="h-4 w-32 rounded mt-2 animate-pulse" style={{ background: '#FFE4D4' }} />
@@ -86,11 +84,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-2xl" style={{ direction: 'ltr' }}>
+    <div className="space-y-8 max-w-2xl" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
       {/* Header */}
       <div>
-        <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">Settings</h1>
-        <p className="text-[#6B6B6B] text-sm font-cairo mt-1">الإعدادات — Academy information & configuration</p>
+        <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.settingsTitle}</h1>
+        <p className="text-[#6B6B6B] text-sm font-cairo mt-1">{t.settingsSub}</p>
       </div>
 
       {/* ── Section: Academy Info ── */}
@@ -99,14 +97,13 @@ export default function SettingsPage() {
         style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}
       >
         <div className="px-6 py-4" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4' }}>
-          <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">🏫 Academy Information</h2>
-          <p className="text-xs text-[#A0A0A0] font-cairo">معلومات الأكاديمية</p>
+          <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">{t.sectionAcademy}</h2>
+          <p className="text-xs text-[#A0A0A0] font-cairo">{t.sectionAcademySub}</p>
         </div>
         <div className="p-6 space-y-5">
           <Field
             id="academy_name"
-            label="Academy Name"
-            labelAr="اسم الأكاديمية"
+            label={t.academyName}
             value={settings.academy_name}
             onChange={setField('academy_name')}
             placeholder="Art Smart Academy | أرت سمارت اكاديمي"
@@ -114,8 +111,7 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <Field
               id="phone"
-              label="Phone Number"
-              labelAr="رقم الهاتف"
+              label={t.phone}
               type="tel"
               value={settings.phone}
               onChange={setField('phone')}
@@ -123,8 +119,7 @@ export default function SettingsPage() {
             />
             <Field
               id="whatsapp"
-              label="WhatsApp Number"
-              labelAr="واتساب"
+              label={t.whatsapp}
               type="tel"
               value={settings.whatsapp}
               onChange={setField('whatsapp')}
@@ -133,8 +128,7 @@ export default function SettingsPage() {
           </div>
           <Field
             id="email"
-            label="Email Address"
-            labelAr="البريد الإلكتروني"
+            label={t.email}
             type="email"
             value={settings.email}
             onChange={setField('email')}
@@ -149,22 +143,22 @@ export default function SettingsPage() {
         style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}
       >
         <div className="px-6 py-4" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4' }}>
-          <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">🎓 Certificate ID Format</h2>
-          <p className="text-xs text-[#A0A0A0] font-cairo">صيغة رقم الشهادة</p>
+          <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">{t.sectionCert}</h2>
+          <p className="text-xs text-[#A0A0A0] font-cairo">{t.sectionCertSub}</p>
         </div>
         <div className="p-6 space-y-4">
           <Field
             id="cert_id_format"
-            label="Certificate ID Format"
+            label={t.certFormat}
             value={settings.cert_id_format}
             onChange={setField('cert_id_format')}
             placeholder="ASA-[COURSE]-[YEAR]-[NUMBER]"
-            helpText="Use placeholders: [COURSE], [YEAR], [NUMBER]"
+            helpText={t.certHelp}
           />
           {/* Preview */}
           <div className="rounded-[10px] p-4 flex items-center gap-4" style={{ background: '#FFF8F4', border: '1px solid #FFE4D4' }}>
             <div>
-              <p className="text-xs font-bold text-[#A0A0A0] uppercase tracking-wider font-cairo mb-1">Preview</p>
+              <p className="text-xs font-bold text-[#A0A0A0] uppercase tracking-wider font-cairo mb-1">{t.certPreview}</p>
               <p className="font-bold text-lg font-mono text-[#FF5C1A]">
                 {settings.cert_id_format
                   .replace('[COURSE]', 'CREATIVE')
@@ -189,7 +183,7 @@ export default function SettingsPage() {
           onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,92,26,0.40)' } }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
         >
-          {saving ? '⏳ Saving...' : '💾 Save Settings'}
+          {saving ? t.savingSettings : t.saveSettings}
         </button>
 
         {saved && (
@@ -197,7 +191,7 @@ export default function SettingsPage() {
             className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-bold font-cairo"
             style={{ background: 'rgba(16,185,129,0.10)', color: '#059669', border: '1px solid rgba(16,185,129,0.20)' }}
           >
-            <span>✓</span> Settings saved!
+            {t.saved}
           </div>
         )}
       </div>

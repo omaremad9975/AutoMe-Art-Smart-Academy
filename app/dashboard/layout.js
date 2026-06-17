@@ -5,17 +5,41 @@ import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { DashboardLangProvider, useDashboardLang } from '@/lib/dashboard-lang'
 
+// ── Role-based nav config ──────────────────────────────────────────────────────
+// What each role can access
+const ROLE_PERMISSIONS = {
+  super_admin: ['overview', 'registrations', 'landing', 'payments', 'users', 'settings'],
+  admin:       ['overview', 'registrations', 'landing', 'payments', 'users', 'settings'],
+  marketing:   ['registrations'],
+}
+
+const NAV_ITEMS = [
+  { key: 'overview',      href: '/dashboard',              icon: 'overview' },
+  { key: 'registrations', href: '/dashboard/registrations', icon: 'registrations' },
+  { key: 'landing',       href: '/dashboard/landing',       icon: 'landing' },
+  { key: 'payments',      href: '/dashboard/payments',      icon: 'payments' },
+  { key: 'users',         href: '/dashboard/users',         icon: 'users' },
+  { key: 'settings',      href: '/dashboard/settings',      icon: 'settings' },
+]
+
+// Default redirect per role if they land on a forbidden page
+const ROLE_HOME = {
+  super_admin: '/dashboard',
+  admin:       '/dashboard',
+  marketing:   '/dashboard/registrations',
+}
+
 // ── Icons ──────────────────────────────────────────────────────────────────────
 function Icon({ name, className = 'w-5 h-5' }) {
   const icons = {
-    overview: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
+    overview:      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
     registrations: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>,
-    courses: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg>,
-    payments: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>,
-    users: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg>,
-    settings: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>,
-    logout: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/></svg>,
-    menu: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+    landing:       <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4"/></svg>,
+    payments:      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>,
+    users:         <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg>,
+    settings:      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>,
+    logout:        <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/></svg>,
+    menu:          <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
   }
   return icons[name] || null
 }
@@ -29,18 +53,12 @@ function PinIcon({ pinned }) {
   )
 }
 
-const NAV_ITEMS = [
-  { key: 'overview',      href: '/dashboard',               icon: 'overview' },
-  { key: 'registrations', href: '/dashboard/registrations', icon: 'registrations' },
-  { key: 'courses',       href: '/dashboard/courses',       icon: 'courses' },
-  { key: 'payments',      href: '/dashboard/payments',      icon: 'payments' },
-  { key: 'users',         href: '/dashboard/users',         icon: 'users' },
-  { key: 'settings',      href: '/dashboard/settings',      icon: 'settings' },
-]
-
 // ── Sidebar ────────────────────────────────────────────────────────────────────
-function Sidebar({ pathname, onNavigate, user, onLogout, isExpanded, pinned, onTogglePin, onMouseEnter, onMouseLeave }) {
+function Sidebar({ pathname, onNavigate, user, userRole, onLogout, isExpanded, pinned, onTogglePin, onMouseEnter, onMouseLeave }) {
   const { t } = useDashboardLang()
+
+  const allowedKeys = ROLE_PERMISSIONS[userRole] || ROLE_PERMISSIONS.admin
+  const visibleNav = NAV_ITEMS.filter((item) => allowedKeys.includes(item.key))
 
   return (
     <aside
@@ -87,12 +105,12 @@ function Sidebar({ pathname, onNavigate, user, onLogout, isExpanded, pinned, onT
       {/* Nav */}
       <nav className="flex-1 py-4 overflow-y-auto overflow-x-hidden" style={{ padding: isExpanded ? '16px 12px' : '16px 8px' }}>
         {isExpanded && (
-          <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest px-3 mb-3 font-cairo whitespace-nowrap" style={{ opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s' }}>
+          <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-widest px-3 mb-3 font-cairo whitespace-nowrap">
             {t.navigation}
           </p>
         )}
         <ul className="space-y-1">
-          {NAV_ITEMS.map((item) => {
+          {visibleNav.map((item) => {
             const isActive = item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href)
             return (
               <li key={item.href}>
@@ -177,10 +195,11 @@ function DashboardInner({ children }) {
   const pathname = usePathname()
   const { t, lang, toggleLang } = useDashboardLang()
 
-  const [user, setUser] = useState(null)
+  const [user, setUser]               = useState(null)
+  const [userRole, setUserRole]       = useState(null)
   const [authChecked, setAuthChecked] = useState(false)
-  const [pinned, setPinned] = useState(false)
-  const [hovered, setHovered] = useState(false)
+  const [pinned, setPinned]           = useState(false)
+  const [hovered, setHovered]         = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   const isExpanded = pinned || hovered
@@ -190,13 +209,41 @@ function DashboardInner({ children }) {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         router.replace('/login')
-      } else {
-        setUser(session.user)
-        setAuthChecked(true)
+        return
       }
+
+      setUser(session.user)
+
+      // Fetch role from admins table
+      const { data: adminRow } = await supabase
+        .from('admins')
+        .select('role')
+        .eq('email', session.user.email)
+        .single()
+
+      const role = adminRow?.role || 'admin' // fallback to admin if not found
+      setUserRole(role)
+      setAuthChecked(true)
     }
     checkAuth()
   }, [router])
+
+  // Redirect if current path is not allowed for this role
+  useEffect(() => {
+    if (!authChecked || !userRole) return
+    const allowedKeys = ROLE_PERMISSIONS[userRole] || ROLE_PERMISSIONS.admin
+    const allowedHrefs = NAV_ITEMS
+      .filter((item) => allowedKeys.includes(item.key))
+      .map((item) => item.href)
+
+    const isAllowed = allowedHrefs.some((href) =>
+      href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href)
+    )
+
+    if (!isAllowed) {
+      router.replace(ROLE_HOME[userRole] || '/dashboard/registrations')
+    }
+  }, [authChecked, userRole, pathname, router])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -232,6 +279,7 @@ function DashboardInner({ children }) {
           pathname={pathname}
           onNavigate={handleNavigate}
           user={user}
+          userRole={userRole}
           onLogout={handleLogout}
           isExpanded={isExpanded}
           pinned={pinned}
@@ -250,6 +298,7 @@ function DashboardInner({ children }) {
               pathname={pathname}
               onNavigate={handleNavigate}
               user={user}
+              userRole={userRole}
               onLogout={handleLogout}
               isExpanded={true}
               pinned={true}

@@ -53,9 +53,15 @@ CREATE TABLE IF NOT EXISTS payments (
 CREATE TABLE IF NOT EXISTS admins (
   id        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email     TEXT UNIQUE NOT NULL,
-  role      TEXT NOT NULL DEFAULT 'admin',  -- admin | super_admin
+  role      TEXT NOT NULL DEFAULT 'admin',  -- admin | super_admin | marketing
+  auth_id   UUID,                           -- Supabase Auth user ID (set when created via dashboard)
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ⚠️ If admins table already exists, run this migration in Supabase SQL Editor:
+-- ALTER TABLE admins ADD COLUMN IF NOT EXISTS auth_id UUID;
+-- ALTER TABLE admins ALTER COLUMN role SET DEFAULT 'admin';
+-- COMMENT ON COLUMN admins.role IS 'admin | super_admin | marketing';
 
 -- ============================================================
 -- TABLE: settings (key-value store for academy settings)

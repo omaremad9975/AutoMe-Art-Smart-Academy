@@ -19,7 +19,7 @@ const MOCK_PAYMENTS = [
     payment_status: 'paid',
     transaction_id: 'PB_219_1778084987_KFN9AKKL',
     payment_reference: '9618380364',
-    payment_date: '2026-05-06',
+    payment_date: '2026-05-06T10:47:00.000Z',
   },
   {
     id: 2,
@@ -34,7 +34,7 @@ const MOCK_PAYMENTS = [
     payment_status: 'pending',
     transaction_id: null,
     payment_reference: 'INS-20260607-002',
-    payment_date: '2026-06-07',
+    payment_date: '2026-06-07T14:22:00.000Z',
   },
   {
     id: 3,
@@ -49,7 +49,7 @@ const MOCK_PAYMENTS = [
     payment_status: 'paid',
     transaction_id: null,
     payment_reference: 'VCH-20260608-003',
-    payment_date: '2026-06-08',
+    payment_date: '2026-06-08T09:05:00.000Z',
   },
   {
     id: 4,
@@ -64,7 +64,7 @@ const MOCK_PAYMENTS = [
     payment_status: 'paid',
     transaction_id: 'PB_220_1778094511_ABX7MNKL',
     payment_reference: '9618390210',
-    payment_date: '2026-06-10',
+    payment_date: '2026-06-10T16:31:00.000Z',
   },
   {
     id: 5,
@@ -79,7 +79,7 @@ const MOCK_PAYMENTS = [
     payment_status: 'pending',
     transaction_id: null,
     payment_reference: null,
-    payment_date: '2026-06-12',
+    payment_date: '2026-06-12T11:58:00.000Z',
   },
 ]
 
