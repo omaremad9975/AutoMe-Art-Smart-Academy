@@ -16,8 +16,8 @@ const ROLE_PERMISSIONS = {
 const NAV_ITEMS = [
   { key: 'overview',      href: '/dashboard',              icon: 'overview' },
   { key: 'registrations', href: '/dashboard/registrations', icon: 'registrations' },
-  { key: 'landing',       href: '/dashboard/landing',       icon: 'landing' },
   { key: 'payments',      href: '/dashboard/payments',      icon: 'payments' },
+  { key: 'landing',       href: '/dashboard/landing',       icon: 'landing' },
   { key: 'users',         href: '/dashboard/users',         icon: 'users' },
   { key: 'settings',      href: '/dashboard/settings',      icon: 'settings' },
 ]

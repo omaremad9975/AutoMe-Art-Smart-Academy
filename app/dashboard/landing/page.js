@@ -70,15 +70,24 @@ function CoursesSection() {
   const [saving, setSaving] = useState(false)
   const [togglingId, setTogglingId] = useState(null)
 
+  // ── Helper: get auth token for API calls ─────────────────────────────────────
+  const getToken = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token || ''
+  }
+
   const fetchCourses = useCallback(async () => {
     setLoading(true)
     setError(null)
-    const { data, error } = await supabase
-      .from('courses')
-      .select('*')
-      .order('created_at', { ascending: false })
-    if (error) setError(error.message)
-    else setCourses(data || [])
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/courses', { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      if (!res.ok) setError(data.error)
+      else setCourses(data.courses || [])
+    } catch {
+      setError('Failed to load courses')
+    }
     setLoading(false)
   }, [])
 
@@ -95,40 +104,52 @@ function CoursesSection() {
   const handleSave = async () => {
     setSaving(true)
     setError(null)
-    const payload = {
-      name_ar: form.name_ar,
-      name_en: form.name_en,
-      price: parseFloat(form.price) || 0,
-      duration: form.duration,
-      seats: parseInt(form.seats) || 0,
-      is_active: form.is_active,
+    try {
+      const token = await getToken()
+      const body = modal === 'add'
+        ? { name_ar: form.name_ar, name_en: form.name_en, price: form.price, duration: form.duration, seats: form.seats, is_active: form.is_active }
+        : { id: selectedCourse.id, name_ar: form.name_ar, name_en: form.name_en, price: form.price, duration: form.duration, seats: form.seats, is_active: form.is_active }
+      const res = await fetch('/api/admin/courses', {
+        method: modal === 'add' ? 'POST' : 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error); setSaving(false); return }
+      await fetchCourses()
+      setModal(null)
+    } catch {
+      setError('Failed to save course')
     }
-    let err
-    if (modal === 'add') {
-      ({ error: err } = await supabase.from('courses').insert([payload]))
-    } else {
-      ({ error: err } = await supabase.from('courses').update(payload).eq('id', selectedCourse.id))
-    }
-    if (err) setError(err.message)
-    else { await fetchCourses(); setModal(null) }
     setSaving(false)
   }
 
   const handleDelete = async () => {
     setSaving(true)
-    const { error: err } = await supabase.from('courses').delete().eq('id', selectedCourse.id)
-    if (err) setError(err.message)
-    else { await fetchCourses(); setModal(null) }
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/courses', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: selectedCourse.id }),
+      })
+      if (res.ok) { await fetchCourses(); setModal(null) }
+      else { const d = await res.json(); setError(d.error) }
+    } catch { setError('Failed to delete') }
     setSaving(false)
   }
 
   const toggleActive = async (course) => {
     setTogglingId(course.id)
-    const { error: err } = await supabase
-      .from('courses')
-      .update({ is_active: !course.is_active })
-      .eq('id', course.id)
-    if (!err) setCourses((prev) => prev.map((c) => c.id === course.id ? { ...c, is_active: !c.is_active } : c))
+    try {
+      const token = await getToken()
+      await fetch('/api/admin/courses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: course.id, is_active: !course.is_active }),
+      })
+      setCourses((prev) => prev.map((c) => c.id === course.id ? { ...c, is_active: !c.is_active } : c))
+    } catch {}
     setTogglingId(null)
   }
 

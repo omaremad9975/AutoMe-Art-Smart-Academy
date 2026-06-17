@@ -497,33 +497,41 @@ const PAYMENT_OPTIONS = [
 
 const EMPTY_FORM = { name: '', phone: '', email: '', sameWhatsapp: true, whatsapp: '', courseId: '', paymentMethod: 'fawry' }
 
-// ── ModalField is outside RegistrationModal so React never remounts inputs ──
-function ModalField({ label, error, isRTL, children }) {
+// ── ModalField — defined outside so React never remounts inputs ──────────────
+function ModalField({ label, error, children, required = true }) {
   return (
     <div>
-      <label className="block text-sm font-bold text-[#1A1A1A] mb-1.5 font-cairo" style={{ display: 'block', textAlign: isRTL ? 'right' : 'left' }}>
-        {label} <span style={{ color: '#FF5C1A' }}>*</span>
+      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 font-cairo">
+        {label}{required && <span style={{ color: '#FF5C1A' }}> *</span>}
       </label>
       {children}
-      {error && <p className="text-xs text-red-500 mt-1 font-cairo" style={{ textAlign: isRTL ? 'right' : 'left' }}>{error}</p>}
+      {error && (
+        <p className="text-xs text-red-500 mt-1 font-cairo flex items-center gap-1">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {error}
+        </p>
+      )}
     </div>
   )
 }
 
-const INPUT_CLASS = 'w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] transition-all duration-200 outline-none'
-const INPUT_STYLE = { border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }
-function onFocusIn(e)  { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }
-function onFocusOut(e) { e.target.style.borderColor = '#FFE4D4'; e.target.style.boxShadow = 'none' }
+const INPUT_BASE = {
+  width: '100%', padding: '10px 14px', borderRadius: '10px', fontSize: '14px',
+  fontFamily: 'Cairo, sans-serif', color: '#111827', outline: 'none',
+  border: '1.5px solid #E5E7EB', background: '#F9FAFB', direction: 'ltr',
+  transition: 'border-color 0.15s, box-shadow 0.15s',
+}
+function onFocusIn(e)  { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.12)'; e.target.style.background = '#FFFFFF' }
+function onFocusOut(e) { e.target.style.borderColor = '#E5E7EB'; e.target.style.boxShadow = 'none'; e.target.style.background = '#F9FAFB' }
 
 function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
   const mt = MODAL_T[lang]
-  const [form, setForm]           = useState(EMPTY_FORM)
-  const [errors, setErrors]       = useState({})
+  const [form, setForm]             = useState(EMPTY_FORM)
+  const [errors, setErrors]         = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted]   = useState(false)
   const [serverError, setServerError] = useState('')
 
-  // Stable handler — uses data-formkey attribute, never recreated between renders
   const handleChange = useCallback((e) => {
     const key   = e.target.dataset.formkey
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
@@ -532,12 +540,14 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
 
   const setPayment = useCallback((key) => () => setForm((f) => ({ ...f, paymentMethod: key })), [])
 
+  const hasCourses = !coursesLoading && courses.length > 0
+
   function validate() {
     const e = {}
-    if (!form.name.trim())  e.name     = mt.required
-    if (!form.phone.trim()) e.phone    = mt.required
-    if (!form.email.trim()) e.email    = mt.required
-    if (!form.courseId)     e.courseId = mt.required
+    if (!form.name.trim())  e.name  = mt.required
+    if (!form.phone.trim()) e.phone = mt.required
+    if (!form.email.trim()) e.email = mt.required
+    if (hasCourses && !form.courseId) e.courseId = mt.required
     if (!form.sameWhatsapp && !form.whatsapp.trim()) e.whatsapp = mt.required
     return e
   }
@@ -550,15 +560,15 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
     setSubmitting(true)
     setServerError('')
     try {
-      const res  = await fetch('/api/register', {
+      const res = await fetch('/api/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
+        body: JSON.stringify({
           name:          form.name,
           phone:         form.phone,
           email:         form.email,
           whatsapp:      form.sameWhatsapp ? form.phone : form.whatsapp,
-          courseId:      form.courseId,
+          courseId:      form.courseId || null,
           paymentMethod: form.paymentMethod,
         }),
       })
@@ -574,173 +584,252 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
   const isCard = form.paymentMethod === 'fawry'
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative w-full max-w-lg rounded-[24px] overflow-hidden z-10 flex flex-col"
-        style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 24px 80px rgba(255,92,26,0.22)', maxHeight: '90vh' }}
-      >
-        {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', padding: '22px 28px', flexShrink: 0 }}>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-white font-extrabold text-xl font-cairo">{mt.title}</h2>
-              <p className="text-white/75 text-sm font-cairo mt-0.5">{mt.sub}</p>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 md:p-6"
+      style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Modal shell — two-panel */}
+      <div className="relative z-10 w-full flex overflow-hidden"
+        style={{ maxWidth: '760px', maxHeight: '92vh', borderRadius: '20px', boxShadow: '0 40px 100px rgba(0,0,0,0.40)', background: '#FFFFFF' }}>
+
+        {/* ── Left brand panel (hidden on small screens) ── */}
+        <div className="hidden md:flex flex-col justify-between flex-shrink-0"
+          style={{ width: '220px', background: 'linear-gradient(165deg, #FF5C1A 0%, #C73D08 100%)', padding: '32px 24px' }}>
+          {/* Logo area */}
+          <div>
+            <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.18)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', fontSize: '20px' }}>
+              🎨
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors flex-shrink-0">✕</button>
+            <h3 style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '17px', lineHeight: 1.3, marginBottom: '8px', fontFamily: 'Cairo, sans-serif' }}>
+              Art Smart Academy
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,0.70)', fontSize: '12px', lineHeight: 1.6, fontFamily: 'Cairo, sans-serif' }}>
+              {isRTL ? 'انضم إلى أكثر من ٥٠٠ طالب وطوّر مهاراتك الإبداعية.' : 'Join 500+ students and develop your creative skills.'}
+            </p>
+          </div>
+          {/* Trust bullets */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {(isRTL
+              ? ['مدربون خبراء متخصصون', 'شهادات معتمدة', 'مجتمع إبداعي متميز']
+              : ['Expert certified trainers', 'Accredited certificates', 'Creative community']
+            ).map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(255,255,255,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '11px', fontFamily: 'Cairo, sans-serif' }}>{item}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Scrollable body */}
-        <div className="overflow-y-auto flex-1" style={{ padding: '24px 28px' }}>
-          {submitted ? (
-            <div style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-              {/* Checkmark + title */}
-              <div className="text-center" style={{ paddingBottom: '20px', borderBottom: '1px solid #FFE4D4', marginBottom: '20px' }}>
-                <div style={{ width: '68px', height: '68px', background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: '0 8px 24px rgba(255,92,26,0.30)' }}>
-                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        {/* ── Right form panel ── */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          {/* Top bar */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', borderBottom: '1px solid #F3F4F6', flexShrink: 0 }}>
+            <div>
+              <h2 style={{ fontWeight: 800, fontSize: '18px', color: '#111827', fontFamily: 'Cairo, sans-serif', margin: 0 }}>{mt.title}</h2>
+              <p style={{ fontSize: '12px', color: '#9CA3AF', fontFamily: 'Cairo, sans-serif', margin: '2px 0 0' }}>{mt.sub}</p>
+            </div>
+            <button onClick={onClose}
+              style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', background: '#F3F4F6', color: '#6B7280', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              ✕
+            </button>
+          </div>
+
+          {/* Scrollable form/success body */}
+          <div style={{ overflowY: 'auto', flex: 1, padding: '20px 24px' }}>
+
+            {submitted ? (
+              /* ── SUCCESS STATE ── */
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                {/* Animated check */}
+                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 28px rgba(255,92,26,0.35)' }}>
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                 </div>
-                <h3 className="font-extrabold text-[#1A1A1A] text-xl font-cairo mb-1">{mt.successTitle}</h3>
-                <p className="text-[#6B6B6B] text-sm font-cairo">{mt.successSub}</p>
-              </div>
+                <h3 style={{ fontWeight: 800, fontSize: '22px', color: '#111827', fontFamily: 'Cairo, sans-serif', margin: '0 0 6px' }}>{mt.successTitle}</h3>
+                <p style={{ fontSize: '14px', color: '#6B7280', fontFamily: 'Cairo, sans-serif', margin: '0 0 24px' }}>{mt.successSub}</p>
 
-              {/* Email on its way — highlighted */}
-              <div style={{ background: 'linear-gradient(135deg,#FFF8F4,#FFF3ED)', border: '1.5px solid #FFD4B8', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexDirection: isRTL ? 'row' : 'row-reverse', justifyContent: 'flex-end' }}>
-                  <div>
-                    <p className="text-sm font-bold font-cairo" style={{ color: '#FF5C1A', textAlign: isRTL ? 'right' : 'left' }}>
-                      {isRTL ? '📧 إيميل تأكيد في طريقه إليك الآن!' : '📧 A confirmation email is on its way!'}
-                    </p>
-                    <p className="text-xs text-[#6B6B6B] font-cairo mt-0.5" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                      {isCard ? mt.successCard : mt.successManual}
-                    </p>
+                {/* Email highlight */}
+                <div style={{ background: '#FFF7ED', border: '1.5px solid #FED7AA', borderRadius: '14px', padding: '16px 20px', marginBottom: '16px', textAlign: isRTL ? 'right' : 'left' }}>
+                  <p style={{ fontWeight: 700, fontSize: '14px', color: '#C2410C', fontFamily: 'Cairo, sans-serif', margin: '0 0 4px' }}>
+                    📧 {isRTL ? 'إيميل تأكيد في طريقه إليك!' : 'Confirmation email is on its way!'}
+                  </p>
+                  <p style={{ fontSize: '12px', color: '#78350F', fontFamily: 'Cairo, sans-serif', lineHeight: 1.6, margin: 0 }}>
+                    {isCard ? mt.successCard : mt.successManual}
+                  </p>
+                </div>
+
+                {/* Next steps */}
+                <div style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px', textAlign: isRTL ? 'right' : 'left' }}>
+                  <p style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1.5px', fontFamily: 'Cairo, sans-serif', margin: '0 0 12px' }}>{mt.nextTitle}</p>
+                  {[
+                    { icon: '📬', text: mt.nextEmail },
+                    { icon: '📞', text: mt.nextContact },
+                    { icon: '📁', text: mt.nextSpam },
+                  ].map((s, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flexDirection: isRTL ? 'row' : 'row', marginBottom: i < 2 ? '8px' : 0 }}>
+                      <span style={{ fontSize: '14px', flexShrink: 0 }}>{s.icon}</span>
+                      <p style={{ fontSize: '12px', color: '#374151', fontFamily: 'Cairo, sans-serif', lineHeight: 1.5, margin: 0 }}>{s.text}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <button onClick={onClose}
+                  style={{ width: '100%', padding: '13px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', color: '#FFFFFF', fontWeight: 700, fontSize: '14px', fontFamily: 'Cairo, sans-serif', cursor: 'pointer', boxShadow: '0 4px 16px rgba(255,92,26,0.35)' }}>
+                  {mt.close}
+                </button>
+              </div>
+            ) : (
+              /* ── FORM ── */
+              <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+                {/* Section 1 — Personal info */}
+                <div>
+                  <p style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1.5px', fontFamily: 'Cairo, sans-serif', marginBottom: '12px' }}>
+                    {isRTL ? '١ — بياناتك الشخصية' : '1 — Your Information'}
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                    <ModalField label={mt.name} error={errors.name}>
+                      <input data-formkey="name" type="text" value={form.name} onChange={handleChange}
+                        placeholder={mt.namePh} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
+                    </ModalField>
+                    <ModalField label={mt.phone} error={errors.phone}>
+                      <input data-formkey="phone" type="tel" value={form.phone} onChange={handleChange}
+                        placeholder={mt.phonePh} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
+                    </ModalField>
+                  </div>
+                  <ModalField label={mt.email} error={errors.email}>
+                    <input data-formkey="email" type="email" value={form.email} onChange={handleChange}
+                      placeholder={mt.emailPh} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
+                  </ModalField>
+
+                  {/* WhatsApp toggle */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                    <input data-formkey="sameWhatsapp" type="checkbox" checked={form.sameWhatsapp} onChange={handleChange}
+                      style={{ width: '15px', height: '15px', accentColor: '#FF5C1A', cursor: 'pointer' }} />
+                    <span style={{ fontSize: '12px', color: '#6B7280', fontFamily: 'Cairo, sans-serif' }}>{mt.sameWa}</span>
+                  </label>
+                  {!form.sameWhatsapp && (
+                    <div style={{ marginTop: '10px' }}>
+                      <ModalField label={mt.whatsapp} error={errors.whatsapp}>
+                        <input data-formkey="whatsapp" type="tel" value={form.whatsapp} onChange={handleChange}
+                          placeholder={mt.whatsappPh} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
+                      </ModalField>
+                    </div>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div style={{ borderTop: '1px solid #F3F4F6' }} />
+
+                {/* Section 2 — Course */}
+                <div>
+                  <p style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1.5px', fontFamily: 'Cairo, sans-serif', marginBottom: '12px' }}>
+                    {isRTL ? '٢ — اختر الكورس' : '2 — Select Course'}
+                  </p>
+                  <ModalField label={mt.course} error={errors.courseId} required={hasCourses}>
+                    {coursesLoading ? (
+                      <div style={{ ...INPUT_BASE, color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF5C1A" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+                        {mt.loadingCourses}
+                      </div>
+                    ) : courses.length === 0 ? (
+                      <div style={{ ...INPUT_BASE, color: '#9CA3AF', fontSize: '12px' }}>
+                        {mt.noCourses}
+                      </div>
+                    ) : (
+                      <select data-formkey="courseId" value={form.courseId} onChange={handleChange}
+                        style={{ ...INPUT_BASE, cursor: 'pointer', appearance: 'auto' }}
+                        onFocus={onFocusIn} onBlur={onFocusOut}>
+                        <option value="">{mt.selectCourse}</option>
+                        {courses.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {lang === 'ar' ? c.name_ar : c.name_en} — {c.price} EGP
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </ModalField>
+                </div>
+
+                {/* Divider */}
+                <div style={{ borderTop: '1px solid #F3F4F6' }} />
+
+                {/* Section 3 — Payment */}
+                <div>
+                  <p style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1.5px', fontFamily: 'Cairo, sans-serif', marginBottom: '12px' }}>
+                    {isRTL ? '٣ — طريقة الدفع' : '3 — Payment Method'}
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {PAYMENT_OPTIONS.map(({ key, ar, en, noteAr, noteEn, color, bg, Logo }) => {
+                      const sel = form.paymentMethod === key
+                      return (
+                        <button key={key} type="button" onClick={setPayment(key)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px',
+                            borderRadius: '12px', border: sel ? `2px solid ${color}` : '2px solid #E5E7EB',
+                            background: sel ? bg : '#F9FAFB', cursor: 'pointer', textAlign: isRTL ? 'right' : 'left',
+                            transition: 'all 0.15s', boxShadow: sel ? `0 2px 12px ${color}20` : 'none',
+                            flexDirection: isRTL ? 'row-reverse' : 'row',
+                          }}>
+                          {/* Logo */}
+                          <div style={{ width: '56px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Logo />
+                          </div>
+                          {/* Label */}
+                          <div style={{ flex: 1 }}>
+                            <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', fontFamily: 'Cairo, sans-serif', color: sel ? color : '#111827' }}>
+                              {lang === 'ar' ? ar : en}
+                            </p>
+                            <p style={{ margin: '2px 0 0', fontSize: '11px', fontFamily: 'Cairo, sans-serif', color: sel ? color : '#9CA3AF' }}>
+                              {lang === 'ar' ? noteAr : noteEn}
+                            </p>
+                          </div>
+                          {/* Radio dot */}
+                          <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: sel ? `5px solid ${color}` : '2px solid #D1D5DB', background: sel ? '#FFFFFF' : 'transparent', flexShrink: 0, transition: 'all 0.15s' }} />
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
-              </div>
 
-              {/* What's next steps */}
-              <div style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '12px', padding: '14px 16px', marginBottom: '20px' }}>
-                <p className="text-xs font-bold text-[#6B6B6B] font-cairo mb-3" style={{ textTransform: 'uppercase', letterSpacing: '1px', textAlign: isRTL ? 'right' : 'left' }}>
-                  {mt.nextTitle}
-                </p>
-                {[
-                  { icon: '📬', text: mt.nextEmail },
-                  { icon: '📞', text: mt.nextContact },
-                  { icon: '🗂️', text: mt.nextSpam },
-                ].map((step, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: i < 2 ? '10px' : 0, flexDirection: isRTL ? 'row' : 'row-reverse' }}>
-                    <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>{step.icon}</span>
-                    <p className="text-xs text-[#4B5563] font-cairo leading-relaxed" style={{ textAlign: isRTL ? 'right' : 'left' }}>{step.text}</p>
+                {/* Server error */}
+                {serverError && (
+                  <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '10px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#DC2626', fontFamily: 'Cairo, sans-serif' }}>{serverError}</p>
                   </div>
-                ))}
-              </div>
+                )}
 
-              <button onClick={onClose} className="w-full py-3 rounded-[10px] text-sm font-bold text-white font-cairo"
-                style={{ background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', boxShadow: '0 4px 16px rgba(255,92,26,0.30)' }}>
-                {mt.close}
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                {/* Submit */}
+                <button type="submit" disabled={submitting}
+                  style={{
+                    width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
+                    background: submitting ? '#FCA587' : 'linear-gradient(135deg,#FF5C1A,#FF7A40)',
+                    color: '#FFFFFF', fontWeight: 800, fontSize: '15px', fontFamily: 'Cairo, sans-serif',
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    boxShadow: submitting ? 'none' : '0 4px 20px rgba(255,92,26,0.40)',
+                    transition: 'all 0.2s',
+                  }}>
+                  {submitting
+                    ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+                        {mt.submitting}
+                      </span>
+                    : mt.submit
+                  }
+                </button>
 
-              {/* Name */}
-              <ModalField label={mt.name} error={errors.name} isRTL={isRTL}>
-                <input data-formkey="name" type="text" value={form.name} onChange={handleChange}
-                  placeholder={mt.namePh} className={INPUT_CLASS} style={INPUT_STYLE}
-                  onFocus={onFocusIn} onBlur={onFocusOut} />
-              </ModalField>
-
-              {/* Phone */}
-              <ModalField label={mt.phone} error={errors.phone} isRTL={isRTL}>
-                <input data-formkey="phone" type="tel" value={form.phone} onChange={handleChange}
-                  placeholder={mt.phonePh} className={INPUT_CLASS} style={INPUT_STYLE}
-                  onFocus={onFocusIn} onBlur={onFocusOut} />
-              </ModalField>
-
-              {/* Email */}
-              <ModalField label={mt.email} error={errors.email} isRTL={isRTL}>
-                <input data-formkey="email" type="email" value={form.email} onChange={handleChange}
-                  placeholder={mt.emailPh} className={INPUT_CLASS} style={INPUT_STYLE}
-                  onFocus={onFocusIn} onBlur={onFocusOut} />
-              </ModalField>
-
-              {/* WhatsApp same as phone */}
-              <label className="flex items-center gap-3 cursor-pointer select-none" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <input data-formkey="sameWhatsapp" type="checkbox" checked={form.sameWhatsapp} onChange={handleChange}
-                  className="w-4 h-4 rounded" style={{ accentColor: '#FF5C1A' }} />
-                <span className="text-sm text-[#6B6B6B] font-cairo">{mt.sameWa}</span>
-              </label>
-
-              {!form.sameWhatsapp && (
-                <ModalField label={mt.whatsapp} error={errors.whatsapp} isRTL={isRTL}>
-                  <input data-formkey="whatsapp" type="tel" value={form.whatsapp} onChange={handleChange}
-                    placeholder={mt.whatsappPh} className={INPUT_CLASS} style={INPUT_STYLE}
-                    onFocus={onFocusIn} onBlur={onFocusOut} />
-                </ModalField>
-              )}
-
-              {/* Course dropdown */}
-              <ModalField label={mt.course} error={errors.courseId} isRTL={isRTL}>
-                {coursesLoading
-                  ? <p className="text-sm text-[#A0A0A0] font-cairo py-2">{mt.loadingCourses}</p>
-                  : courses.length === 0
-                  ? <p className="text-sm text-[#A0A0A0] font-cairo py-2">{mt.noCourses}</p>
-                  : <select data-formkey="courseId" value={form.courseId} onChange={handleChange}
-                      className={INPUT_CLASS} style={{ ...INPUT_STYLE, cursor: 'pointer' }}
-                      onFocus={onFocusIn} onBlur={onFocusOut}>
-                      <option value="">{mt.selectCourse}</option>
-                      {courses.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {lang === 'ar' ? c.name_ar : c.name_en} — {c.price} EGP
-                        </option>
-                      ))}
-                    </select>
-                }
-              </ModalField>
-
-              {/* Payment method */}
-              <div>
-                <p className="text-sm font-bold text-[#1A1A1A] mb-3 font-cairo" style={{ textAlign: isRTL ? 'right' : 'left' }}>{mt.payment}</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {PAYMENT_OPTIONS.map(({ key, ar, en, noteAr, noteEn, color, bg, Logo }) => {
-                    const sel = form.paymentMethod === key
-                    return (
-                      <button key={key} type="button" onClick={setPayment(key)}
-                        className="flex flex-col items-center gap-2 py-3 px-2 rounded-[12px] text-center transition-all duration-200"
-                        style={{ background: sel ? bg : '#FFF8F4', border: sel ? `2px solid ${color}` : '2px solid #FFE4D4', boxShadow: sel ? `0 4px 14px ${color}22` : 'none' }}>
-                        <div style={{ height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Logo />
-                        </div>
-                        <span className="text-xs font-bold font-cairo leading-tight" style={{ color: sel ? color : '#6B6B6B' }}>
-                          {lang === 'ar' ? ar : en}
-                        </span>
-                        <span className="text-[10px] font-cairo" style={{ color: sel ? color : '#A0A0A0' }}>
-                          {lang === 'ar' ? noteAr : noteEn}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {serverError && (
-                <div className="text-sm text-red-600 font-cairo rounded-[10px] p-3" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
-                  {serverError}
-                </div>
-              )}
-
-              <button type="submit" disabled={submitting}
-                className="w-full py-3.5 rounded-[10px] text-sm font-bold text-white font-cairo transition-all duration-200"
-                style={{ background: submitting ? '#FFB89A' : 'linear-gradient(135deg,#FF5C1A,#FF7A40)', boxShadow: submitting ? 'none' : '0 4px 16px rgba(255,92,26,0.35)', marginTop: '4px' }}>
-                {submitting ? mt.submitting : mt.submit}
-              </button>
-
-            </form>
-          )}
+              </form>
+            )}
+          </div>
         </div>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }
