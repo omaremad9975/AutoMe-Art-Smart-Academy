@@ -104,8 +104,18 @@ export default function UsersPage() {
 
   const fetchAdmins = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase.from('admins').select('*').order('created_at', { ascending: false })
-    setAdmins(data || [])
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { setAdmins([]); setLoading(false); return }
+
+      const res = await fetch('/api/admin/admins', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const result = await res.json()
+      setAdmins(result.admins || [])
+    } catch {
+      setAdmins([])
+    }
     setLoading(false)
   }, [])
 

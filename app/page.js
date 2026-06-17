@@ -926,17 +926,15 @@ export default function Home() {
       })
   }, [])
 
-  // Fetch active courses for the registration modal dropdown
+  // Fetch active courses via service-role API (bypasses RLS — always reliable)
   useEffect(() => {
-    supabase
-      .from('courses')
-      .select('id, name_ar, name_en, price')
-      .eq('is_active', true)
-      .order('created_at', { ascending: true })
-      .then(({ data }) => {
-        if (data) setModalCourses(data)
+    fetch('/api/public/courses')
+      .then((r) => r.json())
+      .then(({ courses }) => {
+        if (courses) setModalCourses(courses)
         setModalCoursesLoading(false)
       })
+      .catch(() => setModalCoursesLoading(false))
   }, [])
 
   useEffect(() => {
@@ -959,6 +957,17 @@ export default function Home() {
 
   const toggleLang = () => {
     setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))
+  }
+
+  // ── Filter courses section by what's active in Supabase ──────────────────
+  // While loading, show all (graceful fallback). After load, hide inactive ones.
+  const activeCourseNamesAr = new Set(modalCourses.map((c) => c.name_ar))
+  const activeIndices = coursesData.ar
+    .map((c, i) => (modalCoursesLoading || activeCourseNamesAr.has(c.title) ? i : -1))
+    .filter((i) => i >= 0)
+  const filteredCoursesData = {
+    ar: activeIndices.map((i) => coursesData.ar[i]),
+    en: activeIndices.map((i) => coursesData.en[i]),
   }
 
   return (
@@ -1247,7 +1256,7 @@ export default function Home() {
 
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {coursesData[lang].map((course) => (
+            {filteredCoursesData[lang].map((course) => (
               <div
                 key={course.title}
                 className="warm-card rounded-asa-radius-xl flex flex-col p-5 md:p-6 relative overflow-hidden"
