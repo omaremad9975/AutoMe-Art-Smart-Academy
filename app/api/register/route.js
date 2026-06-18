@@ -12,11 +12,16 @@ const supabaseAdmin = createClient(
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { name, phone, email, whatsapp, courseId, paymentMethod } = body
+    const { name, phone, email, whatsapp, courseId, paymentMethod, receiptUrl } = body
 
     // ── Validate ───────────────────────────────────────────────────────────────
     if (!name || !phone || !email || !courseId || !paymentMethod) {
       return NextResponse.json({ error: 'All required fields must be filled' }, { status: 400 })
+    }
+    // Receipt is required for manual payment methods
+    const manualMethods = ['vodafone_cash', 'instapay']
+    if (manualMethods.includes(paymentMethod) && !receiptUrl) {
+      return NextResponse.json({ error: 'Receipt screenshot is required for this payment method' }, { status: 400 })
     }
     const validMethods = ['fawry', 'vodafone_cash', 'instapay']
     if (!validMethods.includes(paymentMethod)) {
@@ -41,6 +46,7 @@ export async function POST(request) {
         course_id:      courseId,
         payment_method: paymentMethod,
         payment_status: paymentStatus,
+        receipt_url:    receiptUrl || null,
       }])
       .select()
       .single()

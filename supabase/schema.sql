@@ -36,11 +36,13 @@ CREATE TABLE IF NOT EXISTS registrations (
   whatsapp        TEXT,                            -- optional, if different from phone
   payment_method  TEXT NOT NULL DEFAULT 'fawry',  -- fawry | vodafone_cash | instapay
   payment_status  TEXT NOT NULL DEFAULT 'pending', -- pending | confirmed
+  receipt_url     TEXT,                            -- uploaded receipt screenshot (vodafone_cash / instapay)
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- ⚠️ If registrations table already exists, run this migration:
+-- ⚠️ If registrations table already exists, run these migrations:
 -- ALTER TABLE registrations ADD COLUMN IF NOT EXISTS whatsapp TEXT;
+-- ALTER TABLE registrations ADD COLUMN IF NOT EXISTS receipt_url TEXT;
 
 -- ============================================================
 -- TABLE: payments

@@ -145,6 +145,7 @@ export default function PaymentsPage() {
           payment_status:    r.payment_status === 'confirmed' ? 'paid' : r.payment_status,
           transaction_id:    r.transaction_id || null,
           payment_reference: r.payment_reference || null,
+          receipt_url:       r.receipt_url || null,
           payment_date:      r.created_at,
         }))
         setPayments(mapped)
@@ -241,7 +242,7 @@ export default function PaymentsPage() {
     exportToPDF(rows, PDF_COLUMNS, `payments_${new Date().toISOString().slice(0,10)}`, 'Payments Report')
   }
 
-  const TABLE_COLUMNS = ['Student', 'Email', 'Phone', 'Product', 'Amount', 'Method', 'Transaction ID', 'Reference', 'Status', 'Date', 'Action']
+  const TABLE_COLUMNS = ['Student', 'Email', 'Phone', 'Product', 'Amount', 'Method', 'Transaction ID', 'Reference', 'Receipt', 'Status', 'Date', 'Action']
 
   return (
     <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
@@ -423,6 +424,21 @@ export default function PaymentsPage() {
                     {/* Reference */}
                     <td className="px-4 py-3 text-xs font-mono text-[#6B6B6B] whitespace-nowrap">
                       {p.payment_reference || <span className="text-[#C0C0C0]">—</span>}
+                    </td>
+                    {/* Receipt */}
+                    <td className="px-4 py-3">
+                      {p.receipt_url ? (
+                        <a href={p.receipt_url} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-xs font-bold font-cairo transition-all duration-200 whitespace-nowrap"
+                          style={{ background: 'rgba(16,185,129,0.08)', color: '#059669', border: '1px solid rgba(16,185,129,0.20)', textDecoration: 'none' }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.18)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.08)'}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          View
+                        </a>
+                      ) : (
+                        <span className="text-[#C0C0C0] text-xs font-cairo">—</span>
+                      )}
                     </td>
                     {/* Status */}
                     <td className="px-4 py-3"><StatusBadge status={p.payment_status} /></td>

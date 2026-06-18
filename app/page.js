@@ -424,6 +424,18 @@ const MODAL_T = {
     loadingCourses: 'جارٍ تحميل الكورسات...',
     noCourses: 'لا توجد كورسات متاحة حالياً',
     spamNote: 'تحقق من مجلد الرسائل غير المرغوب فيها إذا لم يصلك الإيميل.',
+    // Receipt upload
+    payDetailsTitle: '٤ — أكمل الدفع وارفع الإيصال',
+    payDetailsHolder: 'اسم الحساب',
+    payDetailsNumber: 'الرقم',
+    payDetailsInstruction: 'حوّل المبلغ المطلوب ثم ارفع صورة الإيصال أدناه.',
+    receiptLabel: 'صورة إيصال الدفع',
+    receiptBtn: 'اضغط لرفع الصورة',
+    receiptHint: 'JPG, PNG, HEIC, PDF — حتى 5 ميغابايت',
+    receiptUploading: 'جارٍ رفع الصورة...',
+    receiptUploaded: '✓ تم رفع الإيصال',
+    receiptRequired: 'يجب رفع إيصال الدفع قبل إرسال الطلب',
+    receiptError: 'حدث خطأ أثناء رفع الصورة، حاول مرة أخرى',
   },
   en: {
     title: 'Register for a Course', sub: "Fill in your details and we'll be in touch soon",
@@ -447,6 +459,18 @@ const MODAL_T = {
     loadingCourses: 'Loading courses...',
     noCourses: 'No courses available right now',
     spamNote: "Check your spam folder too if the email doesn't arrive within a few minutes.",
+    // Receipt upload
+    payDetailsTitle: '4 — Complete Payment & Upload Receipt',
+    payDetailsHolder: 'Account Name',
+    payDetailsNumber: 'Number',
+    payDetailsInstruction: 'Send the required amount, then upload your payment screenshot below.',
+    receiptLabel: 'Payment Receipt Screenshot',
+    receiptBtn: 'Click to upload screenshot',
+    receiptHint: 'JPG, PNG, HEIC, PDF — up to 5 MB',
+    receiptUploading: 'Uploading...',
+    receiptUploaded: '✓ Receipt uploaded',
+    receiptRequired: 'Please upload a payment receipt before submitting',
+    receiptError: 'Upload failed, please try again',
   },
 }
 
@@ -516,6 +540,12 @@ const PAYMENT_OPTIONS = [
 
 const EMPTY_FORM = { name: '', phone: '', email: '', sameWhatsapp: true, whatsapp: '', courseId: '', paymentMethod: 'fawry' }
 
+// Payment details for manual methods
+const MANUAL_PAYMENT_DETAILS = {
+  vodafone_cash: { holder: 'Mahmoud A**** S***', number: '01*********' },
+  instapay:      { holder: 'Mahmoud A**** S***', number: '01*********' },
+}
+
 // ── ModalField — defined outside so React never remounts inputs ──────────────
 function ModalField({ label, error, children, required = true }) {
   return (
@@ -545,11 +575,20 @@ function onFocusOut(e) { e.target.style.borderColor = '#E5E7EB'; e.target.style.
 
 function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
   const mt = MODAL_T[lang]
-  const [form, setForm]             = useState(EMPTY_FORM)
-  const [errors, setErrors]         = useState({})
-  const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted]   = useState(false)
+  const [form, setForm]               = useState(EMPTY_FORM)
+  const [errors, setErrors]           = useState({})
+  const [submitting, setSubmitting]   = useState(false)
+  const [submitted, setSubmitted]     = useState(false)
   const [serverError, setServerError] = useState('')
+
+  // Receipt upload state
+  const [receiptFile, setReceiptFile]         = useState(null)
+  const [receiptUrl, setReceiptUrl]           = useState('')
+  const [uploadingReceipt, setUploadingReceipt] = useState(false)
+  const [receiptError, setReceiptError]       = useState('')
+
+  const isManual = form.paymentMethod === 'vodafone_cash' || form.paymentMethod === 'instapay'
+  const isCard   = form.paymentMethod === 'fawry'
 
   const handleChange = useCallback((e) => {
     const key   = e.target.dataset.formkey
@@ -557,21 +596,61 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
     setForm((f) => ({ ...f, [key]: value }))
   }, [])
 
-  const setPayment = useCallback((key) => () => setForm((f) => ({ ...f, paymentMethod: key })), [])
+  const setPayment = useCallback((key) => () => {
+    setForm((f) => ({ ...f, paymentMethod: key }))
+    // Reset receipt when switching payment method
+    setReceiptFile(null)
+    setReceiptUrl('')
+    setReceiptError('')
+  }, [])
 
   const hasCourses = !coursesLoading && courses.length > 0
+
+  async function handleReceiptChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+
+    const MAX = 5 * 1024 * 1024 // 5MB
+    if (file.size > MAX) {
+      setReceiptError(isRTL ? 'حجم الملف أكبر من 5 ميغابايت' : 'File exceeds 5 MB limit')
+      return
+    }
+
+    setReceiptFile(file)
+    setReceiptError('')
+    setUploadingReceipt(true)
+    setReceiptUrl('')
+
+    try {
+      const ext = file.name.split('.').pop().toLowerCase()
+      const urlRes = await fetch(`/api/public/get-receipt-upload-url?ext=${ext}`)
+      const urlData = await urlRes.json()
+      if (!urlRes.ok || urlData.error) { setReceiptError(mt.receiptError); setUploadingReceipt(false); return }
+
+      const uploadRes = await fetch(urlData.signedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type, 'x-upsert': 'false' },
+      })
+      if (!uploadRes.ok) { setReceiptError(mt.receiptError); setUploadingReceipt(false); return }
+
+      setReceiptUrl(urlData.publicUrl)
+    } catch {
+      setReceiptError(mt.receiptError)
+    }
+    setUploadingReceipt(false)
+  }
 
   function validate() {
     const e = {}
     if (!form.name.trim()) e.name = mt.required
-    // Phone: exactly 11 digits (Egyptian numbers)
     const phoneDigits = form.phone.replace(/\D/g, '')
     if (!form.phone.trim()) {
       e.phone = mt.required
     } else if (phoneDigits.length !== 11) {
       e.phone = isRTL ? 'يجب أن يكون رقم الهاتف 11 رقماً بالضبط' : 'Phone must be exactly 11 digits'
     }
-    // Email: must contain @ and a domain with a dot
     if (!form.email.trim()) {
       e.email = mt.required
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
@@ -579,6 +658,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
     }
     if (hasCourses && !form.courseId) e.courseId = mt.required
     if (!form.sameWhatsapp && !form.whatsapp.trim()) e.whatsapp = mt.required
+    if (isManual && !receiptUrl) e.receipt = mt.receiptRequired
     return e
   }
 
@@ -600,6 +680,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
           whatsapp:      form.sameWhatsapp ? form.phone : form.whatsapp,
           courseId:      form.courseId || null,
           paymentMethod: form.paymentMethod,
+          receiptUrl:    receiptUrl || null,
         }),
       })
       const data = await res.json()
@@ -610,8 +691,6 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
       setSubmitting(false)
     }
   }
-
-  const isCard = form.paymentMethod === 'fawry'
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 md:p-6"
@@ -826,6 +905,78 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                   </div>
                 </div>
 
+                {/* Section 4 — Payment details + receipt upload (manual methods only) */}
+                {isManual && (() => {
+                  const details = MANUAL_PAYMENT_DETAILS[form.paymentMethod]
+                  const accentColor = form.paymentMethod === 'vodafone_cash' ? '#E60000' : '#6B2FA0'
+                  const accentBg    = form.paymentMethod === 'vodafone_cash' ? '#FFF1F1' : '#F5F0FF'
+                  const accentBorder = form.paymentMethod === 'vodafone_cash' ? '#FECACA' : '#DDD6FE'
+                  return (
+                    <>
+                      <div style={{ borderTop: '1px solid #F3F4F6' }} />
+                      <div>
+                        <p style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1.5px', fontFamily: 'Cairo, sans-serif', marginBottom: '12px' }}>
+                          {mt.payDetailsTitle}
+                        </p>
+
+                        {/* Account details box */}
+                        <div style={{ background: accentBg, border: `1.5px solid ${accentBorder}`, borderRadius: '12px', padding: '14px 16px', marginBottom: '14px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                              <span style={{ fontSize: '11px', color: '#6B7280', fontFamily: 'Cairo, sans-serif' }}>{mt.payDetailsHolder}</span>
+                              <span style={{ fontSize: '13px', fontWeight: 700, color: accentColor, fontFamily: 'Cairo, sans-serif', direction: 'ltr' }}>{details.holder}</span>
+                            </div>
+                            <div style={{ height: '1px', background: accentBorder }} />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                              <span style={{ fontSize: '11px', color: '#6B7280', fontFamily: 'Cairo, sans-serif' }}>{mt.payDetailsNumber}</span>
+                              <span style={{ fontSize: '15px', fontWeight: 800, color: accentColor, fontFamily: 'monospace', letterSpacing: '1px', direction: 'ltr' }}>{details.number}</span>
+                            </div>
+                          </div>
+                          <p style={{ margin: '12px 0 0', fontSize: '11px', color: '#4B5563', fontFamily: 'Cairo, sans-serif', lineHeight: 1.6, textAlign: isRTL ? 'right' : 'left' }}>
+                            {mt.payDetailsInstruction}
+                          </p>
+                        </div>
+
+                        {/* Receipt upload area */}
+                        <label style={{ display: 'block', cursor: 'pointer' }}>
+                          <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={handleReceiptChange} disabled={uploadingReceipt} />
+                          <div style={{
+                            border: `2px dashed ${errors.receipt ? '#EF4444' : receiptUrl ? '#10B981' : '#D1D5DB'}`,
+                            borderRadius: '12px', padding: '16px', textAlign: 'center',
+                            background: receiptUrl ? 'rgba(16,185,129,0.05)' : '#FAFAFA',
+                            transition: 'all 0.15s', cursor: 'pointer',
+                          }}>
+                            {uploadingReceipt ? (
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+                                <span style={{ fontSize: '13px', color: accentColor, fontFamily: 'Cairo, sans-serif' }}>{mt.receiptUploading}</span>
+                              </div>
+                            ) : receiptUrl ? (
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#10B981', fontFamily: 'Cairo, sans-serif' }}>{mt.receiptUploaded}</span>
+                                <span style={{ fontSize: '11px', color: '#6B7280', fontFamily: 'Cairo, sans-serif' }}>({receiptFile?.name})</span>
+                              </div>
+                            ) : (
+                              <>
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" style={{ margin: '0 auto 8px', display: 'block' }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#374151', fontFamily: 'Cairo, sans-serif' }}>{mt.receiptBtn}</p>
+                                <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#9CA3AF', fontFamily: 'Cairo, sans-serif' }}>{mt.receiptHint}</p>
+                              </>
+                            )}
+                          </div>
+                        </label>
+                        {receiptError && (
+                          <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#EF4444', fontFamily: 'Cairo, sans-serif' }}>{receiptError}</p>
+                        )}
+                        {errors.receipt && !receiptError && (
+                          <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#EF4444', fontFamily: 'Cairo, sans-serif' }}>{errors.receipt}</p>
+                        )}
+                      </div>
+                    </>
+                  )
+                })()}
+
                 {/* Server error */}
                 {serverError && (
                   <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '10px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -835,13 +986,13 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                 )}
 
                 {/* Submit */}
-                <button type="submit" disabled={submitting}
+                <button type="submit" disabled={submitting || uploadingReceipt}
                   style={{
                     width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
-                    background: submitting ? '#FCA587' : 'linear-gradient(135deg,#FF5C1A,#FF7A40)',
+                    background: (submitting || uploadingReceipt) ? '#FCA587' : 'linear-gradient(135deg,#FF5C1A,#FF7A40)',
                     color: '#FFFFFF', fontWeight: 800, fontSize: '15px', fontFamily: 'Cairo, sans-serif',
-                    cursor: submitting ? 'not-allowed' : 'pointer',
-                    boxShadow: submitting ? 'none' : '0 4px 20px rgba(255,92,26,0.40)',
+                    cursor: (submitting || uploadingReceipt) ? 'not-allowed' : 'pointer',
+                    boxShadow: (submitting || uploadingReceipt) ? 'none' : '0 4px 20px rgba(255,92,26,0.40)',
                     transition: 'all 0.2s',
                   }}>
                   {submitting
