@@ -228,15 +228,16 @@ function DashboardInner({ children }) {
 
       setUser(session.user)
 
-      // Fetch role from admins table
-      const { data: adminRow } = await supabase
-        .from('admins')
-        .select('role')
-        .eq('email', session.user.email)
-        .single()
-
-      const role = adminRow?.role || 'admin' // fallback to admin if not found
-      setUserRole(role)
+      // Fetch role via service-role API (bypasses RLS — always reliable)
+      try {
+        const res = await fetch('/api/admin/my-role', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        const result = await res.json()
+        setUserRole(result.role || 'admin')
+      } catch {
+        setUserRole('admin') // fallback
+      }
       setAuthChecked(true)
     }
     checkAuth()
