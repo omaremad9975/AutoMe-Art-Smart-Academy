@@ -303,13 +303,7 @@ export default function RegistrationsPage() {
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     {/* Student */}
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-                          style={{ background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)' }}>
-                          {reg.student_name?.[0]?.toUpperCase()}
-                        </div>
-                        <span className="font-semibold text-sm text-[#1A1A1A] font-cairo whitespace-nowrap">{reg.student_name}</span>
-                      </div>
+                      <span className="font-semibold text-sm text-[#1A1A1A] font-cairo whitespace-nowrap">{reg.student_name}</span>
                     </td>
                     <td className="px-5 py-4 text-sm text-[#6B6B6B] font-cairo whitespace-nowrap">{reg.phone}</td>
                     <td className="px-5 py-4 text-sm text-[#6B6B6B] font-cairo">{reg.email || '—'}</td>

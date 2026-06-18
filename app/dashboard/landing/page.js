@@ -1,8 +1,55 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useDashboardLang } from '@/lib/dashboard-lang'
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+function Toast({ toast }) {
+  if (!toast) return null
+  const isSuccess = toast.type === 'success'
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: '24px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 9999,
+        minWidth: '320px',
+        maxWidth: '560px',
+        padding: '14px 20px',
+        borderRadius: '12px',
+        background: isSuccess ? '#059669' : '#DC2626',
+        color: '#FFFFFF',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '10px',
+        fontFamily: 'Cairo, sans-serif',
+        animation: 'toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+      }}
+    >
+      <style>{`
+        @keyframes toastIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(-16px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `}</style>
+      <span style={{ fontSize: '18px', lineHeight: 1.2, flexShrink: 0 }}>
+        {isSuccess ? '✓' : '✕'}
+      </span>
+      <div>
+        <p style={{ fontWeight: 700, fontSize: '14px', margin: 0 }}>{toast.title}</p>
+        {toast.description && (
+          <p style={{ fontWeight: 400, fontSize: '12px', margin: '2px 0 0', opacity: 0.88 }}>
+            {toast.description}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
 
 // ── Modal ──────────────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children }) {
@@ -49,6 +96,38 @@ function Field({ label, type = 'text', value, onChange, placeholder, min }) {
   )
 }
 
+// ── Settings Field (with current-value indicator) ──────────────────────────────
+function SettingsField({ label, id, type = 'text', value, onChange, placeholder, isRTL, currentValue }) {
+  const isDirty = currentValue !== undefined && value !== currentValue
+  return (
+    <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
+      <label htmlFor={id} className="block text-[#1A1A1A] font-bold text-sm mb-1 font-cairo">
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none transition-all duration-200"
+        style={{ border: isDirty ? '1.5px solid #F59E0B' : '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr', textAlign: 'left' }}
+        onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
+        onBlur={(e) => { e.target.style.borderColor = isDirty ? '#F59E0B' : '#FFE4D4'; e.target.style.boxShadow = 'none' }}
+      />
+      {currentValue && (
+        <p className="text-xs font-cairo mt-1.5 flex items-center gap-1.5" style={{ direction: 'ltr' }}>
+          <span style={{ color: '#A0A0A0' }}>{isRTL ? 'الحالي:' : 'Current:'}</span>
+          <span style={{ color: isDirty ? '#F59E0B' : '#6B6B6B', fontWeight: isDirty ? 600 : 400, textDecoration: isDirty ? 'line-through' : 'none' }}>
+            {currentValue}
+          </span>
+          {isDirty && <span style={{ color: '#FF5C1A', fontWeight: 600 }}>→ {value}</span>}
+        </p>
+      )}
+    </div>
+  )
+}
+
 const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration: '', seats: '', is_active: true }
 
 const SOCIAL_DEFAULTS = {
@@ -56,6 +135,19 @@ const SOCIAL_DEFAULTS = {
   social_instagram: '',
   social_tiktok:    '',
   social_youtube:   '',
+}
+
+const ACADEMY_DEFAULTS = {
+  academy_name: 'Art Smart Academy | أرت سمارت اكاديمي',
+  phone:        '+20 100 000 0000',
+  email:        'info@artsmartacademy.com',
+  whatsapp:     '+20 100 000 0000',
+}
+
+// ── Helper ─────────────────────────────────────────────────────────────────────
+async function getToken() {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.access_token || ''
 }
 
 // ── Courses Section ─────────────────────────────────────────────────────────────
@@ -69,12 +161,6 @@ function CoursesSection() {
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [saving, setSaving] = useState(false)
   const [togglingId, setTogglingId] = useState(null)
-
-  // ── Helper: get auth token for API calls ─────────────────────────────────────
-  const getToken = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    return session?.access_token || ''
-  }
 
   const fetchCourses = useCallback(async () => {
     setLoading(true)
@@ -155,7 +241,6 @@ function CoursesSection() {
 
   return (
     <div className="space-y-5">
-      {/* Sub-header */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#6B6B6B] font-cairo">
           {courses.length} {t.courses}
@@ -173,7 +258,7 @@ function CoursesSection() {
 
       {error && (
         <div className="rounded-[12px] p-4 text-sm font-cairo text-red-700" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.20)' }}>
-          ⚠️ {error}
+          {error}
         </div>
       )}
 
@@ -184,10 +269,7 @@ function CoursesSection() {
           ))}
         </div>
       ) : courses.length === 0 ? (
-        <div
-          className="rounded-[16px] flex flex-col items-center justify-center py-20 gap-4"
-          style={{ background: '#FFFFFF', border: '1px solid #FFE4D4' }}
-        >
+        <div className="rounded-[16px] flex flex-col items-center justify-center py-20 gap-4" style={{ background: '#FFFFFF', border: '1px solid #FFE4D4' }}>
           <div className="text-5xl">📚</div>
           <p className="text-[#A0A0A0] font-cairo text-sm">{t.noCoursesYet}</p>
           <button onClick={openAdd} className="px-5 py-2 rounded-full text-sm font-bold text-white font-cairo" style={{ background: '#FF5C1A' }}>
@@ -266,7 +348,6 @@ function CoursesSection() {
         </div>
       )}
 
-      {/* Add / Edit Modal */}
       {(modal === 'add' || modal === 'edit') && (
         <Modal title={modal === 'add' ? t.addNewCourse : t.editCourse} onClose={() => setModal(null)}>
           <div className="space-y-4">
@@ -303,7 +384,6 @@ function CoursesSection() {
         </Modal>
       )}
 
-      {/* Delete Modal */}
       {modal === 'delete' && (
         <Modal title={t.deleteCourse} onClose={() => setModal(null)}>
           <div className="space-y-5">
@@ -335,37 +415,46 @@ const SOCIAL_LINKS = [
   { key: 'social_youtube',   label: 'YouTube',   icon: '▶️', color: '#FF0000', placeholder: 'https://youtube.com/...' },
 ]
 
-function SocialSection() {
+function SocialSection({ showToast }) {
   const { t, isRTL } = useDashboardLang()
   const [links, setLinks] = useState(SOCIAL_DEFAULTS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
 
   useEffect(() => {
-    const fetch = async () => {
-      const keys = Object.keys(SOCIAL_DEFAULTS)
-      const { data } = await supabase.from('settings').select('key, value').in('key', keys)
-      if (data) {
-        const map = {}
-        data.forEach((r) => { map[r.key] = r.value })
-        setLinks((prev) => ({ ...prev, ...map }))
-      }
+    const load = async () => {
+      try {
+        const token = await getToken()
+        const res = await fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } })
+        const result = await res.json()
+        if (result.settings) {
+          setLinks((prev) => ({ ...prev, ...Object.fromEntries(Object.keys(SOCIAL_DEFAULTS).filter((k) => result.settings[k] !== undefined).map((k) => [k, result.settings[k]])) }))
+        }
+      } catch {}
       setLoading(false)
     }
-    fetch()
+    load()
   }, [])
 
   const handleSave = async () => {
     setSaving(true)
-    setSaved(false)
-    setError('')
-    const rows = Object.entries(links).map(([key, value]) => ({ key, value }))
-    const { error: err } = await supabase.from('settings').upsert(rows, { onConflict: 'key' })
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(links),
+      })
+      const result = await res.json()
+      if (!res.ok || result.error) {
+        showToast('error', isRTL ? 'فشل الحفظ' : 'Save Failed', result.error)
+      } else {
+        showToast('success', isRTL ? 'تم الحفظ بنجاح' : 'Links Saved', isRTL ? 'تم تحديث روابط التواصل' : 'Social links updated successfully')
+      }
+    } catch (err) {
+      showToast('error', isRTL ? 'خطأ في الشبكة' : 'Network Error', err?.message)
+    }
     setSaving(false)
-    if (err) { setError(err.message) }
-    else { setSaved(true); setTimeout(() => setSaved(false), 3000) }
   }
 
   if (loading) {
@@ -411,24 +500,158 @@ function SocialSection() {
               </div>
             </div>
           ))}
-          {error && <p className="text-xs font-semibold font-cairo py-2 px-3 rounded-[8px]" style={{ background: 'rgba(239,68,68,0.08)', color: '#DC2626' }}>{error}</p>}
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div>
         <button
           onClick={handleSave}
           disabled={saving}
           className="px-8 py-3 rounded-[10px] text-sm font-bold text-white font-cairo transition-all duration-200"
           style={{ background: saving ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)', boxShadow: saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
+          onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,92,26,0.40)' } }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
         >
           {saving ? t.saving : t.saveSocial}
         </button>
-        {saved && (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-bold font-cairo" style={{ background: 'rgba(16,185,129,0.10)', color: '#059669', border: '1px solid rgba(16,185,129,0.20)' }}>
-            {t.socialSaved}
+      </div>
+    </div>
+  )
+}
+
+// ── Academy Info Section ────────────────────────────────────────────────────────
+function AcademyInfoSection({ showToast }) {
+  const { isRTL } = useDashboardLang()
+  const [info, setInfo]             = useState(ACADEMY_DEFAULTS)
+  const [savedInfo, setSavedInfo]   = useState(ACADEMY_DEFAULTS)
+  const [loading, setLoading]       = useState(true)
+  const [saving, setSaving]         = useState(false)
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = await getToken()
+        const res = await fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } })
+        const result = await res.json()
+        if (result.settings) {
+          const patch = Object.fromEntries(
+            Object.keys(ACADEMY_DEFAULTS)
+              .filter((k) => result.settings[k] !== undefined)
+              .map((k) => [k, result.settings[k]])
+          )
+          setInfo((prev) => ({ ...prev, ...patch }))
+          setSavedInfo((prev) => ({ ...prev, ...patch }))
+        }
+      } catch {}
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(info),
+      })
+      const result = await res.json()
+      if (!res.ok || result.error) {
+        showToast('error',
+          isRTL ? 'فشل الحفظ' : 'Save Failed',
+          result.error || (isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred')
+        )
+      } else {
+        setSavedInfo(info)
+        showToast('success',
+          isRTL ? 'تم الحفظ بنجاح' : 'Changes Saved',
+          isRTL ? 'تم تحديث معلومات الأكاديمية وستظهر في الموقع فوراً' : 'Academy info updated and will reflect on the site immediately'
+        )
+      }
+    } catch (err) {
+      showToast('error',
+        isRTL ? 'خطأ في الشبكة' : 'Network Error',
+        err?.message || (isRTL ? 'تعذّر الاتصال بالخادم' : 'Could not reach the server')
+      )
+    }
+    setSaving(false)
+  }
+
+  const set = (key) => (e) => setInfo((s) => ({ ...s, [key]: e.target.value }))
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-14 rounded-[12px] animate-pulse" style={{ background: '#FFE4D4' }} />)}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <div className="rounded-[16px] overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4', textAlign: isRTL ? 'right' : 'left' }}>
+          <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">{isRTL ? 'معلومات الأكاديمية' : 'Academy Information'}</h2>
+          <p className="text-xs text-[#A0A0A0] font-cairo">{isRTL ? 'هذه المعلومات تظهر في الموقع مباشرةً بعد الحفظ' : 'These details appear live on the website after saving'}</p>
+        </div>
+        <div className="p-6 space-y-5">
+          <SettingsField
+            id="academy_name"
+            label={isRTL ? 'اسم الأكاديمية' : 'Academy Name'}
+            value={info.academy_name}
+            onChange={set('academy_name')}
+            placeholder="Art Smart Academy | أرت سمارت اكاديمي"
+            isRTL={isRTL}
+            currentValue={savedInfo.academy_name}
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <SettingsField
+              id="phone"
+              label={isRTL ? 'رقم الهاتف' : 'Phone Number'}
+              type="tel"
+              value={info.phone}
+              onChange={set('phone')}
+              placeholder="+20 100 000 0000"
+              isRTL={isRTL}
+              currentValue={savedInfo.phone}
+            />
+            <SettingsField
+              id="whatsapp"
+              label={isRTL ? 'واتساب' : 'WhatsApp'}
+              type="tel"
+              value={info.whatsapp}
+              onChange={set('whatsapp')}
+              placeholder="+20 100 000 0000"
+              isRTL={isRTL}
+              currentValue={savedInfo.whatsapp}
+            />
           </div>
-        )}
+          <SettingsField
+            id="email"
+            label={isRTL ? 'البريد الإلكتروني' : 'Email Address'}
+            type="email"
+            value={info.email}
+            onChange={set('email')}
+            placeholder="info@artsmartacademy.com"
+            isRTL={isRTL}
+            currentValue={savedInfo.email}
+          />
+        </div>
+      </div>
+
+      <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-8 py-3 rounded-[10px] text-sm font-bold text-white font-cairo transition-all duration-200"
+          style={{ background: saving ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)', boxShadow: saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
+          onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,92,26,0.40)' } }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
+        >
+          {saving ? (isRTL ? 'جارٍ الحفظ...' : 'Saving...') : (isRTL ? 'حفظ التغييرات' : 'Save Changes')}
+        </button>
       </div>
     </div>
   )
@@ -438,42 +661,53 @@ function SocialSection() {
 export default function LandingPage() {
   const { t, isRTL } = useDashboardLang()
   const [activeTab, setActiveTab] = useState('courses')
+  const [toast, setToast] = useState(null)
+  const toastTimer = useRef(null)
+
+  const showToast = (type, title, description) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setToast({ type, title, description })
+    toastTimer.current = setTimeout(() => setToast(null), 4500)
+  }
 
   const tabs = [
-    { key: 'courses', label: t.tabCourses, icon: '📚' },
-    { key: 'social',  label: t.tabSocial,  icon: '🔗' },
+    { key: 'courses', label: t.tabCourses },
+    { key: 'social',  label: t.tabSocial },
+    { key: 'academy', label: isRTL ? 'معلومات الأكاديمية' : 'Academy Info' },
   ]
 
   return (
-    <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-      {/* Header */}
-      <div>
-        <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.landingTitle}</h1>
-        <p className="text-[#6B6B6B] text-sm font-cairo mt-1">{t.landingSub}</p>
-      </div>
+    <>
+      <Toast toast={toast} />
 
-      {/* Tab Bar */}
-      <div className="flex gap-2 p-1 rounded-[12px] w-fit" style={{ background: '#FFF0E8', border: '1px solid #FFE4D4' }}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-sm font-bold font-cairo transition-all duration-200"
-            style={{
-              background: activeTab === tab.key ? '#FFFFFF' : 'transparent',
-              color: activeTab === tab.key ? '#FF5C1A' : '#6B6B6B',
-              boxShadow: activeTab === tab.key ? '0 2px 8px rgba(255,92,26,0.12)' : 'none',
-            }}
-          >
-            <span>{tab.icon}</span>
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+        <div>
+          <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.landingTitle}</h1>
+          <p className="text-[#6B6B6B] text-sm font-cairo mt-1">{t.landingSub}</p>
+        </div>
 
-      {/* Tab Content */}
-      {activeTab === 'courses' && <CoursesSection />}
-      {activeTab === 'social'  && <SocialSection />}
-    </div>
+        {/* Tab Bar */}
+        <div className="flex gap-2 p-1 rounded-[12px] w-fit" style={{ background: '#FFF0E8', border: '1px solid #FFE4D4' }}>
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className="px-5 py-2.5 rounded-[10px] text-sm font-bold font-cairo transition-all duration-200"
+              style={{
+                background: activeTab === tab.key ? '#FFFFFF' : 'transparent',
+                color: activeTab === tab.key ? '#FF5C1A' : '#6B6B6B',
+                boxShadow: activeTab === tab.key ? '0 2px 8px rgba(255,92,26,0.12)' : 'none',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'courses' && <CoursesSection />}
+        {activeTab === 'social'  && <SocialSection showToast={showToast} />}
+        {activeTab === 'academy' && <AcademyInfoSection showToast={showToast} />}
+      </div>
+    </>
   )
 }

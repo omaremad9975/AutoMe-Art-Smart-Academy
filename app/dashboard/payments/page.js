@@ -437,13 +437,7 @@ export default function PaymentsPage() {
                   >
                     {/* Student */}
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-                          style={{ background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)' }}>
-                          {p.student_name?.[0]?.toUpperCase()}
-                        </div>
-                        <span className="font-semibold text-sm text-[#1A1A1A] font-cairo whitespace-nowrap">{p.student_name}</span>
-                      </div>
+                      <span className="font-semibold text-sm text-[#1A1A1A] font-cairo whitespace-nowrap">{p.student_name}</span>
                     </td>
                     {/* Email */}
                     <td className="px-4 py-3 text-xs text-[#6B6B6B] font-cairo">{p.email || '—'}</td>
