@@ -82,7 +82,7 @@ function Sidebar({ pathname, onNavigate, user, userRole, onLogout, isExpanded, p
           src="/logo_mark_blue.png"
           alt="Art Smart Academy"
           className="flex-shrink-0 object-contain"
-          style={{ height: '32px', width: '32px', filter: 'brightness(0) saturate(100%)' }}
+          style={{ height: '36px', width: '36px' }}
         />
         <div className="flex items-center flex-1 min-w-0" style={{ opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s', pointerEvents: isExpanded ? 'auto' : 'none' }}>
           <div className="flex flex-col overflow-hidden">

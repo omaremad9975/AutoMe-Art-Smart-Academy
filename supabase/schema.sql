@@ -157,6 +157,15 @@ CREATE POLICY "Authenticated write settings"
 -- ============================================================
 -- SEED DATA (optional examples)
 -- ============================================================
+
+-- Seed existing conference photos so they appear in the Gallery dashboard
+INSERT INTO gallery_photos (url, caption_ar, caption_en, sort_order) VALUES
+  ('/conference/conf1.jpg',    'صورة جماعية مع المشاركين والمنظمين',          'Group photo with all conference attendees and organizers', 0),
+  ('/conference/IMG_2259.jpg', 'طلاب أرت سمارت في المؤتمر',                   'Students representing Art Smart Academy at the conference', 1),
+  ('/conference/IMG_2308.jpg', 'اجتماع رسمي مع كبار المشاركين',               'Official meeting with conference dignitaries', 2),
+  ('/conference/conf2.jpg',    'جلسات وعروض المؤتمر',                         'Conference sessions and presentations', 3),
+  ('/conference/conf3.jpg',    'أبرز لحظات المؤتمر الدولي للذكاء الاصطناعي', 'Highlights from the International AI Conference', 4)
+ON CONFLICT DO NOTHING;
 INSERT INTO courses (name_ar, name_en, price, duration, seats, is_active) VALUES
   ('التفكير الإبداعي',   'Creative Thinking',      2500, '8 أسابيع',  20, TRUE),
   ('الذكاء الاصطناعي',  'Artificial Intelligence', 3000, '10 أسابيع', 15, TRUE),

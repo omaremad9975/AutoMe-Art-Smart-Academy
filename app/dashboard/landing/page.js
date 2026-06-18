@@ -258,27 +258,31 @@ function CoursesSection() {
 
     try {
       const token = await getToken()
+      const ext = file.name.split('.').pop().toLowerCase()
 
-      // 1. Upload file to storage
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('bucket', 'certificate-templates')
-      const upRes = await fetch('/api/admin/upload-to-storage', {
-        method: 'POST',
+      // 1. Get signed upload URL (avoids Vercel 4.5MB body limit)
+      const urlRes = await fetch(`/api/admin/get-upload-url?bucket=certificate-templates&ext=${ext}`, {
         headers: { Authorization: `Bearer ${token}` },
-        body: fd,
       })
-      const upData = await upRes.json()
-      if (!upRes.ok || upData.error) { setError(upData.error || 'Upload failed'); setUploadingCertFor(null); return }
+      const urlData = await urlRes.json()
+      if (!urlRes.ok || urlData.error) { setError(urlData.error || 'Upload failed'); setUploadingCertFor(null); return }
 
-      // 2. Save URL to course
+      // 2. Upload directly to Supabase Storage
+      const uploadRes = await fetch(urlData.signedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type, 'x-upsert': 'false' },
+      })
+      if (!uploadRes.ok) { setError(`Storage error: ${uploadRes.status}`); setUploadingCertFor(null); return }
+
+      // 3. Save URL to course
       const patchRes = await fetch('/api/admin/courses', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ id: courseId, certificate_template_url: upData.url }),
+        body: JSON.stringify({ id: courseId, certificate_template_url: urlData.publicUrl }),
       })
       if (patchRes.ok) {
-        setCourses((prev) => prev.map((c) => c.id === courseId ? { ...c, certificate_template_url: upData.url } : c))
+        setCourses((prev) => prev.map((c) => c.id === courseId ? { ...c, certificate_template_url: urlData.publicUrl } : c))
       }
     } catch (err) {
       setError(err?.message || 'Upload failed')
@@ -661,22 +665,28 @@ function GallerySection({ showToast }) {
     try {
       const token = await getToken()
       for (const file of files) {
-        const fd = new FormData()
-        fd.append('file', file)
-        fd.append('bucket', 'gallery')
-        const upRes = await fetch('/api/admin/upload-to-storage', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: fd,
-        })
-        const upData = await upRes.json()
-        if (!upRes.ok || upData.error) { showToast('error', 'Upload Failed', upData.error); continue }
+        const ext = file.name.split('.').pop().toLowerCase()
 
-        // Save to gallery_photos table
+        // 1. Get a signed upload URL from the server (file never passes through serverless function)
+        const urlRes = await fetch(`/api/admin/get-upload-url?bucket=gallery&ext=${ext}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const urlData = await urlRes.json()
+        if (!urlRes.ok || urlData.error) { showToast('error', 'Upload Failed', urlData.error); continue }
+
+        // 2. Upload DIRECTLY to Supabase Storage (bypasses Vercel 4.5MB body limit)
+        const uploadRes = await fetch(urlData.signedUrl, {
+          method: 'PUT',
+          body: file,
+          headers: { 'Content-Type': file.type, 'x-upsert': 'false' },
+        })
+        if (!uploadRes.ok) { showToast('error', 'Upload Failed', `Storage error: ${uploadRes.status}`); continue }
+
+        // 3. Save URL to gallery_photos table
         const addRes = await fetch('/api/admin/gallery', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ url: upData.url, sort_order: photos.length }),
+          body: JSON.stringify({ url: urlData.publicUrl, sort_order: photos.length }),
         })
         const addData = await addRes.json()
         if (addData.photo) setPhotos((prev) => [...prev, addData.photo])
@@ -739,8 +749,8 @@ function GallerySection({ showToast }) {
       <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleUpload} />
 
       <div className="rounded-[16px] overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
-        <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4' }}>
-          <div>
+        <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4', direction: isRTL ? 'rtl' : 'ltr' }}>
+          <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
             <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">
               {isRTL ? 'معرض الصور' : 'Event Gallery'}
             </h2>
