@@ -424,6 +424,14 @@ const MODAL_T = {
     loadingCourses: 'جارٍ تحميل الكورسات...',
     noCourses: 'لا توجد كورسات متاحة حالياً',
     spamNote: 'تحقق من مجلد الرسائل غير المرغوب فيها إذا لم يصلك الإيميل.',
+    // Card details
+    cardDetailsTitle: '٤ — بيانات البطاقة',
+    cardName: 'الاسم على البطاقة', cardNamePh: 'مثال: MOHAMED AHMED',
+    cardNumber: 'رقم البطاقة', cardNumberPh: 'XXXX  XXXX  XXXX  XXXX',
+    cardExpiry: 'تاريخ الانتهاء', cardExpiryPh: 'MM/YY',
+    cardCvv: 'CVV', cardCvvPh: '•••',
+    cardNote: 'سيتواصل معك فريقنا لإتمام الدفع بالبطاقة عبر بوابة فوري الآمنة.',
+    cardComingSoon: '🔒 بوابة الدفع الإلكتروني قيد الإعداد — سيتواصل معك فريقنا لإتمام العملية.',
     // Receipt upload
     payDetailsTitle: '٤ — أكمل الدفع وارفع الإيصال',
     payDetailsHolder: 'اسم الحساب',
@@ -459,6 +467,14 @@ const MODAL_T = {
     loadingCourses: 'Loading courses...',
     noCourses: 'No courses available right now',
     spamNote: "Check your spam folder too if the email doesn't arrive within a few minutes.",
+    // Card details
+    cardDetailsTitle: '4 — Card Details',
+    cardName: 'Name on Card', cardNamePh: 'e.g. MOHAMED AHMED',
+    cardNumber: 'Card Number', cardNumberPh: 'XXXX  XXXX  XXXX  XXXX',
+    cardExpiry: 'Expiry Date', cardExpiryPh: 'MM/YY',
+    cardCvv: 'CVV', cardCvvPh: '•••',
+    cardNote: 'Our team will contact you to complete card payment via Fawry secure gateway.',
+    cardComingSoon: '🔒 Online card payment gateway is being set up — our team will contact you to complete the payment.',
     // Receipt upload
     payDetailsTitle: '4 — Complete Payment & Upload Receipt',
     payDetailsHolder: 'Account Name',
@@ -582,10 +598,13 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
   const [serverError, setServerError] = useState('')
 
   // Receipt upload state
-  const [receiptFile, setReceiptFile]         = useState(null)
-  const [receiptUrl, setReceiptUrl]           = useState('')
+  const [receiptFile, setReceiptFile]           = useState(null)
+  const [receiptUrl, setReceiptUrl]             = useState('')
   const [uploadingReceipt, setUploadingReceipt] = useState(false)
-  const [receiptError, setReceiptError]       = useState('')
+  const [receiptError, setReceiptError]         = useState('')
+
+  // Card details state (UI only until Fawry merchant account is ready)
+  const [card, setCard] = useState({ name: '', number: '', expiry: '', cvv: '' })
 
   const isManual = form.paymentMethod === 'vodafone_cash' || form.paymentMethod === 'instapay'
   const isCard   = form.paymentMethod === 'fawry'
@@ -598,10 +617,11 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
 
   const setPayment = useCallback((key) => () => {
     setForm((f) => ({ ...f, paymentMethod: key }))
-    // Reset receipt when switching payment method
+    // Reset receipt + card when switching payment method
     setReceiptFile(null)
     setReceiptUrl('')
     setReceiptError('')
+    setCard({ name: '', number: '', expiry: '', cvv: '' })
   }, [])
 
   const hasCourses = !coursesLoading && courses.length > 0
@@ -905,7 +925,98 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                   </div>
                 </div>
 
-                {/* Section 4 — Payment details + receipt upload (manual methods only) */}
+                {/* Section 4a — Card details (Fawry/card payment) */}
+                {isCard && (
+                  <>
+                    <div style={{ borderTop: '1px solid #F3F4F6' }} />
+                    <div>
+                      <p style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1.5px', fontFamily: 'Cairo, sans-serif', marginBottom: '12px' }}>
+                        {mt.cardDetailsTitle}
+                      </p>
+
+                      {/* Visa/MC logos */}
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                        <div style={{ background: '#F3F4F6', borderRadius: '8px', padding: '6px 12px', display: 'flex', alignItems: 'center' }}>
+                          <CardLogo />
+                        </div>
+                        <div style={{ background: '#EEF2FF', border: '1px solid #C7D2FE', borderRadius: '8px', padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#4F46E5', fontFamily: 'Cairo, sans-serif' }}>Fawry Secure</span>
+                        </div>
+                      </div>
+
+                      {/* Card number */}
+                      <div style={{ marginBottom: '10px' }}>
+                        <ModalField label={mt.cardNumber} error={null}>
+                          <input
+                            type="text" inputMode="numeric" maxLength={19}
+                            placeholder={mt.cardNumberPh}
+                            value={card.number}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\D/g, '').slice(0, 16)
+                              const fmt = raw.replace(/(.{4})/g, '$1 ').trim()
+                              setCard((c) => ({ ...c, number: fmt }))
+                            }}
+                            style={{ ...INPUT_BASE, letterSpacing: '2px', fontSize: '15px', fontWeight: 600 }}
+                            onFocus={onFocusIn} onBlur={onFocusOut}
+                          />
+                        </ModalField>
+                      </div>
+
+                      {/* Name on card */}
+                      <div style={{ marginBottom: '10px' }}>
+                        <ModalField label={mt.cardName} error={null}>
+                          <input
+                            type="text"
+                            placeholder={mt.cardNamePh}
+                            value={card.name}
+                            onChange={(e) => setCard((c) => ({ ...c, name: e.target.value.toUpperCase() }))}
+                            style={{ ...INPUT_BASE, textTransform: 'uppercase', letterSpacing: '1px' }}
+                            onFocus={onFocusIn} onBlur={onFocusOut}
+                          />
+                        </ModalField>
+                      </div>
+
+                      {/* Expiry + CVV */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <ModalField label={mt.cardExpiry} error={null}>
+                          <input
+                            type="text" inputMode="numeric" maxLength={5}
+                            placeholder={mt.cardExpiryPh}
+                            value={card.expiry}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\D/g, '').slice(0, 4)
+                              const fmt = raw.length > 2 ? raw.slice(0,2) + '/' + raw.slice(2) : raw
+                              setCard((c) => ({ ...c, expiry: fmt }))
+                            }}
+                            style={{ ...INPUT_BASE, letterSpacing: '2px', textAlign: 'center' }}
+                            onFocus={onFocusIn} onBlur={onFocusOut}
+                          />
+                        </ModalField>
+                        <ModalField label={mt.cardCvv} error={null}>
+                          <input
+                            type="password" inputMode="numeric" maxLength={3}
+                            placeholder={mt.cardCvvPh}
+                            value={card.cvv}
+                            onChange={(e) => setCard((c) => ({ ...c, cvv: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+                            style={{ ...INPUT_BASE, letterSpacing: '4px', textAlign: 'center' }}
+                            onFocus={onFocusIn} onBlur={onFocusOut}
+                          />
+                        </ModalField>
+                      </div>
+
+                      {/* Coming soon notice */}
+                      <div style={{ marginTop: '12px', background: '#EEF2FF', border: '1px solid #C7D2FE', borderRadius: '10px', padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <span style={{ fontSize: '13px', flexShrink: 0 }}>🔒</span>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#4338CA', fontFamily: 'Cairo, sans-serif', lineHeight: 1.6, textAlign: isRTL ? 'right' : 'left' }}>
+                          {isRTL ? mt.cardComingSoon?.replace('🔒 ', '') : mt.cardComingSoon?.replace('🔒 ', '')}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Section 4b — Payment details + receipt upload (manual methods only) */}
                 {isManual && (() => {
                   const details = MANUAL_PAYMENT_DETAILS[form.paymentMethod]
                   const accentColor = form.paymentMethod === 'vodafone_cash' ? '#E60000' : '#6B2FA0'
