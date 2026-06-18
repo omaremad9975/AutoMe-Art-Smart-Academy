@@ -79,10 +79,10 @@ function Sidebar({ pathname, onNavigate, user, userRole, onLogout, isExpanded, p
         style={{ borderBottom: '1px solid #FFE4D4', minHeight: '72px' }}
       >
         <img
-          src="/logo_mark_blue.png"
+          src="/logo_mark_black.png"
           alt="Art Smart Academy"
           className="flex-shrink-0 object-contain"
-          style={{ height: '24px', width: '24px', filter: 'brightness(0)' }}
+          style={{ height: '24px', width: '24px' }}
         />
         <div className="flex items-center flex-1 min-w-0" style={{ opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s', pointerEvents: isExpanded ? 'auto' : 'none' }}>
           <div className="flex flex-col overflow-hidden">
