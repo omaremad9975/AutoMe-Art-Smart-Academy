@@ -389,12 +389,13 @@ function Icon({ name, className = 'w-6 h-6', ...props }) {
 // ==========================================
 // CONFERENCE PHOTO CAROUSEL
 // ==========================================
-const conferencePhotos = [
-  { src: '/conference/conf1.jpg', caption: 'Group photo with all conference attendees and organizers' },
-  { src: '/conference/IMG_2259.jpg', caption: 'Students representing Art Smart Academy at the conference' },
-  { src: '/conference/IMG_2308.jpg', caption: 'Official meeting with conference dignitaries' },
-  { src: '/conference/conf2.jpg', caption: 'Conference sessions and presentations' },
-  { src: '/conference/conf3.jpg', caption: 'Highlights from the International AI Conference' },
+// Hardcoded fallback (shown if DB has no photos yet)
+const FALLBACK_PHOTOS = [
+  { id: 'f1', url: '/conference/conf1.jpg',    caption_ar: 'صورة جماعية مع المشاركين والمنظمين',          caption_en: 'Group photo with all conference attendees and organizers' },
+  { id: 'f2', url: '/conference/IMG_2259.jpg', caption_ar: 'طلاب أرت سمارت في المؤتمر',                   caption_en: 'Students representing Art Smart Academy at the conference' },
+  { id: 'f3', url: '/conference/IMG_2308.jpg', caption_ar: 'اجتماع رسمي مع كبار المشاركين',               caption_en: 'Official meeting with conference dignitaries' },
+  { id: 'f4', url: '/conference/conf2.jpg',    caption_ar: 'جلسات وعروض المؤتمر',                         caption_en: 'Conference sessions and presentations' },
+  { id: 'f5', url: '/conference/conf3.jpg',    caption_ar: 'أبرز لحظات المؤتمر الدولي للذكاء الاصطناعي', caption_en: 'Highlights from the International AI Conference' },
 ]
 
 // ==========================================
@@ -863,27 +864,40 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
   )
 }
 
-function ConferenceCarousel() {
+function ConferenceCarousel({ lang }) {
+  const [photos, setPhotos]   = useState(FALLBACK_PHOTOS)
   const [current, setCurrent] = useState(0)
-  const total = conferencePhotos.length
+  const isRTL = lang === 'ar'
 
-  const prev = () => setCurrent((c) => (c - 1 + total) % total)
-  const next = () => setCurrent((c) => (c + 1) % total)
+  useEffect(() => {
+    fetch('/api/public/gallery')
+      .then((r) => r.json())
+      .then(({ photos: dbPhotos }) => { if (dbPhotos?.length) { setPhotos(dbPhotos); setCurrent(0) } })
+      .catch(() => {})
+  }, [])
+
+  const total = photos.length
+  const prev  = () => setCurrent((c) => (c - 1 + total) % total)
+  const next  = () => setCurrent((c) => (c + 1) % total)
 
   useEffect(() => {
     const timer = setInterval(() => setCurrent((c) => (c + 1) % total), 4500)
     return () => clearInterval(timer)
   }, [total])
 
+  const caption = isRTL
+    ? (photos[current]?.caption_ar || photos[current]?.caption_en || '')
+    : (photos[current]?.caption_en || photos[current]?.caption_ar || '')
+
   return (
     <div className="relative max-w-3xl mx-auto">
       {/* Main image */}
       <div className="relative rounded-asa-radius-xl overflow-hidden shadow-asa-shadow-orange" style={{ aspectRatio: '16/9' }}>
-        {conferencePhotos.map((photo, i) => (
+        {photos.map((photo, i) => (
           <img
-            key={i}
-            src={photo.src}
-            alt={photo.caption}
+            key={photo.id || i}
+            src={photo.url || photo.src}
+            alt={photo.caption_en || photo.caption_ar || ''}
             className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
             style={{ opacity: i === current ? 1 : 0 }}
           />
@@ -891,9 +905,11 @@ function ConferenceCarousel() {
         {/* Gradient overlay at bottom for caption */}
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
         {/* Caption */}
-        <p className="absolute bottom-4 left-6 right-6 text-white text-xs md:text-sm font-semibold font-cairo text-center drop-shadow">
-          {conferencePhotos[current].caption}
-        </p>
+        {caption && (
+          <p className="absolute bottom-4 left-6 right-6 text-white text-xs md:text-sm font-semibold font-cairo text-center drop-shadow">
+            {caption}
+          </p>
+        )}
         {/* Prev / Next arrows */}
         <button
           onClick={prev}
@@ -912,7 +928,7 @@ function ConferenceCarousel() {
       </div>
       {/* Dot indicators */}
       <div className="flex justify-center gap-2 mt-4">
-        {conferencePhotos.map((_, i) => (
+        {photos.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
@@ -1423,7 +1439,7 @@ export default function Home() {
           </div>
 
           {/* Photo Carousel */}
-          <ConferenceCarousel />
+          <ConferenceCarousel lang={lang} />
 
         </div>
       </section>

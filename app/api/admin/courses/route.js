@@ -61,12 +61,13 @@ export async function PATCH(request) {
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
   const payload = {}
-  if (fields.name_ar  !== undefined) payload.name_ar   = fields.name_ar
-  if (fields.name_en  !== undefined) payload.name_en   = fields.name_en
-  if (fields.price    !== undefined) payload.price      = parseFloat(fields.price) || 0
-  if (fields.duration !== undefined) payload.duration   = fields.duration
-  if (fields.seats    !== undefined) payload.seats      = parseInt(fields.seats) || 0
-  if (fields.is_active !== undefined) payload.is_active = fields.is_active
+  if (fields.name_ar                  !== undefined) payload.name_ar                  = fields.name_ar
+  if (fields.name_en                  !== undefined) payload.name_en                  = fields.name_en
+  if (fields.price                    !== undefined) payload.price                     = parseFloat(fields.price) || 0
+  if (fields.duration                 !== undefined) payload.duration                  = fields.duration
+  if (fields.seats                    !== undefined) payload.seats                     = parseInt(fields.seats) || 0
+  if (fields.is_active                !== undefined) payload.is_active                 = fields.is_active
+  if (fields.certificate_template_url !== undefined) payload.certificate_template_url  = fields.certificate_template_url
 
   const { data, error } = await supabaseAdmin.from('courses').update(payload).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

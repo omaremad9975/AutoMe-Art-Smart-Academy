@@ -10,15 +10,19 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- TABLE: courses
 -- ============================================================
 CREATE TABLE IF NOT EXISTS courses (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name_ar       TEXT NOT NULL,
-  name_en       TEXT NOT NULL,
-  price         NUMERIC(10, 2) NOT NULL DEFAULT 0,
-  duration      TEXT NOT NULL DEFAULT '',
-  seats         INTEGER NOT NULL DEFAULT 0,
-  is_active     BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id                       UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name_ar                  TEXT NOT NULL,
+  name_en                  TEXT NOT NULL,
+  price                    NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  duration                 TEXT NOT NULL DEFAULT '',
+  seats                    INTEGER NOT NULL DEFAULT 0,
+  is_active                BOOLEAN NOT NULL DEFAULT TRUE,
+  certificate_template_url TEXT,
+  created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ⚠️ If courses table already exists, run this migration:
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS certificate_template_url TEXT;
 
 -- ============================================================
 -- TABLE: registrations
@@ -83,6 +87,25 @@ INSERT INTO settings (key, value) VALUES
   ('whatsapp',          '+20 100 000 0000'),
   ('cert_id_format',    'ASA-[COURSE]-[YEAR]-[NUMBER]')
 ON CONFLICT (key) DO NOTHING;
+
+-- ============================================================
+-- TABLE: gallery_photos (conference / event photo carousel)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS gallery_photos (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  url         TEXT NOT NULL,
+  caption_ar  TEXT NOT NULL DEFAULT '',
+  caption_en  TEXT NOT NULL DEFAULT '',
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE gallery_photos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public read gallery_photos"
+  ON gallery_photos FOR SELECT TO anon USING (TRUE);
+CREATE POLICY "Authenticated write gallery_photos"
+  ON gallery_photos FOR ALL TO authenticated USING (TRUE) WITH CHECK (TRUE);
 
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS)

@@ -161,6 +161,9 @@ function CoursesSection() {
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [saving, setSaving] = useState(false)
   const [togglingId, setTogglingId] = useState(null)
+  const [uploadingCertFor, setUploadingCertFor] = useState(null) // course id being uploaded
+  const certInputRef = useRef(null)
+  const [pendingCertCourseId, setPendingCertCourseId] = useState(null)
 
   const fetchCourses = useCallback(async () => {
     setLoading(true)
@@ -239,8 +242,73 @@ function CoursesSection() {
     setTogglingId(null)
   }
 
+  const triggerCertUpload = (courseId) => {
+    setPendingCertCourseId(courseId)
+    certInputRef.current?.click()
+  }
+
+  const handleCertFileChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !pendingCertCourseId) return
+    e.target.value = ''
+
+    setUploadingCertFor(pendingCertCourseId)
+    const courseId = pendingCertCourseId
+    setPendingCertCourseId(null)
+
+    try {
+      const token = await getToken()
+
+      // 1. Upload file to storage
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('bucket', 'certificate-templates')
+      const upRes = await fetch('/api/admin/upload-to-storage', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      })
+      const upData = await upRes.json()
+      if (!upRes.ok || upData.error) { setError(upData.error || 'Upload failed'); setUploadingCertFor(null); return }
+
+      // 2. Save URL to course
+      const patchRes = await fetch('/api/admin/courses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: courseId, certificate_template_url: upData.url }),
+      })
+      if (patchRes.ok) {
+        setCourses((prev) => prev.map((c) => c.id === courseId ? { ...c, certificate_template_url: upData.url } : c))
+      }
+    } catch (err) {
+      setError(err?.message || 'Upload failed')
+    }
+    setUploadingCertFor(null)
+  }
+
+  const removeCert = async (courseId) => {
+    try {
+      const token = await getToken()
+      await fetch('/api/admin/courses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: courseId, certificate_template_url: null }),
+      })
+      setCourses((prev) => prev.map((c) => c.id === courseId ? { ...c, certificate_template_url: null } : c))
+    } catch {}
+  }
+
   return (
     <div className="space-y-5">
+      {/* Hidden cert upload input */}
+      <input
+        ref={certInputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+        style={{ display: 'none' }}
+        onChange={handleCertFileChange}
+      />
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#6B6B6B] font-cairo">
           {courses.length} {t.courses}
@@ -342,6 +410,50 @@ function CoursesSection() {
                 >
                   {t.delete}
                 </button>
+              </div>
+
+              {/* Certificate Template */}
+              <div className="rounded-[10px] p-3" style={{ background: '#FFF8F4', border: '1px dashed #FFD0B0' }}>
+                <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-wider font-cairo mb-2">
+                  📜 Certificate Template
+                </p>
+                {course.certificate_template_url ? (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={course.certificate_template_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 text-xs font-semibold font-cairo truncate"
+                      style={{ color: '#FF5C1A' }}
+                    >
+                      ↗ View Template
+                    </a>
+                    <button
+                      onClick={() => triggerCertUpload(course.id)}
+                      disabled={uploadingCertFor === course.id}
+                      className="text-xs font-bold font-cairo px-2 py-1 rounded-[6px]"
+                      style={{ background: 'rgba(255,92,26,0.10)', color: '#FF5C1A' }}
+                    >
+                      {uploadingCertFor === course.id ? '...' : 'Replace'}
+                    </button>
+                    <button
+                      onClick={() => removeCert(course.id)}
+                      className="text-xs font-bold font-cairo px-2 py-1 rounded-[6px]"
+                      style={{ background: 'rgba(239,68,68,0.08)', color: '#DC2626' }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => triggerCertUpload(course.id)}
+                    disabled={uploadingCertFor === course.id}
+                    className="w-full text-xs font-bold font-cairo py-1.5 rounded-[6px] transition-all"
+                    style={{ background: 'rgba(255,92,26,0.08)', color: '#FF5C1A', border: '1px solid rgba(255,92,26,0.20)' }}
+                  >
+                    {uploadingCertFor === course.id ? 'Uploading...' : '+ Upload Certificate Design'}
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -519,6 +631,236 @@ function SocialSection({ showToast }) {
   )
 }
 
+// ── Gallery Section ────────────────────────────────────────────────────────────
+function GallerySection({ showToast }) {
+  const { isRTL } = useDashboardLang()
+  const [photos, setPhotos]           = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [uploading, setUploading]     = useState(false)
+  const [captionModal, setCaptionModal] = useState(null) // { id, caption_ar, caption_en }
+  const fileInputRef = useRef(null)
+
+  const fetchPhotos = useCallback(async () => {
+    setLoading(true)
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/gallery', { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      setPhotos(data.photos || [])
+    } catch {}
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { fetchPhotos() }, [fetchPhotos])
+
+  const handleUpload = async (e) => {
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    e.target.value = ''
+    setUploading(true)
+    try {
+      const token = await getToken()
+      for (const file of files) {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('bucket', 'gallery')
+        const upRes = await fetch('/api/admin/upload-to-storage', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        })
+        const upData = await upRes.json()
+        if (!upRes.ok || upData.error) { showToast('error', 'Upload Failed', upData.error); continue }
+
+        // Save to gallery_photos table
+        const addRes = await fetch('/api/admin/gallery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ url: upData.url, sort_order: photos.length }),
+        })
+        const addData = await addRes.json()
+        if (addData.photo) setPhotos((prev) => [...prev, addData.photo])
+      }
+      showToast('success', isRTL ? 'تم الرفع بنجاح' : 'Photos Uploaded', isRTL ? 'تمت إضافة الصور إلى المعرض' : 'Photos added to the gallery')
+    } catch (err) {
+      showToast('error', 'Error', err?.message)
+    }
+    setUploading(false)
+  }
+
+  const handleDelete = async (photo) => {
+    try {
+      const token = await getToken()
+      // Delete from DB
+      await fetch('/api/admin/gallery', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: photo.id }),
+      })
+      // Try to delete from storage too (best effort — extract filename from URL)
+      try {
+        const url = new URL(photo.url)
+        const pathParts = url.pathname.split('/object/public/gallery/')
+        if (pathParts[1]) {
+          await fetch('/api/admin/upload-to-storage', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ bucket: 'gallery', path: pathParts[1] }),
+          })
+        }
+      } catch {}
+      setPhotos((prev) => prev.filter((p) => p.id !== photo.id))
+      showToast('success', isRTL ? 'تم الحذف' : 'Photo Deleted', '')
+    } catch (err) {
+      showToast('error', 'Error', err?.message)
+    }
+  }
+
+  const handleSaveCaptions = async () => {
+    if (!captionModal) return
+    try {
+      const token = await getToken()
+      await fetch('/api/admin/gallery', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: captionModal.id, caption_ar: captionModal.caption_ar, caption_en: captionModal.caption_en }),
+      })
+      setPhotos((prev) => prev.map((p) => p.id === captionModal.id ? { ...p, caption_ar: captionModal.caption_ar, caption_en: captionModal.caption_en } : p))
+      showToast('success', isRTL ? 'تم الحفظ' : 'Caption Saved', '')
+      setCaptionModal(null)
+    } catch (err) {
+      showToast('error', 'Error', err?.message)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Hidden file input */}
+      <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleUpload} />
+
+      <div className="rounded-[16px] overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
+        <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4' }}>
+          <div>
+            <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">
+              {isRTL ? 'معرض الصور' : 'Event Gallery'}
+            </h2>
+            <p className="text-xs text-[#A0A0A0] font-cairo mt-0.5">
+              {isRTL ? 'صور المؤتمر والفعاليات التي تظهر في الصفحة الرئيسية' : 'Conference and event photos shown in the home page carousel'}
+            </p>
+          </div>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-sm font-bold text-white font-cairo transition-all"
+            style={{ background: uploading ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)', boxShadow: uploading ? 'none' : '0 4px 12px rgba(255,92,26,0.25)' }}
+          >
+            {uploading ? (isRTL ? 'جارٍ الرفع...' : 'Uploading...') : (isRTL ? '+ رفع صور' : '+ Upload Photos')}
+          </button>
+        </div>
+
+        <div className="p-6">
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="aspect-video rounded-[12px] animate-pulse" style={{ background: '#FFE4D4' }} />
+              ))}
+            </div>
+          ) : photos.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <div className="text-5xl">🖼️</div>
+              <p className="text-[#A0A0A0] font-cairo text-sm">
+                {isRTL ? 'لا توجد صور بعد. ارفع صور لتظهر في القائمة الدوارة.' : 'No photos yet. Upload photos to show in the carousel.'}
+              </p>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-5 py-2 rounded-full text-sm font-bold text-white font-cairo"
+                style={{ background: '#FF5C1A' }}
+              >
+                {isRTL ? 'رفع الصور' : 'Upload Photos'}
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {photos.map((photo) => (
+                <div key={photo.id} className="relative group rounded-[12px] overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                  <img src={photo.url} alt={photo.caption_en || ''} className="w-full h-full object-cover" />
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => setCaptionModal({ id: photo.id, caption_ar: photo.caption_ar || '', caption_en: photo.caption_en || '' })}
+                      className="px-3 py-1.5 rounded-[8px] text-xs font-bold text-white font-cairo"
+                      style={{ background: 'rgba(255,92,26,0.80)' }}
+                    >
+                      {isRTL ? 'تعديل' : 'Caption'}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(photo)}
+                      className="px-3 py-1.5 rounded-[8px] text-xs font-bold text-white font-cairo"
+                      style={{ background: 'rgba(220,38,38,0.80)' }}
+                    >
+                      {isRTL ? 'حذف' : 'Delete'}
+                    </button>
+                  </div>
+                  {/* Caption badge */}
+                  {(photo.caption_ar || photo.caption_en) && (
+                    <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-black/50">
+                      <p className="text-white text-[10px] font-cairo truncate">
+                        {isRTL ? photo.caption_ar : photo.caption_en}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Caption edit modal */}
+      {captionModal && (
+        <Modal title={isRTL ? 'تعديل التسمية التوضيحية' : 'Edit Caption'} onClose={() => setCaptionModal(null)}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[#1A1A1A] font-bold text-sm mb-1.5 font-cairo">Caption (Arabic)</label>
+              <input
+                type="text"
+                value={captionModal.caption_ar}
+                onChange={(e) => setCaptionModal((m) => ({ ...m, caption_ar: e.target.value }))}
+                placeholder="وصف الصورة بالعربية"
+                className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none"
+                style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'rtl' }}
+                onFocus={(e) => { e.target.style.borderColor = '#FF5C1A' }}
+                onBlur={(e) => { e.target.style.borderColor = '#FFE4D4' }}
+              />
+            </div>
+            <div>
+              <label className="block text-[#1A1A1A] font-bold text-sm mb-1.5 font-cairo">Caption (English)</label>
+              <input
+                type="text"
+                value={captionModal.caption_en}
+                onChange={(e) => setCaptionModal((m) => ({ ...m, caption_en: e.target.value }))}
+                placeholder="Photo caption in English"
+                className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none"
+                style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }}
+                onFocus={(e) => { e.target.style.borderColor = '#FF5C1A' }}
+                onBlur={(e) => { e.target.style.borderColor = '#FFE4D4' }}
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setCaptionModal(null)} className="flex-1 py-2.5 rounded-[10px] text-sm font-bold text-[#6B6B6B] font-cairo" style={{ border: '1.5px solid #FFE4D4' }}>
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </button>
+              <button onClick={handleSaveCaptions} className="flex-1 py-2.5 rounded-[10px] text-sm font-bold text-white font-cairo" style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
+                {isRTL ? 'حفظ' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
 // ── Academy Info Section ────────────────────────────────────────────────────────
 function AcademyInfoSection({ showToast }) {
   const { isRTL } = useDashboardLang()
@@ -674,6 +1016,7 @@ export default function LandingPage() {
     { key: 'courses', label: t.tabCourses },
     { key: 'social',  label: t.tabSocial },
     { key: 'academy', label: isRTL ? 'معلومات الأكاديمية' : 'Academy Info' },
+    { key: 'gallery', label: isRTL ? 'معرض الصور' : 'Gallery' },
   ]
 
   return (
@@ -707,6 +1050,7 @@ export default function LandingPage() {
         {activeTab === 'courses' && <CoursesSection />}
         {activeTab === 'social'  && <SocialSection showToast={showToast} />}
         {activeTab === 'academy' && <AcademyInfoSection showToast={showToast} />}
+        {activeTab === 'gallery' && <GallerySection showToast={showToast} />}
       </div>
     </>
   )

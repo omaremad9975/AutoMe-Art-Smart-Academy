@@ -95,6 +95,7 @@ export default function SettingsPage() {
   const [savingCert, setSavingCert]       = useState(false)
 
   // ── Password state ─────────────────────────────────────────────────────────
+  const [oldPassword, setOldPassword]     = useState('')
   const [newPassword, setNewPassword]     = useState('')
   const [confirmPw, setConfirmPw]         = useState('')
   const [savingPw, setSavingPw]           = useState(false)
@@ -155,10 +156,17 @@ export default function SettingsPage() {
 
   // ── Change password ─────────────────────────────────────────────────────────
   const handleChangePassword = async () => {
+    if (!oldPassword) {
+      showToast('error',
+        isRTL ? 'أدخل كلمة المرور الحالية' : 'Enter Current Password',
+        isRTL ? 'يجب إدخال كلمة المرور الحالية للتحقق من هويتك' : 'You must enter your current password to verify your identity'
+      )
+      return
+    }
     if (newPassword.length < 6) {
       showToast('error',
         isRTL ? 'كلمة المرور قصيرة' : 'Password Too Short',
-        isRTL ? 'يجب أن تكون كلمة المرور 6 أحرف على الأقل' : 'Password must be at least 6 characters'
+        isRTL ? 'يجب أن تكون كلمة المرور الجديدة 6 أحرف على الأقل' : 'New password must be at least 6 characters'
       )
       return
     }
@@ -170,11 +178,26 @@ export default function SettingsPage() {
       return
     }
     setSavingPw(true)
+    // Re-authenticate with old password first
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: oldPassword,
+    })
+    if (signInError) {
+      setSavingPw(false)
+      showToast('error',
+        isRTL ? 'كلمة المرور الحالية خاطئة' : 'Incorrect Current Password',
+        isRTL ? 'تأكد من كلمة المرور الحالية وحاول مجدداً' : 'Check your current password and try again'
+      )
+      return
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword })
     setSavingPw(false)
     if (error) {
       showToast('error', isRTL ? 'فشل تغيير كلمة المرور' : 'Password Change Failed', error.message)
     } else {
+      setOldPassword('')
       setNewPassword('')
       setConfirmPw('')
       showToast('success',
@@ -225,8 +248,8 @@ export default function SettingsPage() {
             />
             {/* Preview */}
             <div className="rounded-[10px] p-4" style={{ background: '#FFF8F4', border: '1px solid #FFE4D4' }}>
-              <p className="text-xs font-bold text-[#A0A0A0] uppercase tracking-wider font-cairo mb-1">{t.certPreview}</p>
-              <p className="font-bold text-lg font-mono text-[#FF5C1A]">
+              <p className="text-xs font-bold text-[#A0A0A0] uppercase tracking-wider font-cairo mb-1" style={{ textAlign: isRTL ? 'right' : 'left' }}>{t.certPreview}</p>
+              <p className="font-bold text-lg font-mono text-[#FF5C1A]" style={{ textAlign: isRTL ? 'right' : 'left', direction: 'ltr' }}>
                 {certFormat
                   .replace('[COURSE]', 'CREATIVE')
                   .replace('[YEAR]', new Date().getFullYear())
@@ -260,6 +283,22 @@ export default function SettingsPage() {
             </p>
           </div>
           <div className="p-6 space-y-4">
+            {/* Old password */}
+            <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
+              <label className="block text-[#1A1A1A] font-bold text-sm mb-1 font-cairo">
+                {isRTL ? 'كلمة المرور الحالية' : 'Current Password'}
+              </label>
+              <input
+                type="password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                placeholder={isRTL ? 'أدخل كلمة المرور الحالية' : 'Enter your current password'}
+                className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none transition-all duration-200"
+                style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr', textAlign: 'left' }}
+                onFocus={(e) => { e.target.style.borderColor = '#FF5C1A'; e.target.style.boxShadow = '0 0 0 3px rgba(255,92,26,0.10)' }}
+                onBlur={(e) => { e.target.style.borderColor = '#FFE4D4'; e.target.style.boxShadow = 'none' }}
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
                 <label className="block text-[#1A1A1A] font-bold text-sm mb-1 font-cairo">
@@ -311,14 +350,14 @@ export default function SettingsPage() {
         <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
           <button
             onClick={handleChangePassword}
-            disabled={savingPw || !newPassword || !confirmPw}
+            disabled={savingPw || !oldPassword || !newPassword || !confirmPw}
             className="px-8 py-3 rounded-[10px] text-sm font-bold text-white font-cairo transition-all duration-200"
             style={{
               background: savingPw ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)',
               boxShadow: savingPw ? 'none' : '0 4px 16px rgba(255,92,26,0.30)',
-              opacity: (!newPassword || !confirmPw) ? 0.6 : 1,
+              opacity: (!oldPassword || !newPassword || !confirmPw) ? 0.6 : 1,
             }}
-            onMouseEnter={(e) => { if (!savingPw && newPassword && confirmPw) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,92,26,0.40)' } }}
+            onMouseEnter={(e) => { if (!savingPw && oldPassword && newPassword && confirmPw) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,92,26,0.40)' } }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = savingPw ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
           >
             {savingPw
