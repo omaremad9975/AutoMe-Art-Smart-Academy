@@ -31,19 +31,19 @@ function Modal({ title, onClose, children }) {
 }
 
 // ── Role Badge ─────────────────────────────────────────────────────────────────
-function RoleBadge({ role, t }) {
+function RoleBadge({ role, isRTL }) {
   const styles = {
-    super_admin: { bg: 'rgba(255,92,26,0.10)',  color: '#FF5C1A',  border: 'rgba(255,92,26,0.20)',  label: t.roleSuperAdmin, icon: '⭐' },
-    admin:       { bg: 'rgba(99,102,241,0.10)', color: '#6366F1',  border: 'rgba(99,102,241,0.20)', label: t.roleAdmin,      icon: '👤' },
-    marketing:   { bg: 'rgba(16,185,129,0.10)', color: '#059669',  border: 'rgba(16,185,129,0.20)', label: t.roleMarketing,  icon: '📣' },
+    super_admin: { bg: 'rgba(99,102,241,0.10)', color: '#6366F1', border: 'rgba(99,102,241,0.20)', label: isRTL ? 'أدمن' : 'Admin' },
+    admin:       { bg: 'rgba(99,102,241,0.10)', color: '#6366F1', border: 'rgba(99,102,241,0.20)', label: isRTL ? 'أدمن' : 'Admin' },
+    marketing:   { bg: 'rgba(16,185,129,0.10)', color: '#059669', border: 'rgba(16,185,129,0.20)', label: isRTL ? 'تسويق' : 'Marketing' },
   }
   const s = styles[role] || styles.admin
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold font-cairo"
+      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-cairo"
       style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}` }}
     >
-      {s.icon} {s.label}
+      {s.label}
     </span>
   )
 }
@@ -223,9 +223,8 @@ export default function UsersPage() {
       {/* Role Legend */}
       <div className="flex flex-wrap gap-3 p-4 rounded-[12px]" style={{ background: 'rgba(255,92,26,0.04)', border: '1px solid rgba(255,92,26,0.12)' }}>
         <div className="flex items-start gap-2.5">
-          <span className="text-lg">ℹ️</span>
           <div className="text-xs font-cairo text-[#6B6B6B] space-y-1">
-            <p><strong className="text-[#FF5C1A]">Super Admin / Admin</strong> — {isRTL ? 'وصول كامل لجميع الصفحات' : 'Full access to all pages'}</p>
+            <p><strong className="text-[#6366F1]">Admin</strong> — {isRTL ? 'وصول كامل لجميع الصفحات' : 'Full access to all pages'}</p>
             <p><strong className="text-[#059669]">Marketing</strong> — {isRTL ? 'التسجيلات فقط' : 'Registrations page only'}</p>
           </div>
         </div>
@@ -293,7 +292,7 @@ export default function UsersPage() {
                       </div>
                     </td>
                     {/* Role */}
-                    <td className="px-5 py-4"><RoleBadge role={admin.role} t={t} /></td>
+                    <td className="px-5 py-4"><RoleBadge role={admin.role} isRTL={isRTL} /></td>
                     {/* Joined */}
                     <td className="px-5 py-4 text-xs text-[#A0A0A0] font-cairo whitespace-nowrap">
                       {formatDateTime(admin.created_at)}
@@ -360,15 +359,14 @@ export default function UsersPage() {
                 onFocus={(e) => { e.target.style.borderColor = '#FF5C1A' }}
                 onBlur={(e) => { e.target.style.borderColor = '#FFE4D4' }}
               >
-                <option value="admin">👤 {t.roleAdmin}</option>
-                <option value="super_admin">⭐ {t.roleSuperAdmin}</option>
-                <option value="marketing">📣 {t.roleMarketing}</option>
+                <option value="admin">{isRTL ? 'أدمن' : 'Admin'}</option>
+                <option value="marketing">{isRTL ? 'تسويق' : 'Marketing'}</option>
               </select>
               {/* Role description */}
               <p className="text-[10px] text-[#A0A0A0] font-cairo mt-1.5 leading-relaxed">
                 {form.role === 'marketing'
-                  ? (isRTL ? '⚠️ التسجيلات فقط — لا يمكن الوصول للإعدادات أو المستخدمين أو الموقع' : '⚠️ Registrations only — no access to Settings, Users, or Landing Page')
-                  : (isRTL ? '✅ وصول كامل لجميع الصفحات' : '✅ Full access to all pages')}
+                  ? (isRTL ? 'التسجيلات فقط — لا يمكن الوصول للإعدادات أو المستخدمين أو الموقع' : 'Registrations only — no access to Settings, Users, or Landing Page')
+                  : (isRTL ? 'وصول كامل لجميع الصفحات' : 'Full access to all pages')}
               </p>
             </div>
 

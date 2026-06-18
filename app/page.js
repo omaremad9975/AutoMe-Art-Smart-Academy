@@ -912,18 +912,12 @@ export default function Home() {
   const openModal = () => setShowModal(true)
   const closeModal = () => setShowModal(false)
 
-  // Fetch live settings from Supabase (phone, email, whatsapp)
+  // Fetch live settings via public API (service role bypasses RLS)
   useEffect(() => {
-    supabase
-      .from('settings')
-      .select('key, value')
-      .then(({ data }) => {
-        if (data) {
-          const map = {}
-          data.forEach((r) => { map[r.key] = r.value })
-          setSiteSettings(map)
-        }
-      })
+    fetch('/api/public/settings')
+      .then((r) => r.json())
+      .then(({ settings }) => { if (settings) setSiteSettings(settings) })
+      .catch(() => {})
   }, [])
 
   // Fetch active courses via service-role API (bypasses RLS — always reliable)
