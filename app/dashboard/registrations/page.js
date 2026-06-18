@@ -42,8 +42,6 @@ export default function RegistrationsPage() {
   const [filterCourse, setFilterCourse]   = useState('all')
   const [filterDateFrom, setFilterDateFrom] = useState('')
   const [filterDateTo,   setFilterDateTo]   = useState('')
-  const [updating, setUpdating] = useState(null)
-
   const fetchRegistrations = useCallback(async () => {
     setLoading(true)
     try {
@@ -59,36 +57,6 @@ export default function RegistrationsPage() {
   }, [])
 
   useEffect(() => { fetchRegistrations() }, [fetchRegistrations])
-
-  const toggleStatus = async (reg) => {
-    setUpdating(reg.id)
-    const newStatus = reg.payment_status === 'confirmed' ? 'pending' : 'confirmed'
-
-    if (newStatus === 'confirmed') {
-      // Confirm via API — this sends the confirmation email
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/admin/confirm-registration', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-        body:    JSON.stringify({ registrationId: reg.id }),
-      })
-      if (res.ok) {
-        setRegistrations(prev => prev.map(r => r.id === reg.id ? { ...r, payment_status: 'confirmed' } : r))
-      }
-    } else {
-      // Unconfirm — update via service role API, no email
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/admin/registrations', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ id: reg.id, payment_status: 'pending' }),
-      })
-      if (res.ok) {
-        setRegistrations(prev => prev.map(r => r.id === reg.id ? { ...r, payment_status: 'pending' } : r))
-      }
-    }
-    setUpdating(null)
-  }
 
   // Unique courses derived from loaded data
   const uniqueCourses = Array.from(
@@ -278,7 +246,7 @@ export default function RegistrationsPage() {
           <table className="w-full">
             <thead>
               <tr style={{ background: '#FFF8F4', borderBottom: '1px solid #FFE4D4' }}>
-                {[t.colStudent, t.colPhone, t.colEmail, t.colCourse, t.colMethod, t.colStatus, t.colDate, t.colAction].map((h) => (
+                {[t.colStudent, t.colPhone, t.colEmail, t.colCourse, t.colMethod, t.colStatus, t.colDate].map((h) => (
                   <th key={h} className="px-5 py-3 text-xs font-bold text-[#A0A0A0] uppercase tracking-wider font-cairo whitespace-nowrap"
                     style={{ textAlign: isRTL ? 'right' : 'left' }}>
                     {h}
@@ -320,26 +288,6 @@ export default function RegistrationsPage() {
                     <td className="px-5 py-4"><StatusBadge status={reg.payment_status} t={t} /></td>
                     <td className="px-5 py-4 text-xs text-[#A0A0A0] font-cairo whitespace-nowrap">
                       {formatDateTime(reg.created_at)}
-                    </td>
-                    <td className="px-5 py-4">
-                      {reg.payment_method === 'fawry' ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo"
-                          style={{ background: 'rgba(99,102,241,0.07)', color: '#9CA3AF', border: '1px solid rgba(99,102,241,0.15)' }}
-                          title="Fawry auto-confirms payments — no manual action needed">
-                          ⚡ Auto
-                        </span>
-                      ) : (
-                        <button onClick={() => toggleStatus(reg)} disabled={updating === reg.id}
-                          className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo transition-all duration-200"
-                          style={{
-                            background: reg.payment_status === 'confirmed' ? 'rgba(220,38,38,0.08)' : 'rgba(16,185,129,0.08)',
-                            color:      reg.payment_status === 'confirmed' ? '#DC2626'              : '#059669',
-                            border:     `1px solid ${reg.payment_status === 'confirmed' ? 'rgba(220,38,38,0.20)' : 'rgba(16,185,129,0.20)'}`,
-                            opacity: updating === reg.id ? 0.6 : 1,
-                          }}>
-                          {updating === reg.id ? '...' : reg.payment_status === 'confirmed' ? '↩ Unconfirm' : '✓ Confirm'}
-                        </button>
-                      )}
                     </td>
                   </tr>
                 ))

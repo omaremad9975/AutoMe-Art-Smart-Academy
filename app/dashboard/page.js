@@ -1,22 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 import { useDashboardLang } from '@/lib/dashboard-lang'
-
-const MOCK_STATS = {
-  totalRegistrations: 10,
-  totalRevenue: 14500,
-  activeCourses: 2,
-  pendingPayments: 3,
-}
-
-const MOCK_RECENT = [
-  { id: 1, student_name: 'Ahmed Hassan',  courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' }, payment_method: 'fawry',         payment_status: 'confirmed', created_at: '2026-06-10' },
-  { id: 2, student_name: 'Sara Mohamed',  courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم UI/UX' }, payment_method: 'vodafone_cash', payment_status: 'pending',   created_at: '2026-06-11' },
-  { id: 3, student_name: 'Omar Ali',      courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' }, payment_method: 'instapay',      payment_status: 'confirmed', created_at: '2026-06-12' },
-  { id: 4, student_name: 'Nour Khaled',   courses: { name_en: 'UI/UX Design Bootcamp',    name_ar: 'بوتكامب تصميم UI/UX' }, payment_method: 'fawry',         payment_status: 'pending',   created_at: '2026-06-13' },
-  { id: 5, student_name: 'Yasmine Tarek', courses: { name_en: 'Digital Art Fundamentals', name_ar: 'أساسيات الفن الرقمي' }, payment_method: 'vodafone_cash', payment_status: 'confirmed', created_at: '2026-06-14' },
-]
 
 function StatCard({ icon, label, value, sub, loading }) {
   return (
@@ -72,12 +58,35 @@ export default function DashboardOverview() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setLoading(true)
-    setTimeout(() => {
-      setStats(MOCK_STATS)
-      setRecentRegs(MOCK_RECENT)
+    const load = async () => {
+      setLoading(true)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) { setLoading(false); return }
+
+        // Fetch registrations + active courses in parallel
+        const [regRes, courseRes] = await Promise.all([
+          fetch('/api/admin/registrations', { headers: { Authorization: `Bearer ${session.access_token}` } }),
+          fetch('/api/public/courses'),
+        ])
+        const { registrations = [] } = await regRes.json()
+        const { courses = [] }       = await courseRes.json()
+
+        const confirmed     = registrations.filter((r) => r.payment_status === 'confirmed')
+        const totalRevenue  = confirmed.reduce((sum, r) => sum + Number(r.courses?.price || 0), 0)
+        const pendingCount  = registrations.filter((r) => r.payment_status !== 'confirmed').length
+
+        setStats({
+          totalRegistrations: registrations.length,
+          totalRevenue,
+          activeCourses:  courses.length,
+          pendingPayments: pendingCount,
+        })
+        setRecentRegs(registrations.slice(0, 5))
+      } catch {}
       setLoading(false)
-    }, 600)
+    }
+    load()
   }, [])
 
   const formatCurrency = (n) => `EGP ${Number(n).toLocaleString('en-EG')}`
@@ -143,12 +152,7 @@ export default function DashboardOverview() {
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs font-cairo flex-shrink-0" style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
-                          {reg.student_name?.[0]?.toUpperCase()}
-                        </div>
-                        <span className="font-semibold text-sm text-[#1A1A1A] font-cairo">{reg.student_name}</span>
-                      </div>
+                      <span className="font-semibold text-sm text-[#1A1A1A] font-cairo">{reg.student_name}</span>
                     </td>
                     <td className="px-6 py-4 text-sm text-[#6B6B6B] font-cairo">
                       {lang === 'ar' ? reg.courses?.name_ar : reg.courses?.name_en}
