@@ -471,20 +471,38 @@ function CardLogo() {
 
 function VodafoneCashLogo() {
   return (
-    <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="50" cy="50" r="48" fill="#E60000"/>
-      {/* Vodafone speech-bubble/quote mark */}
-      <path fill="white" d="M67 30 C80 30 80 50 67 50 C62 50 58 47 55 44 L48 52 L51 44 C38 42 38 30 54 30 Z"/>
-      <circle cx="54" cy="40" r="5" fill="#E60000"/>
-    </svg>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {/* Vodafone red circle with official speech-bubble mark */}
+      <svg width="28" height="28" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="50" fill="#E60000"/>
+        {/* Vodafone speech bubble shape — open at bottom-left */}
+        <path fill="white" d="
+          M 65,22
+          C 81,22 81,42 65,42
+          C 59,42 54,39 51,36
+          L 44,44 L 47.5,35.5
+          C 33,33 33,22 50,22 Z
+        "/>
+        <circle cx="50" cy="32" r="6" fill="#E60000"/>
+      </svg>
+      <span style={{ fontWeight: 800, fontSize: '13px', color: '#E60000', fontFamily: 'Arial, sans-serif', letterSpacing: '-0.3px' }}>Cash</span>
+    </div>
   )
 }
 
 function InstaPayLogo() {
   return (
-    <svg width="72" height="22" viewBox="0 0 180 55" xmlns="http://www.w3.org/2000/svg">
-      <rect width="180" height="55" rx="8" fill="#6B2FA0"/>
-      <text x="90" y="38" textAnchor="middle" fill="white" fontSize="26" fontWeight="800" fontFamily="Arial, sans-serif" letterSpacing="-0.5">instaPay</text>
+    <svg width="80" height="26" viewBox="0 0 200 65" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="ip-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8B2FC9"/>
+          <stop offset="100%" stopColor="#5B0FA8"/>
+        </linearGradient>
+      </defs>
+      <rect width="200" height="65" rx="10" fill="url(#ip-grad)"/>
+      {/* instaPay wordmark */}
+      <text x="100" y="27" textAnchor="middle" fill="white" fontSize="16" fontWeight="400" fontFamily="Arial, sans-serif" letterSpacing="0.5">insta</text>
+      <text x="100" y="48" textAnchor="middle" fill="white" fontSize="22" fontWeight="900" fontFamily="Arial, sans-serif" letterSpacing="-0.5">Pay</text>
     </svg>
   )
 }
@@ -544,9 +562,20 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
 
   function validate() {
     const e = {}
-    if (!form.name.trim())  e.name  = mt.required
-    if (!form.phone.trim()) e.phone = mt.required
-    if (!form.email.trim()) e.email = mt.required
+    if (!form.name.trim()) e.name = mt.required
+    // Phone: exactly 11 digits (Egyptian numbers)
+    const phoneDigits = form.phone.replace(/\D/g, '')
+    if (!form.phone.trim()) {
+      e.phone = mt.required
+    } else if (phoneDigits.length !== 11) {
+      e.phone = isRTL ? 'يجب أن يكون رقم الهاتف 11 رقماً بالضبط' : 'Phone must be exactly 11 digits'
+    }
+    // Email: must contain @ and a domain with a dot
+    if (!form.email.trim()) {
+      e.email = mt.required
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      e.email = isRTL ? 'البريد الإلكتروني غير صحيح (مثال: name@gmail.com)' : 'Invalid email (e.g. name@gmail.com)'
+    }
     if (hasCourses && !form.courseId) e.courseId = mt.required
     if (!form.sameWhatsapp && !form.whatsapp.trim()) e.whatsapp = mt.required
     return e
@@ -597,8 +626,8 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
           style={{ width: '220px', background: 'linear-gradient(165deg, #FF5C1A 0%, #C73D08 100%)', padding: '32px 24px' }}>
           {/* Logo area */}
           <div>
-            <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.18)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', fontSize: '20px' }}>
-              🎨
+            <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.18)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', padding: '6px' }}>
+              <img src="/logo_mark_blue.png" alt="Art Smart Academy" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
             </div>
             <h3 style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '17px', lineHeight: 1.3, marginBottom: '8px', fontFamily: 'Cairo, sans-serif' }}>
               Art Smart Academy
@@ -698,7 +727,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                     </ModalField>
                     <ModalField label={mt.phone} error={errors.phone}>
                       <input data-formkey="phone" type="tel" value={form.phone} onChange={handleChange}
-                        placeholder={mt.phonePh} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
+                        placeholder={mt.phonePh} maxLength={11} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
                     </ModalField>
                   </div>
                   <ModalField label={mt.email} error={errors.email}>

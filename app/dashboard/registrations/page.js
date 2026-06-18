@@ -46,11 +46,15 @@ export default function RegistrationsPage() {
 
   const fetchRegistrations = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('registrations')
-      .select('*, courses(name_ar, name_en)')
-      .order('created_at', { ascending: false })
-    if (!error && data) setRegistrations(data)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { setLoading(false); return }
+      const res = await fetch('/api/admin/registrations', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const result = await res.json()
+      if (result.registrations) setRegistrations(result.registrations)
+    } catch {}
     setLoading(false)
   }, [])
 
@@ -72,12 +76,14 @@ export default function RegistrationsPage() {
         setRegistrations(prev => prev.map(r => r.id === reg.id ? { ...r, payment_status: 'confirmed' } : r))
       }
     } else {
-      // Unconfirm — just update DB, no email
-      const { error } = await supabase
-        .from('registrations')
-        .update({ payment_status: 'pending' })
-        .eq('id', reg.id)
-      if (!error) {
+      // Unconfirm — update via service role API, no email
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin/registrations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ id: reg.id, payment_status: 'pending' }),
+      })
+      if (res.ok) {
         setRegistrations(prev => prev.map(r => r.id === reg.id ? { ...r, payment_status: 'pending' } : r))
       }
     }

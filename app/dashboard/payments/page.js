@@ -3,85 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useDashboardLang } from '@/lib/dashboard-lang'
 import { formatDateTime, exportToXLSX, exportToPDF } from '@/lib/export'
-// import { supabase } from '@/lib/supabase' // TODO: re-enable when Supabase is connected
+import { supabase } from '@/lib/supabase'
 
-const MOCK_PAYMENTS = [
-  {
-    id: 1,
-    student_name: 'Osama Mustafa Ahmed',
-    email: 'osamam@gmail.com',
-    phone: '01122078122',
-    product_name: 'Digital Art Fundamentals',
-    product_type: 'course',
-    amount: 2500,
-    currency: 'EGP',
-    payment_method: 'fawry',
-    payment_status: 'paid',
-    transaction_id: 'PB_219_1778084987_KFN9AKKL',
-    payment_reference: '9618380364',
-    payment_date: '2026-05-06T10:47:00.000Z',
-  },
-  {
-    id: 2,
-    student_name: 'Sara Mohamed Ali',
-    email: 'sara.m@gmail.com',
-    phone: '01011223344',
-    product_name: 'UI/UX Design Bootcamp',
-    product_type: 'course',
-    amount: 3000,
-    currency: 'EGP',
-    payment_method: 'instapay',
-    payment_status: 'pending',
-    transaction_id: null,
-    payment_reference: 'INS-20260607-002',
-    payment_date: '2026-06-07T14:22:00.000Z',
-  },
-  {
-    id: 3,
-    student_name: 'Karim Mahmoud',
-    email: 'karim.m@yahoo.com',
-    phone: '01098765432',
-    product_name: 'Summer Workshop',
-    product_type: 'workshop',
-    amount: 800,
-    currency: 'EGP',
-    payment_method: 'vodafone_cash',
-    payment_status: 'paid',
-    transaction_id: null,
-    payment_reference: 'VCH-20260608-003',
-    payment_date: '2026-06-08T09:05:00.000Z',
-  },
-  {
-    id: 4,
-    student_name: 'Nour Khaled Hassan',
-    email: 'nour.k@gmail.com',
-    phone: '01234567890',
-    product_name: 'Certificate Printing',
-    product_type: 'certificate',
-    amount: 150,
-    currency: 'EGP',
-    payment_method: 'fawry',
-    payment_status: 'paid',
-    transaction_id: 'PB_220_1778094511_ABX7MNKL',
-    payment_reference: '9618390210',
-    payment_date: '2026-06-10T16:31:00.000Z',
-  },
-  {
-    id: 5,
-    student_name: 'Yasmine Tarek',
-    email: 'yasmine.t@gmail.com',
-    phone: '01155667788',
-    product_name: 'Digital Art Fundamentals',
-    product_type: 'course',
-    amount: 2500,
-    currency: 'EGP',
-    payment_method: 'instapay',
-    payment_status: 'pending',
-    transaction_id: null,
-    payment_reference: null,
-    payment_date: '2026-06-12T11:58:00.000Z',
-  },
-]
 
 const METHOD_COLORS = {
   fawry:         { bg: 'rgba(99,102,241,0.10)',  color: '#6366F1', border: 'rgba(99,102,241,0.20)', label: 'Fawry' },
@@ -200,7 +123,34 @@ export default function PaymentsPage() {
 
   const fetchPayments = useCallback(async () => {
     setLoading(true)
-    setTimeout(() => { setPayments(MOCK_PAYMENTS); setLoading(false) }, 400)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { setLoading(false); return }
+      const res = await fetch('/api/admin/registrations', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const result = await res.json()
+      if (result.registrations) {
+        // Map registrations → payment rows
+        const mapped = result.registrations.map((r) => ({
+          id:                r.id,
+          student_name:      r.student_name,
+          email:             r.email,
+          phone:             r.phone,
+          product_name:      r.courses?.name_ar || r.courses?.name_en || '—',
+          product_type:      'course',
+          amount:            Number(r.courses?.price || 0),
+          payment_method:    r.payment_method,
+          // map confirmed→paid for the payments view
+          payment_status:    r.payment_status === 'confirmed' ? 'paid' : r.payment_status,
+          transaction_id:    r.transaction_id || null,
+          payment_reference: r.payment_reference || null,
+          payment_date:      r.created_at,
+        }))
+        setPayments(mapped)
+      }
+    } catch {}
+    setLoading(false)
   }, [])
 
   useEffect(() => { fetchPayments() }, [fetchPayments])
@@ -236,8 +186,18 @@ export default function PaymentsPage() {
   const paidAmount  = filtered.filter(p => p.payment_status === 'paid').reduce((s, p) => s + (p.amount || 0), 0)
 
   const handleMarkPaid = async (id, reference) => {
-    // TODO: supabase.from('payments').update({ payment_status: 'paid', payment_reference: reference }).eq('id', id)
-    setPayments(prev => prev.map(p => p.id === id ? { ...p, payment_status: 'paid', payment_reference: reference || p.payment_reference } : p))
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      // Use confirm-registration API so it sends email + sets confirmed status
+      const res = await fetch('/api/admin/confirm-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ registrationId: id }),
+      })
+      if (res.ok) {
+        setPayments(prev => prev.map(p => p.id === id ? { ...p, payment_status: 'paid', payment_reference: reference || p.payment_reference } : p))
+      }
+    } catch {}
   }
 
   const PDF_COLUMNS = [
