@@ -34,15 +34,19 @@ CREATE TABLE IF NOT EXISTS registrations (
   email           TEXT,
   course_id       UUID REFERENCES courses(id) ON DELETE SET NULL,
   whatsapp        TEXT,                            -- optional, if different from phone
-  payment_method  TEXT NOT NULL DEFAULT 'fawry',  -- fawry | vodafone_cash | instapay
-  payment_status  TEXT NOT NULL DEFAULT 'pending', -- pending | confirmed
-  receipt_url     TEXT,                            -- uploaded receipt screenshot (vodafone_cash / instapay)
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  payment_method    TEXT NOT NULL DEFAULT 'fawry',  -- fawry | vodafone_cash | instapay
+  payment_status    TEXT NOT NULL DEFAULT 'pending', -- pending | confirmed
+  receipt_url       TEXT,                            -- uploaded receipt screenshot (vodafone_cash / instapay)
+  payment_reference TEXT,                            -- manual reference entered by admin when confirming
+  transaction_id    TEXT,                            -- auto transaction ID (Fawry)
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- ⚠️ If registrations table already exists, run these migrations:
 -- ALTER TABLE registrations ADD COLUMN IF NOT EXISTS whatsapp TEXT;
 -- ALTER TABLE registrations ADD COLUMN IF NOT EXISTS receipt_url TEXT;
+-- ALTER TABLE registrations ADD COLUMN IF NOT EXISTS payment_reference TEXT;
+-- ALTER TABLE registrations ADD COLUMN IF NOT EXISTS transaction_id TEXT;
 
 -- ============================================================
 -- TABLE: payments

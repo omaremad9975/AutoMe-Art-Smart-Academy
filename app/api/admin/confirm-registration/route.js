@@ -33,7 +33,7 @@ export async function POST(request) {
     }
 
     // ── 2. Parse request ───────────────────────────────────────────────────────
-    const { registrationId } = await request.json()
+    const { registrationId, paymentReference } = await request.json()
     if (!registrationId) {
       return NextResponse.json({ error: 'registrationId is required' }, { status: 400 })
     }
@@ -58,10 +58,13 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Fawry registrations are auto-confirmed' }, { status: 400 })
     }
 
-    // ── 4. Update status to confirmed ─────────────────────────────────────────
+    // ── 4. Update status to confirmed + save reference ────────────────────────
+    const updatePayload = { payment_status: 'confirmed' }
+    if (paymentReference) updatePayload.payment_reference = paymentReference
+
     const { error: updateError } = await supabaseAdmin
       .from('registrations')
-      .update({ payment_status: 'confirmed' })
+      .update(updatePayload)
       .eq('id', registrationId)
 
     if (updateError) {

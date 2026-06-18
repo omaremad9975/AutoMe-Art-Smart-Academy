@@ -189,11 +189,10 @@ export default function PaymentsPage() {
   const handleMarkPaid = async (id, reference) => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      // Use confirm-registration API so it sends email + sets confirmed status
       const res = await fetch('/api/admin/confirm-registration', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ registrationId: id }),
+        body: JSON.stringify({ registrationId: id, paymentReference: reference || null }),
       })
       if (res.ok) {
         setPayments(prev => prev.map(p => p.id === id ? { ...p, payment_status: 'paid', payment_reference: reference || p.payment_reference } : p))
@@ -242,7 +241,7 @@ export default function PaymentsPage() {
     exportToPDF(rows, PDF_COLUMNS, `payments_${new Date().toISOString().slice(0,10)}`, 'Payments Report')
   }
 
-  const TABLE_COLUMNS = ['Student', 'Email', 'Phone', 'Product', 'Amount', 'Method', 'Transaction ID', 'Reference', 'Receipt', 'Status', 'Date', 'Action']
+  const TABLE_COLUMNS = ['Student', 'Email', 'Phone', 'Product', 'Type', 'Amount', 'Method', 'Tx ID', 'Ref', '🧾', 'Status', 'Date', '✓']
 
   return (
     <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
@@ -360,11 +359,11 @@ export default function PaymentsPage() {
       {/* Table */}
       <div className="rounded-[16px] overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 24px rgba(255,92,26,0.06)' }}>
         <div className="overflow-x-auto">
-          <table className="w-full" style={{ minWidth: '1100px' }}>
+          <table className="w-full" style={{ minWidth: '900px' }}>
             <thead>
               <tr style={{ background: '#FFF8F4', borderBottom: '1px solid #FFE4D4' }}>
                 {TABLE_COLUMNS.map((h) => (
-                  <th key={h} className="px-4 py-3 text-[11px] font-bold text-[#A0A0A0] uppercase tracking-wider font-cairo whitespace-nowrap"
+                  <th key={h} className="px-3 py-3 text-[11px] font-bold text-[#A0A0A0] uppercase tracking-wider font-cairo whitespace-nowrap"
                     style={{ textAlign: isRTL ? 'right' : 'left' }}>
                     {h}
                   </th>
@@ -397,67 +396,68 @@ export default function PaymentsPage() {
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
                     {/* Student */}
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       <span className="font-semibold text-sm text-[#1A1A1A] font-cairo whitespace-nowrap">{p.student_name}</span>
                     </td>
                     {/* Email */}
-                    <td className="px-4 py-3 text-xs text-[#6B6B6B] font-cairo">{p.email || '—'}</td>
+                    <td className="px-3 py-3 text-xs text-[#6B6B6B] font-cairo">{p.email || '—'}</td>
                     {/* Phone */}
-                    <td className="px-4 py-3 text-xs text-[#6B6B6B] font-cairo whitespace-nowrap">{p.phone || '—'}</td>
-                    {/* Product */}
-                    <td className="px-4 py-3">
-                      <p className="text-sm font-semibold text-[#1A1A1A] font-cairo whitespace-nowrap">{p.product_name}</p>
-                      <TypeBadge type={p.product_type} />
+                    <td className="px-3 py-3 text-xs text-[#6B6B6B] font-cairo whitespace-nowrap">{p.phone || '—'}</td>
+                    {/* Product — name only */}
+                    <td className="px-3 py-3">
+                      <span className="text-sm font-semibold text-[#1A1A1A] font-cairo whitespace-nowrap">{p.product_name}</span>
                     </td>
+                    {/* Type — badge only */}
+                    <td className="px-3 py-3"><TypeBadge type={p.product_type} /></td>
                     {/* Amount */}
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       <span className="font-bold text-sm font-cairo text-[#1A1A1A] whitespace-nowrap">
-                        {p.currency} {Number(p.amount).toLocaleString()}
+                        {Number(p.amount).toLocaleString()}
                       </span>
                     </td>
                     {/* Method */}
-                    <td className="px-4 py-3"><MethodBadge method={p.payment_method} /></td>
+                    <td className="px-3 py-3"><MethodBadge method={p.payment_method} /></td>
                     {/* Transaction ID */}
-                    <td className="px-4 py-3 text-xs font-mono text-[#6B6B6B] whitespace-nowrap">
+                    <td className="px-3 py-3 text-xs font-mono text-[#6B6B6B] whitespace-nowrap">
                       {p.transaction_id || <span className="text-[#C0C0C0]">—</span>}
                     </td>
                     {/* Reference */}
-                    <td className="px-4 py-3 text-xs font-mono text-[#6B6B6B] whitespace-nowrap">
+                    <td className="px-3 py-3 text-xs font-mono text-[#6B6B6B] whitespace-nowrap">
                       {p.payment_reference || <span className="text-[#C0C0C0]">—</span>}
                     </td>
-                    {/* Receipt */}
-                    <td className="px-4 py-3">
+                    {/* Receipt — eye icon only */}
+                    <td className="px-3 py-3 text-center">
                       {p.receipt_url ? (
                         <a href={p.receipt_url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-xs font-bold font-cairo transition-all duration-200 whitespace-nowrap"
+                          title="View receipt"
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] transition-all duration-200"
                           style={{ background: 'rgba(16,185,129,0.08)', color: '#059669', border: '1px solid rgba(16,185,129,0.20)', textDecoration: 'none' }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.18)'}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.22)'}
                           onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.08)'}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                          View
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </a>
                       ) : (
-                        <span className="text-[#C0C0C0] text-xs font-cairo">—</span>
+                        <span className="text-[#C0C0C0] text-xs">—</span>
                       )}
                     </td>
                     {/* Status */}
-                    <td className="px-4 py-3"><StatusBadge status={p.payment_status} /></td>
+                    <td className="px-3 py-3"><StatusBadge status={p.payment_status} /></td>
                     {/* Date */}
-                    <td className="px-4 py-3 text-xs text-[#A0A0A0] font-cairo whitespace-nowrap">
+                    <td className="px-3 py-3 text-xs text-[#A0A0A0] font-cairo whitespace-nowrap">
                       {formatDateTime(p.payment_date)}
                     </td>
-                    {/* Action */}
-                    <td className="px-4 py-3">
+                    {/* Action — checkmark icon only */}
+                    <td className="px-3 py-3 text-center">
                       {p.payment_status === 'pending' && p.payment_method !== 'fawry' ? (
-                        <button onClick={() => setMarkingPayment(p)}
-                          className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo transition-all duration-200 whitespace-nowrap"
+                        <button onClick={() => setMarkingPayment(p)} title="Mark as paid"
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] transition-all duration-200"
                           style={{ background: 'rgba(16,185,129,0.10)', color: '#059669', border: '1px solid rgba(16,185,129,0.20)' }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.20)'}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.22)'}
                           onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.10)'}>
-                          ✓ Mark Paid
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         </button>
                       ) : (
-                        <span className="text-[#C0C0C0] text-xs font-cairo">—</span>
+                        <span className="text-[#C0C0C0] text-xs">—</span>
                       )}
                     </td>
                   </tr>
