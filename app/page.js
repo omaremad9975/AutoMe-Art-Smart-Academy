@@ -554,7 +554,7 @@ const PAYMENT_OPTIONS = [
   { key: 'instapay',      ar: 'إنستاباي',       en: 'InstaPay',       noteAr: 'تأكيد يدوي',    noteEn: 'Manual confirm', color: '#6B2FA0', bg: '#F5F0FF', Logo: InstaPayLogo },
 ]
 
-const EMPTY_FORM = { name: '', phone: '', email: '', sameWhatsapp: true, whatsapp: '', courseId: '', paymentMethod: 'fawry' }
+const EMPTY_FORM = { name: '', phone: '', email: '', sameWhatsapp: true, whatsapp: '', courseId: '', paymentMethod: 'vodafone_cash' }
 
 // Payment details for manual methods
 const MANUAL_PAYMENT_DETAILS = {
@@ -894,32 +894,52 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {PAYMENT_OPTIONS.map(({ key, ar, en, noteAr, noteEn, color, bg, Logo }) => {
-                      const sel = form.paymentMethod === key
+                      const sel      = form.paymentMethod === key
+                      const disabled = key === 'fawry'
                       return (
-                        <button key={key} type="button" onClick={setPayment(key)}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px',
-                            borderRadius: '12px', border: sel ? `2px solid ${color}` : '2px solid #E5E7EB',
-                            background: sel ? bg : '#F9FAFB', cursor: 'pointer', textAlign: isRTL ? 'right' : 'left',
-                            transition: 'all 0.15s', boxShadow: sel ? `0 2px 12px ${color}20` : 'none',
-                            flexDirection: isRTL ? 'row-reverse' : 'row',
-                          }}>
-                          {/* Logo */}
-                          <div style={{ width: '56px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Logo />
-                          </div>
-                          {/* Label */}
-                          <div style={{ flex: 1 }}>
-                            <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', fontFamily: 'Cairo, sans-serif', color: sel ? color : '#111827' }}>
-                              {lang === 'ar' ? ar : en}
-                            </p>
-                            <p style={{ margin: '2px 0 0', fontSize: '11px', fontFamily: 'Cairo, sans-serif', color: sel ? color : '#9CA3AF' }}>
-                              {lang === 'ar' ? noteAr : noteEn}
-                            </p>
-                          </div>
-                          {/* Radio dot */}
-                          <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: sel ? `5px solid ${color}` : '2px solid #D1D5DB', background: sel ? '#FFFFFF' : 'transparent', flexShrink: 0, transition: 'all 0.15s' }} />
-                        </button>
+                        <div key={key} style={{ position: 'relative' }}>
+                          <button type="button"
+                            onClick={disabled ? undefined : setPayment(key)}
+                            disabled={disabled}
+                            style={{
+                              width: '100%',
+                              display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px',
+                              borderRadius: '12px',
+                              border: disabled ? '2px solid #E5E7EB' : sel ? `2px solid ${color}` : '2px solid #E5E7EB',
+                              background: disabled ? '#F3F4F6' : sel ? bg : '#F9FAFB',
+                              cursor: disabled ? 'not-allowed' : 'pointer',
+                              textAlign: isRTL ? 'right' : 'left',
+                              transition: 'all 0.15s',
+                              boxShadow: (!disabled && sel) ? `0 2px 12px ${color}20` : 'none',
+                              flexDirection: isRTL ? 'row-reverse' : 'row',
+                              opacity: disabled ? 0.55 : 1,
+                            }}>
+                            {/* Logo */}
+                            <div style={{ width: '56px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Logo />
+                            </div>
+                            {/* Label */}
+                            <div style={{ flex: 1 }}>
+                              <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', fontFamily: 'Cairo, sans-serif', color: disabled ? '#9CA3AF' : sel ? color : '#111827' }}>
+                                {lang === 'ar' ? ar : en}
+                              </p>
+                              <p style={{ margin: '2px 0 0', fontSize: '11px', fontFamily: 'Cairo, sans-serif', color: '#9CA3AF' }}>
+                                {disabled
+                                  ? (isRTL ? 'قريباً — اختر طريقة دفع أخرى' : 'Coming soon — please choose another method')
+                                  : (lang === 'ar' ? noteAr : noteEn)
+                                }
+                              </p>
+                            </div>
+                            {/* Radio dot or lock icon */}
+                            {disabled ? (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C0C0C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                              </svg>
+                            ) : (
+                              <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: sel ? `5px solid ${color}` : '2px solid #D1D5DB', background: sel ? '#FFFFFF' : 'transparent', flexShrink: 0, transition: 'all 0.15s' }} />
+                            )}
+                          </button>
+                        </div>
                       )
                     })}
                   </div>

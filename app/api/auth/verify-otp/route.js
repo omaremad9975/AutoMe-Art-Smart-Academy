@@ -20,7 +20,7 @@ export async function POST(request) {
     const { data: otp, error } = await supabaseAdmin
       .from('login_otps')
       .select('*')
-      .eq('email', email)
+      .eq('email', email.toLowerCase().trim())
       .eq('code', code)
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
