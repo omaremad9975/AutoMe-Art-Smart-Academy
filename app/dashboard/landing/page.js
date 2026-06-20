@@ -872,25 +872,23 @@ function GallerySection({ showToast }) {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {photos.map((photo) => (
-                <div key={photo.id} className="relative group rounded-[12px] overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                <div key={photo.id} className="relative rounded-[12px] overflow-hidden" style={{ aspectRatio: '16/9' }}>
                   <img src={photo.url} alt={photo.caption_en || ''} className="w-full h-full object-cover" />
-                  {/* Overlay on hover */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => setCaptionModal({ id: photo.id, caption_ar: photo.caption_ar || '', caption_en: photo.caption_en || '' })}
-                      className="px-3 py-1.5 rounded-[8px] text-xs font-bold text-white font-cairo"
-                      style={{ background: 'rgba(255,92,26,0.80)' }}
-                    >
-                      {isRTL ? 'تعديل' : 'Caption'}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(photo)}
-                      className="px-3 py-1.5 rounded-[8px] text-xs font-bold text-white font-cairo"
-                      style={{ background: 'rgba(220,38,38,0.80)' }}
-                    >
-                      {isRTL ? 'حذف' : 'Delete'}
-                    </button>
-                  </div>
+                  {/* Always-visible action buttons — top corners */}
+                  <button
+                    onClick={() => setCaptionModal({ id: photo.id, caption_ar: photo.caption_ar || '', caption_en: photo.caption_en || '' })}
+                    title={isRTL ? 'تعديل التسمية' : 'Edit Caption'}
+                    style={{ position: 'absolute', top: '6px', left: '6px', width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,92,26,0.88)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() => handleDelete(photo)}
+                    title={isRTL ? 'حذف' : 'Delete'}
+                    style={{ position: 'absolute', top: '6px', right: '6px', width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(220,38,38,0.88)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}
+                  >
+                    🗑️
+                  </button>
                   {/* Caption badge */}
                   {(photo.caption_ar || photo.caption_en) && (
                     <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-black/50">
