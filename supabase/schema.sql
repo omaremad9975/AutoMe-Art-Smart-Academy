@@ -95,6 +95,24 @@ INSERT INTO settings (key, value) VALUES
 ON CONFLICT (key) DO NOTHING;
 
 -- ============================================================
+-- TABLE: login_otps (2FA email codes for admin login)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS login_otps (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email      TEXT NOT NULL,
+  code       TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used       BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE login_otps ENABLE ROW LEVEL SECURITY;
+-- No public access — all operations via service role only
+
+-- ⚠️ Migration (if tables already exist):
+-- Run the full CREATE TABLE above in Supabase SQL Editor
+
+-- ============================================================
 -- TABLE: gallery_photos (conference / event photo carousel)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS gallery_photos (

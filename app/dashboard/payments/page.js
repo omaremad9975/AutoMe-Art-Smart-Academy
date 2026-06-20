@@ -209,8 +209,10 @@ export default function PaymentsPage() {
     { header: 'Amount (EGP)',   key: 'amount',            width: 20 },
     { header: 'Method',         key: 'payment_method',    width: 22 },
     { header: 'Transaction ID', key: 'transaction_id',    width: 36 },
-    { header: 'Reference',      key: 'payment_reference', width: 24 },
+    { header: 'Reference ID',   key: 'payment_reference', width: 24 },
+    { header: 'Receipt',        key: 'receipt_url',       width: 40 },
     { header: 'Status',         key: 'payment_status',    width: 16 },
+    { header: 'Confirmation',   key: '_confirmation',     width: 20 },
     { header: 'Date',           key: '_date_fmt',         width: 24 },
   ]
 
@@ -222,11 +224,12 @@ export default function PaymentsPage() {
       'Product Name':   p.product_name,
       'Product Type':   p.product_type,
       'Amount (EGP)':   p.amount,
-      'Currency':       p.currency,
       'Payment Method': p.payment_method,
       'Transaction ID': p.transaction_id || '',
-      'Reference':      p.payment_reference || '',
+      'Reference ID':   p.payment_reference || '',
+      'Receipt':        p.receipt_url || '',
       'Status':         p.payment_status,
+      'Confirmation':   p.payment_status === 'paid' ? 'Confirmed' : 'Pending',
       'Date':           formatDateTime(p.payment_date),
     }))
     exportToXLSX(rows, `payments_${new Date().toISOString().slice(0,10)}`)
@@ -236,12 +239,13 @@ export default function PaymentsPage() {
     const rows = filtered.map(p => ({
       ...p,
       payment_method: METHOD_COLORS[p.payment_method]?.label || p.payment_method,
-      _date_fmt: formatDateTime(p.payment_date),
+      _date_fmt:      formatDateTime(p.payment_date),
+      _confirmation:  p.payment_status === 'paid' ? 'Confirmed' : 'Pending',
     }))
     exportToPDF(rows, PDF_COLUMNS, `payments_${new Date().toISOString().slice(0,10)}`, 'Payments Report')
   }
 
-  const TABLE_COLUMNS = ['Student', 'Email', 'Phone', 'Product', 'Type', 'Amount', 'Method', 'Tx ID', 'Ref', '🧾', 'Status', 'Date', '✓']
+  const TABLE_COLUMNS = ['Student', 'Email', 'Phone', 'Product', 'Type', 'Amount', 'Method', 'TRN ID', 'REF ID', 'Receipt', 'Status', 'Date', 'Conf']
 
   return (
     <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
