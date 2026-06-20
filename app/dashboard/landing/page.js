@@ -560,7 +560,12 @@ function SocialSection({ showToast }) {
         const res = await fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } })
         const result = await res.json()
         if (result.settings) {
-          setLinks((prev) => ({ ...prev, ...Object.fromEntries(Object.keys(SOCIAL_DEFAULTS).filter((k) => result.settings[k] !== undefined).map((k) => [k, result.settings[k]])) }))
+          setLinks({
+            social_facebook:  result.settings.social_facebook  || '',
+            social_instagram: result.settings.social_instagram || '',
+            social_tiktok:    result.settings.social_tiktok    || '',
+            social_youtube:   result.settings.social_youtube   || '',
+          })
         }
       } catch {}
       setLoading(false)

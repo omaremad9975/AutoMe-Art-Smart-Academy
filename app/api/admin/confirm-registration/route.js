@@ -95,6 +95,8 @@ export async function POST(request) {
       academyEmail:      settingsMap.email,
       isConfirmed:       true,
       whatsappGroupUrl:  reg.courses?.whatsapp_group_url || null,
+      paymentReference:  paymentReference || null,
+      transactionId:     reg.transaction_id || null,
     })
 
     if (!emailResult.success) {

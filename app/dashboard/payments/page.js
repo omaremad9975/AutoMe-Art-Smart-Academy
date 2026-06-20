@@ -61,10 +61,15 @@ function TypeBadge({ type }) {
 function MarkPaidModal({ payment, onClose, onConfirm }) {
   const [reference, setReference] = useState('')
   const [saving, setSaving] = useState(false)
+  const [touched, setTouched] = useState(false)
+
+  const isEmpty = !reference.trim()
 
   const handleConfirm = async () => {
+    setTouched(true)
+    if (isEmpty) return
     setSaving(true)
-    await onConfirm(payment.id, reference)
+    await onConfirm(payment.id, reference.trim())
     setSaving(false)
     onClose()
   }
@@ -78,19 +83,24 @@ function MarkPaidModal({ payment, onClose, onConfirm }) {
         </div>
         <div className="px-6 py-5 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-2">Payment Reference / Screenshot Code</label>
+            <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-2">
+              Payment Reference / Screenshot Code <span style={{ color: '#DC2626' }}>*</span>
+            </label>
             <input
               value={reference}
-              onChange={(e) => setReference(e.target.value)}
+              onChange={(e) => { setReference(e.target.value); setTouched(true) }}
               placeholder={payment.payment_method === 'instapay' ? 'e.g. INS-20260615-XXX' : 'VCH-20260615-XXX'}
               className="w-full px-4 py-3 rounded-[10px] text-sm font-cairo outline-none transition-all"
-              style={{ background: '#FFF8F4', border: '1.5px solid #FFE4D4' }}
-              onFocus={(e) => e.currentTarget.style.borderColor = '#FF5C1A'}
-              onBlur={(e) => e.currentTarget.style.borderColor = '#FFE4D4'}
+              style={{ background: '#FFF8F4', border: `1.5px solid ${touched && isEmpty ? '#DC2626' : '#FFE4D4'}` }}
+              onFocus={(e) => e.currentTarget.style.borderColor = touched && isEmpty ? '#DC2626' : '#FF5C1A'}
+              onBlur={(e) => e.currentTarget.style.borderColor = touched && isEmpty ? '#DC2626' : '#FFE4D4'}
             />
+            {touched && isEmpty && (
+              <p className="text-xs font-semibold font-cairo mt-1.5" style={{ color: '#DC2626' }}>مطلوب — أدخل رقم المرجع قبل التأكيد</p>
+            )}
           </div>
           <p className="text-xs text-[#A0A0A0] font-cairo">
-            Via <strong>{METHOD_COLORS[payment.payment_method]?.label}</strong> — enter the transfer reference or leave blank if confirmed by screenshot only.
+            Via <strong>{METHOD_COLORS[payment.payment_method]?.label}</strong> — enter the transfer reference number.
           </p>
         </div>
         <div className="px-6 py-4 flex gap-3" style={{ borderTop: '1px solid #FFE4D4' }}>
@@ -99,7 +109,7 @@ function MarkPaidModal({ payment, onClose, onConfirm }) {
             Cancel
           </button>
           <button onClick={handleConfirm} disabled={saving} className="flex-1 py-2.5 rounded-[10px] text-sm font-bold font-cairo text-white transition-all"
-            style={{ background: saving ? '#FFA070' : '#FF5C1A' }}>
+            style={{ background: saving ? '#FFA070' : isEmpty ? '#FFC4A8' : '#FF5C1A', cursor: isEmpty ? 'not-allowed' : 'pointer' }}>
             {saving ? 'Saving...' : '✓ Confirm Paid'}
           </button>
         </div>
