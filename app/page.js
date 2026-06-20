@@ -1280,16 +1280,45 @@ export default function Home() {
     setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))
   }
 
-  // ── Filter courses section by what's active in Supabase ──────────────────
-  // While loading, show all (graceful fallback). After load, hide inactive ones.
-  const activeCourseNamesAr = new Set(modalCourses.map((c) => c.name_ar))
-  const activeIndices = coursesData.ar
-    .map((c, i) => (modalCoursesLoading || activeCourseNamesAr.has(c.title) ? i : -1))
-    .filter((i) => i >= 0)
-  const filteredCoursesData = {
-    ar: activeIndices.map((i) => coursesData.ar[i]),
-    en: activeIndices.map((i) => coursesData.en[i]),
+  // ── Build display courses fully from Supabase ─────────────────────────────
+  // Enrichment table: static descriptions/instructors for known courses.
+  // New courses added via dashboard get generic defaults automatically.
+  const COURSE_ENRICHMENT = {
+    'التفكير الإبداعي': {
+      description_ar: 'تعلّم كيف تفكر خارج الصندوق وتحوّل أفكارك إلى حلول مبتكرة. كورس مكثّف يطوّر مهاراتك الإبداعية وقدرتك على حل المشكلات بأساليب غير تقليدية.',
+      description_en: 'Learn to think outside the box and turn your ideas into innovative solutions. An intensive course that builds creative skills and unconventional problem-solving.',
+      instructor_ar: 'د. سارة محمد', instructor_en: 'Dr. Sara Mohamed',
+      icon: 'lightbulb', initials_ar: 'س م', initials_en: 'SM',
+    },
+    'الذكاء الاصطناعي': {
+      description_ar: 'مقدمة شاملة في عالم الذكاء الاصطناعي وتطبيقاته العملية. تعرّف على أساسيات ML والـ AI وكيفية توظيفها في حياتك المهنية.',
+      description_en: 'A comprehensive introduction to AI and its practical applications. Learn ML fundamentals and how to apply them in your career.',
+      instructor_ar: 'م. أحمد خالد', instructor_en: 'Eng. Ahmed Khaled',
+      icon: 'cpu', initials_ar: 'أ خ', initials_en: 'AK',
+    },
+    'اللغة الصينية': {
+      description_ar: 'تعلّم اللغة الصينية من الصفر مع أفضل الأساليب الحديثة. كورس متكامل يشمل المحادثة والكتابة والثقافة الصينية.',
+      description_en: 'Learn Chinese from scratch with modern methods. A complete course covering conversation, writing, and Chinese culture.',
+      instructor_ar: 'أ. لي وانغ', instructor_en: 'Prof. Li Wang',
+      icon: 'globe', initials_ar: 'ل و', initials_en: 'LW',
+    },
   }
+
+  const displayCourses = modalCourses.map((c) => {
+    const enriched = COURSE_ENRICHMENT[c.name_ar] || {}
+    const isAr = lang === 'ar'
+    return {
+      id:          c.id,
+      title:       isAr ? c.name_ar : (c.name_en || c.name_ar),
+      description: isAr ? (enriched.description_ar || '') : (enriched.description_en || ''),
+      instructor:  isAr ? (enriched.instructor_ar || '') : (enriched.instructor_en || ''),
+      icon:        enriched.icon || 'graduation',
+      initials:    isAr ? (enriched.initials_ar || c.name_ar.slice(0, 2)) : (enriched.initials_en || (c.name_en || c.name_ar).slice(0, 2).toUpperCase()),
+      price:       lang === 'ar' ? `${Number(c.price).toLocaleString('ar-EG')} جنيه` : `EGP ${Number(c.price).toLocaleString()}`,
+      duration:    c.duration,
+      seats:       c.seats,
+    }
+  })
 
   return (
     <main className="overflow-x-hidden bg-asa-bg text-asa-text min-h-screen relative selection:bg-asa-orange selection:text-white">
@@ -1576,60 +1605,81 @@ export default function Home() {
           </div>
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {filteredCoursesData[lang].map((course) => (
-              <div
-                key={course.title}
-                className="warm-card rounded-asa-radius-xl flex flex-col p-5 md:p-6 relative overflow-hidden"
-              >
-                {/* 4px top orange accent bar */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-asa-orange" />
-
-                {/* Icon in a light circle with orange glow */}
-                <div className="w-14 h-14 rounded-asa-radius-full bg-asa-orange-tint border border-asa-border flex items-center justify-center text-asa-orange shadow-[0_0_15px_rgba(255,92,26,0.12)] mb-6 self-start">
-                  <Icon name={course.icon} className="w-7 h-7" />
+          {modalCoursesLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="warm-card rounded-asa-radius-xl p-6 animate-pulse">
+                  <div className="w-14 h-14 rounded-full bg-asa-border mb-6" />
+                  <div className="h-6 bg-asa-border rounded mb-3 w-3/4" />
+                  <div className="h-4 bg-asa-border rounded mb-2 w-full" />
+                  <div className="h-4 bg-asa-border rounded mb-2 w-5/6" />
+                  <div className="h-4 bg-asa-border rounded mb-6 w-4/6" />
+                  <div className="h-10 bg-asa-border rounded-full mt-auto" />
                 </div>
-
-                {/* Title */}
-                <h3 className="text-asa-text font-bold text-xl md:text-2xl font-cairo mb-3">
-                  {course.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-asa-text-muted text-sm font-medium leading-relaxed flex-grow mb-6">
-                  {course.description}
-                </p>
-
-                {/* Instructor Row */}
-                <div className="flex items-center gap-3 border-t border-asa-border pt-4 mb-6">
-                  <div className="w-8 h-8 rounded-full bg-asa-orange text-white flex items-center justify-center text-xs font-bold font-cairo">
-                    {course.initials}
-                  </div>
-                  <span className="text-asa-text text-sm font-semibold font-cairo">
-                    {course.instructor}
-                  </span>
-                </div>
-
-                {/* Duration Badge & Price */}
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-xs px-3 py-1 rounded-asa-radius-full bg-asa-orange-tint border border-asa-border text-asa-orange font-bold font-cairo">
-                    {course.duration}
-                  </span>
-                  <span className="text-asa-orange font-extrabold text-lg md:text-xl font-cairo">
-                    {course.price}
-                  </span>
-                </div>
-
-                {/* Enroll Now Button */}
-                <button
-                  onClick={openModal}
-                  className="w-full bg-asa-orange hover:bg-asa-orange-light text-white text-center font-bold py-3 rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange hover:shadow-[0_8px_24px_rgba(255,92,26,0.35)] font-cairo"
+              ))}
+            </div>
+          ) : displayCourses.length === 0 ? (
+            <p className="text-center text-asa-text-muted font-cairo py-10">{currentTranslations.noCourses}</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {displayCourses.map((course) => (
+                <div
+                  key={course.id}
+                  className="warm-card rounded-asa-radius-xl flex flex-col p-5 md:p-6 relative overflow-hidden"
                 >
-                  {currentTranslations.coursesEnroll}
-                </button>
-              </div>
-            ))}
-          </div>
+                  {/* 4px top orange accent bar */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-asa-orange" />
+
+                  {/* Icon */}
+                  <div className="w-14 h-14 rounded-asa-radius-full bg-asa-orange-tint border border-asa-border flex items-center justify-center text-asa-orange shadow-[0_0_15px_rgba(255,92,26,0.12)] mb-6 self-start">
+                    <Icon name={course.icon} className="w-7 h-7" />
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-asa-text font-bold text-xl md:text-2xl font-cairo mb-3">
+                    {course.title}
+                  </h3>
+
+                  {/* Description */}
+                  {course.description && (
+                    <p className="text-asa-text-muted text-sm font-medium leading-relaxed flex-grow mb-6">
+                      {course.description}
+                    </p>
+                  )}
+
+                  {/* Instructor Row — only if we have instructor info */}
+                  {course.instructor && (
+                    <div className="flex items-center gap-3 border-t border-asa-border pt-4 mb-6">
+                      <div className="w-8 h-8 rounded-full bg-asa-orange text-white flex items-center justify-center text-xs font-bold font-cairo">
+                        {course.initials}
+                      </div>
+                      <span className="text-asa-text text-sm font-semibold font-cairo">
+                        {course.instructor}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Duration Badge & Price */}
+                  <div className="flex items-center justify-between mb-6 mt-auto">
+                    <span className="text-xs px-3 py-1 rounded-asa-radius-full bg-asa-orange-tint border border-asa-border text-asa-orange font-bold font-cairo">
+                      {course.duration}
+                    </span>
+                    <span className="text-asa-orange font-extrabold text-lg md:text-xl font-cairo">
+                      {course.price}
+                    </span>
+                  </div>
+
+                  {/* Enroll Button */}
+                  <button
+                    onClick={openModal}
+                    className="w-full bg-asa-orange hover:bg-asa-orange-light text-white text-center font-bold py-3 rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange hover:shadow-[0_8px_24px_rgba(255,92,26,0.35)] font-cairo"
+                  >
+                    {currentTranslations.coursesEnroll}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -2037,66 +2087,4 @@ export default function Home() {
   )
 }
 
-// ==========================================
-// COURSE STATIC DATA IN TRANSLATABLE ARRAYS
-// ==========================================
-const coursesData = {
-  ar: [
-    {
-      title: 'التفكير الإبداعي',
-      description: 'تعلّم كيف تفكر خارج الصندوق وتحوّل أفكارك إلى حلول مبتكرة. كورس مكثّف يطوّر مهاراتك الإبداعية وقدرتك على حل المشكلات بأساليب غير تقليدية.',
-      instructor: 'د. سارة محمد',
-      price: '٢٫٥٠٠ جنيه',
-      duration: '٨ أسابيع',
-      icon: 'lightbulb',
-      initials: 'س م'
-    },
-    {
-      title: 'الذكاء الاصطناعي',
-      description: 'مقدمة شاملة في عالم الذكاء الاصطناعي وتطبيقاته العملية. تعرّف على أساسيات ML والـ AI وكيفية توظيفها في حياتك المهنية.',
-      instructor: 'م. أحمد خالد',
-      price: '٣٫٠٠٠ جنيه',
-      duration: '١٠ أسابيع',
-      icon: 'cpu',
-      initials: 'أ خ'
-    },
-    {
-      title: 'اللغة الصينية',
-      description: 'تعلّم اللغة الصينية من الصفر مع أفضل الأساليب الحديثة. كورس متكامل يشمل المحادثة والكتابة والثقافة الصينية.',
-      instructor: 'أ. لي وانغ',
-      price: '٢٫٢٠٠ جنيه',
-      duration: '١٢ أسبوعًا',
-      icon: 'globe',
-      initials: 'ل و'
-    }
-  ],
-  en: [
-    {
-      title: 'Creative Thinking',
-      description: 'Learn to think outside the box and turn your ideas into innovative solutions. An intensive course that builds creative skills and unconventional problem-solving.',
-      instructor: 'Dr. Sara Mohamed',
-      price: 'EGP 2,500',
-      duration: '8 Weeks',
-      icon: 'lightbulb',
-      initials: 'SM'
-    },
-    {
-      title: 'Artificial Intelligence',
-      description: 'A comprehensive introduction to AI and its practical applications. Learn ML fundamentals and how to apply them in your career.',
-      instructor: 'Eng. Ahmed Khaled',
-      price: 'EGP 3,000',
-      duration: '10 Weeks',
-      icon: 'cpu',
-      initials: 'AK'
-    },
-    {
-      title: 'Chinese Language',
-      description: 'Learn Chinese from scratch with modern methods. A complete course covering conversation, writing, and Chinese culture.',
-      instructor: 'Prof. Li Wang',
-      price: 'EGP 2,200',
-      duration: '12 Weeks',
-      icon: 'globe',
-      initials: 'LW'
-    }
-  ]
-}
+// coursesData removed — courses now render dynamically from Supabase via /api/public/courses
