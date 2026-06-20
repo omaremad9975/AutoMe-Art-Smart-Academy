@@ -76,20 +76,22 @@ export async function POST(request) {
     const coursePrice = course?.price ? `${course.price}` : ''
 
     // ── Send email ─────────────────────────────────────────────────────────────
-    // For Fawry: send immediately with payment instructions (confirmed = false so
-    // we include the Fawry outlet instructions, not the "you're in!" message)
-    // The "fully confirmed" email is the same flow but visually says "confirmed"
-    await sendRegistrationEmail({
-      studentName:    name,
-      studentEmail:   email,
-      courseName,
-      coursePrice,
-      paymentMethod,
-      registrationId: reg.id,
-      academyPhone:   settingsMap.phone,
-      academyEmail:   settingsMap.email,
-      isConfirmed:    isFawry, // Fawry gets "confirmed" styling since no manual step needed
-    })
+    // Manual payments (vodafone_cash, instapay): NO email on registration.
+    // The confirmation email is sent only when an admin confirms payment.
+    // Fawry: send immediately (auto-confirmed).
+    if (isFawry) {
+      await sendRegistrationEmail({
+        studentName:    name,
+        studentEmail:   email,
+        courseName,
+        coursePrice,
+        paymentMethod,
+        registrationId: reg.id,
+        academyPhone:   settingsMap.phone,
+        academyEmail:   settingsMap.email,
+        isConfirmed:    true,
+      })
+    }
 
     return NextResponse.json({
       success: true,

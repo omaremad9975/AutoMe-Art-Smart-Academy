@@ -41,7 +41,7 @@ export async function POST(request) {
     // ── 3. Load registration ───────────────────────────────────────────────────
     const { data: reg, error: fetchError } = await supabaseAdmin
       .from('registrations')
-      .select('*, courses(name_ar, name_en, price)')
+      .select('*, courses(name_ar, name_en, price, whatsapp_group_url)')
       .eq('id', registrationId)
       .single()
 
@@ -85,15 +85,16 @@ export async function POST(request) {
     const coursePrice = reg.courses?.price ? `${reg.courses.price}` : ''
 
     const emailResult = await sendRegistrationEmail({
-      studentName:    reg.student_name,
-      studentEmail:   reg.email,
+      studentName:       reg.student_name,
+      studentEmail:      reg.email,
       courseName,
       coursePrice,
-      paymentMethod:  reg.payment_method,
-      registrationId: reg.id,
-      academyPhone:   settingsMap.phone,
-      academyEmail:   settingsMap.email,
-      isConfirmed:    true,
+      paymentMethod:     reg.payment_method,
+      registrationId:    reg.id,
+      academyPhone:      settingsMap.phone,
+      academyEmail:      settingsMap.email,
+      isConfirmed:       true,
+      whatsappGroupUrl:  reg.courses?.whatsapp_group_url || null,
     })
 
     if (!emailResult.success) {

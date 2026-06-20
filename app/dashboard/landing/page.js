@@ -128,7 +128,7 @@ function SettingsField({ label, id, type = 'text', value, onChange, placeholder,
   )
 }
 
-const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration: '', seats: '', is_active: true }
+const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration: '', seats: '', is_active: true, whatsapp_group_url: '' }
 
 const SOCIAL_DEFAULTS = {
   social_facebook:  '',
@@ -184,7 +184,7 @@ function CoursesSection() {
 
   const openAdd = () => { setForm(EMPTY_FORM); setSelectedCourse(null); setModal('add') }
   const openEdit = (c) => {
-    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration: c.duration, seats: c.seats, is_active: c.is_active })
+    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration: c.duration, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '' })
     setSelectedCourse(c)
     setModal('edit')
   }
@@ -196,8 +196,8 @@ function CoursesSection() {
     try {
       const token = await getToken()
       const body = modal === 'add'
-        ? { name_ar: form.name_ar, name_en: form.name_en, price: form.price, duration: form.duration, seats: form.seats, is_active: form.is_active }
-        : { id: selectedCourse.id, name_ar: form.name_ar, name_en: form.name_en, price: form.price, duration: form.duration, seats: form.seats, is_active: form.is_active }
+        ? { name_ar: form.name_ar, name_en: form.name_en, price: form.price, duration: form.duration, seats: form.seats, is_active: form.is_active, whatsapp_group_url: form.whatsapp_group_url || null }
+        : { id: selectedCourse.id, name_ar: form.name_ar, name_en: form.name_en, price: form.price, duration: form.duration, seats: form.seats, is_active: form.is_active, whatsapp_group_url: form.whatsapp_group_url || null }
       const res = await fetch('/api/admin/courses', {
         method: modal === 'add' ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -473,6 +473,22 @@ function CoursesSection() {
               <Field label={t.fieldPrice} type="number" min="0" value={form.price} onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))} placeholder="2500" />
               <Field label={t.fieldDuration} value={form.duration} onChange={(e) => setForm((f) => ({ ...f, duration: e.target.value }))} placeholder="8 weeks" />
               <Field label={t.fieldSeats} type="number" min="0" value={form.seats} onChange={(e) => setForm((f) => ({ ...f, seats: e.target.value }))} placeholder="20" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">
+                💬 WhatsApp Group Link
+              </label>
+              <input
+                type="url"
+                value={form.whatsapp_group_url}
+                onChange={(e) => setForm((f) => ({ ...f, whatsapp_group_url: e.target.value }))}
+                placeholder="https://chat.whatsapp.com/..."
+                className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none transition-all duration-200"
+                style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', color: '#1A1A1A' }}
+                onFocus={(e) => e.target.style.borderColor = '#FF5C1A'}
+                onBlur={(e) => e.target.style.borderColor = '#FFE4D4'}
+              />
+              <p className="text-[10px] text-[#A0A0A0] font-cairo mt-1">اختياري — يُضاف تلقائياً لإيميل التأكيد إذا كان موجوداً</p>
             </div>
             <div className="flex items-center gap-3">
               <button

@@ -37,13 +37,13 @@ export async function POST(request) {
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { name_ar, name_en, price, duration, seats, is_active } = body
+  const { name_ar, name_en, price, duration, seats, is_active, whatsapp_group_url } = body
 
   if (!name_ar || !name_en) return NextResponse.json({ error: 'Arabic and English names are required' }, { status: 400 })
 
   const { data, error } = await supabaseAdmin
     .from('courses')
-    .insert([{ name_ar, name_en, price: parseFloat(price) || 0, duration: duration || '', seats: parseInt(seats) || 0, is_active: is_active ?? true }])
+    .insert([{ name_ar, name_en, price: parseFloat(price) || 0, duration: duration || '', seats: parseInt(seats) || 0, is_active: is_active ?? true, whatsapp_group_url: whatsapp_group_url || null }])
     .select()
     .single()
 
@@ -68,6 +68,7 @@ export async function PATCH(request) {
   if (fields.seats                    !== undefined) payload.seats                     = parseInt(fields.seats) || 0
   if (fields.is_active                !== undefined) payload.is_active                 = fields.is_active
   if (fields.certificate_template_url !== undefined) payload.certificate_template_url  = fields.certificate_template_url
+  if (fields.whatsapp_group_url       !== undefined) payload.whatsapp_group_url        = fields.whatsapp_group_url
 
   const { data, error } = await supabaseAdmin.from('courses').update(payload).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

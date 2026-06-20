@@ -18,11 +18,13 @@ CREATE TABLE IF NOT EXISTS courses (
   seats                    INTEGER NOT NULL DEFAULT 0,
   is_active                BOOLEAN NOT NULL DEFAULT TRUE,
   certificate_template_url TEXT,
+  whatsapp_group_url       TEXT,
   created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- ⚠️ If courses table already exists, run this migration:
+-- ⚠️ If courses table already exists, run these migrations:
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS certificate_template_url TEXT;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS whatsapp_group_url TEXT;
 
 -- ============================================================
 -- TABLE: registrations
