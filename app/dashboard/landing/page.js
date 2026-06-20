@@ -712,14 +712,20 @@ function GallerySection({ showToast }) {
   const [captionModal, setCaptionModal] = useState(null) // { id, caption_ar, caption_en }
   const fileInputRef = useRef(null)
 
+  const [galleryError, setGalleryError] = useState(null)
+
   const fetchPhotos = useCallback(async () => {
     setLoading(true)
+    setGalleryError(null)
     try {
       const token = await getToken()
       const res = await fetch('/api/admin/gallery', { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
+      if (!res.ok) { setGalleryError(data.error || `Error ${res.status}`); setLoading(false); return }
       setPhotos(data.photos || [])
-    } catch {}
+    } catch (err) {
+      setGalleryError(err?.message || 'Network error')
+    }
     setLoading(false)
   }, [])
 
@@ -842,6 +848,12 @@ function GallerySection({ showToast }) {
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="aspect-video rounded-[12px] animate-pulse" style={{ background: '#FFE4D4' }} />
               ))}
+            </div>
+          ) : galleryError ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="text-4xl">⚠️</div>
+              <p className="text-xs font-semibold font-cairo text-center px-4" style={{ color: '#DC2626' }}>Gallery load error: {galleryError}</p>
+              <button onClick={fetchPhotos} className="px-4 py-2 rounded-full text-xs font-bold text-white font-cairo" style={{ background: '#FF5C1A' }}>Retry</button>
             </div>
           ) : photos.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-4">

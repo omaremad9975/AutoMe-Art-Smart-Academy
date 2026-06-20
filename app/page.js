@@ -415,11 +415,11 @@ const MODAL_T = {
     successTitle: 'شكراً لك! 🎉',
     successSub: 'تم استلام طلب تسجيلك بنجاح.',
     successCard: 'سيصلك إيميل تأكيد قريباً يحتوي على تعليمات الدفع بالبطاقة. بمجرد الدفع سيتم تأكيد تسجيلك تلقائياً.',
-    successManual: 'سيصلك إيميل تأكيد قريباً يحتوي على تعليمات الدفع. بعد إرسال الإيصال، سيقوم فريق الأكاديمية بتأكيد تسجيلك خلال 24 ساعة.',
+    successManual: 'تم استلام طلبك وإيصال الدفع بنجاح. سيقوم فريق الأكاديمية بمراجعة الإيصال وتأكيد تسجيلك خلال 24 ساعة — ستصلك رسالة تأكيد على بريدك الإلكتروني.',
     nextTitle: 'الخطوات القادمة',
-    nextEmail: 'تحقق من بريدك الإلكتروني — سيصلك الإيميل خلال دقائق.',
+    nextEmail: 'انتظر رسالة التأكيد على بريدك الإلكتروني بعد مراجعة الإيصال.',
     nextContact: 'سيتواصل معك فريقنا لتأكيد موعد بدء الكورس.',
-    nextSpam: 'تحقق من مجلد Spam إذا لم يصل الإيميل.',
+    nextSpam: 'تحقق من مجلد Spam إذا لم تصلك رسالة التأكيد.',
     close: 'رائع، شكراً!', required: 'هذا الحقل مطلوب',
     loadingCourses: 'جارٍ تحميل الكورسات...',
     noCourses: 'لا توجد كورسات متاحة حالياً',
@@ -458,11 +458,11 @@ const MODAL_T = {
     successTitle: 'Thank You! 🎉',
     successSub: 'Your registration has been received successfully.',
     successCard: "A confirmation email is on its way with your card payment instructions. Once paid, your registration will be auto-confirmed.",
-    successManual: "A confirmation email is on its way with your payment instructions. After sending the receipt, our team will confirm your registration within 24 hours.",
+    successManual: "Your registration and receipt have been received. Our team will review your payment and confirm your registration within 24 hours — you'll receive a confirmation email once done.",
     nextTitle: "What's next",
-    nextEmail: 'Check your inbox — the email will arrive within a few minutes.',
+    nextEmail: 'Wait for a confirmation email after your receipt is reviewed.',
     nextContact: 'Our team will reach out to confirm your course start date.',
-    nextSpam: "Check your Spam folder if the email doesn't show up.",
+    nextSpam: "Check your Spam folder if the confirmation email doesn't show up.",
     close: 'Got it, thank you!', required: 'This field is required',
     loadingCourses: 'Loading courses...',
     noCourses: 'No courses available right now',
@@ -784,7 +784,9 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                 {/* Email highlight */}
                 <div style={{ background: '#FFF7ED', border: '1.5px solid #FED7AA', borderRadius: '14px', padding: '16px 20px', marginBottom: '16px', textAlign: isRTL ? 'right' : 'left' }}>
                   <p style={{ fontWeight: 700, fontSize: '14px', color: '#C2410C', fontFamily: 'Cairo, sans-serif', margin: '0 0 4px' }}>
-                    📧 {isRTL ? 'إيميل تأكيد في طريقه إليك!' : 'Confirmation email is on its way!'}
+                    {isCard
+                      ? (isRTL ? '📧 إيميل تأكيد في طريقه إليك!' : '📧 Confirmation email is on its way!')
+                      : (isRTL ? '✅ تم استلام طلبك وإيصال الدفع!' : '✅ Registration & receipt received!')}
                   </p>
                   <p style={{ fontSize: '12px', color: '#78350F', fontFamily: 'Cairo, sans-serif', lineHeight: 1.6, margin: 0 }}>
                     {isCard ? mt.successCard : mt.successManual}
