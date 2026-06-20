@@ -1307,14 +1307,25 @@ export default function Home() {
   const displayCourses = modalCourses.map((c) => {
     const enriched = COURSE_ENRICHMENT[c.name_ar] || {}
     const isAr = lang === 'ar'
+    // Prefer DB fields → fall back to hardcoded enrichment
+    const description = isAr
+      ? (c.description_ar || enriched.description_ar || '')
+      : (c.description_en || enriched.description_en || '')
+    const instructor = isAr
+      ? (c.instructor_ar || enriched.instructor_ar || '')
+      : (c.instructor_en || enriched.instructor_en || '')
+    const nameDisplay = isAr ? c.name_ar : (c.name_en || c.name_ar)
+    const initials = isAr
+      ? (enriched.initials_ar || c.name_ar.slice(0, 2))
+      : (enriched.initials_en || (c.name_en || c.name_ar).slice(0, 2).toUpperCase())
     return {
       id:          c.id,
-      title:       isAr ? c.name_ar : (c.name_en || c.name_ar),
-      description: isAr ? (enriched.description_ar || '') : (enriched.description_en || ''),
-      instructor:  isAr ? (enriched.instructor_ar || '') : (enriched.instructor_en || ''),
+      title:       nameDisplay,
+      description,
+      instructor,
       icon:        enriched.icon || 'graduation',
-      initials:    isAr ? (enriched.initials_ar || c.name_ar.slice(0, 2)) : (enriched.initials_en || (c.name_en || c.name_ar).slice(0, 2).toUpperCase()),
-      price:       lang === 'ar' ? `${Number(c.price).toLocaleString('ar-EG')} جنيه` : `EGP ${Number(c.price).toLocaleString()}`,
+      initials,
+      price:       isAr ? `${Number(c.price).toLocaleString('ar-EG')} جنيه` : `EGP ${Number(c.price).toLocaleString()}`,
       duration:    c.duration,
       seats:       c.seats,
     }
