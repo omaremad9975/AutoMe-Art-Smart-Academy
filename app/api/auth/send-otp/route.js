@@ -127,7 +127,7 @@ export async function POST(request) {
 
     if (emailResult.error) {
       console.error('[send-otp] email error:', emailResult.error)
-      return NextResponse.json({ error: 'Could not send email' }, { status: 500 })
+      return NextResponse.json({ error: `Could not send email: ${emailResult.error.message || emailResult.error.name || JSON.stringify(emailResult.error)}` }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
