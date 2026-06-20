@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 
+// 🔧 2FA temporarily disabled — re-enable when domain is ready
+
 // ── Shared input style helpers ────────────────────────────────────────────────
 const inputBase = {
   border: '1.5px solid #FFE4D4',
@@ -260,13 +262,15 @@ function OtpStep({ email, password, onBack }) {
 
 // ── Main Login Page ───────────────────────────────────────────────────────────
 export default function LoginPage() {
+  const router = useRouter()
   // step: 'password' | 'otp'
   const [step, setStep]         = useState('password')
   const [credentials, setCredentials] = useState(null) // { email, password } — in memory only
 
-  const handlePasswordSuccess = (creds) => {
-    setCredentials(creds)
-    setStep('otp')
+  const handlePasswordSuccess = async (creds) => {
+    // 2FA temporarily disabled — sign in directly after password check
+    await supabase.auth.signInWithPassword({ email: creds.email, password: creds.password })
+    router.push('/dashboard')
   }
 
   const handleBack = () => {
