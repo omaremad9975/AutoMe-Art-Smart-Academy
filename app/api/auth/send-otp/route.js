@@ -73,7 +73,7 @@ export async function POST(request) {
 
     if (insertError) {
       console.error('[send-otp] insert error:', insertError)
-      return NextResponse.json({ error: 'Could not generate code — run the login_otps migration in Supabase' }, { status: 500 })
+      return NextResponse.json({ error: `OTP insert failed: ${insertError.message || insertError.code || JSON.stringify(insertError)}` }, { status: 500 })
     }
 
     // ── 5. Send OTP email ─────────────────────────────────────────────────────
