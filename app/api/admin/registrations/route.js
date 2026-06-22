@@ -25,7 +25,7 @@ export async function GET(request) {
 
   const { data, error } = await supabaseAdmin
     .from('registrations')
-    .select('*, courses(name_ar, name_en, price)')
+    .select('*, courses(name_ar, name_en, price, certificate_template_url), student_certificates(id, verification_code, issued_at, certificate_url)')
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

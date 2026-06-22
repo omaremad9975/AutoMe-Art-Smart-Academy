@@ -5,6 +5,22 @@ import { useDashboardLang } from '@/lib/dashboard-lang'
 import { formatDateTime, exportToXLSX, exportToPDF } from '@/lib/export'
 import { supabase } from '@/lib/supabase'
 
+function CertBadge({ issued, isRTL }) {
+  if (issued) return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold font-cairo whitespace-nowrap"
+      style={{ background: 'rgba(16,185,129,0.10)', color: '#059669', border: '1px solid rgba(16,185,129,0.20)' }}>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+      {isRTL ? 'صدرت' : 'Issued'}
+    </span>
+  )
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold font-cairo whitespace-nowrap"
+      style={{ background: 'rgba(156,163,175,0.10)', color: '#9CA3AF', border: '1px solid rgba(156,163,175,0.20)' }}>
+      — {isRTL ? 'لم تصدر' : 'Not issued'}
+    </span>
+  )
+}
+
 const METHOD_COLORS = {
   fawry:         { bg: 'rgba(99,102,241,0.10)',  color: '#6366F1', border: 'rgba(99,102,241,0.20)', label: 'Fawry' },
   vodafone_cash: { bg: 'rgba(220,38,38,0.10)',   color: '#DC2626', border: 'rgba(220,38,38,0.20)',  label: 'Vodafone Cash' },
@@ -42,6 +58,55 @@ export default function RegistrationsPage() {
   const [filterCourse, setFilterCourse]   = useState('all')
   const [filterDateFrom, setFilterDateFrom] = useState('')
   const [filterDateTo,   setFilterDateTo]   = useState('')
+  const [issuingId,  setIssuingId]  = useState(null)    // registrationId being issued
+  const [issuingAll, setIssuingAll] = useState(false)   // bulk issuing
+  const [issueToast, setIssueToast] = useState(null)    // { type: 'success'|'error', msg }
+
+  const showToast = (type, msg) => {
+    setIssueToast({ type, msg })
+    setTimeout(() => setIssueToast(null), 4000)
+  }
+
+  const getToken = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token || ''
+  }
+
+  const handleIssue = async (registrationId) => {
+    setIssuingId(registrationId)
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/issue-certificate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ registrationId }),
+      })
+      const data = await res.json()
+      if (!res.ok) { showToast('error', data.error || 'Failed'); return }
+      if (data.skipped) { showToast('success', isRTL ? 'الشهادة سبق إصدارها' : 'Certificate already issued') }
+      else { showToast('success', isRTL ? 'تم إصدار الشهادة وإرسالها للطالب ✓' : 'Certificate issued & emailed ✓') }
+      await fetchRegistrations()
+    } catch { showToast('error', 'Network error') }
+    setIssuingId(null)
+  }
+
+  const handleIssueAll = async (courseId) => {
+    setIssuingAll(true)
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/issue-certificate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ courseId }),
+      })
+      const data = await res.json()
+      if (!res.ok) { showToast('error', data.error || 'Failed'); return }
+      showToast('success', isRTL
+        ? `تم إصدار ${data.issued} شهادة، ${data.skipped} مكررة`
+        : `Issued ${data.issued} certificates, ${data.skipped} already existed`)
+      await fetchRegistrations()
+    } catch { showToast('error', 'Network error') }
+    setIssuingAll(false)
+  }
+
   const fetchRegistrations = useCallback(async () => {
     setLoading(true)
     try {
@@ -122,14 +187,25 @@ export default function RegistrationsPage() {
   const confirmedCount = filtered.filter(r => r.payment_status === 'confirmed').length
   const pendingCount   = filtered.filter(r => r.payment_status === 'pending').length
 
+  const certIssuedCount = filtered.filter(r => r.student_certificates?.length > 0).length
+
   return (
     <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+
+      {/* Toast */}
+      {issueToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-[12px] text-sm font-bold font-cairo shadow-lg flex items-center gap-2"
+          style={{ background: issueToast.type === 'success' ? '#059669' : '#DC2626', color: '#FFFFFF', minWidth: '280px', justifyContent: 'center' }}>
+          {issueToast.type === 'success' ? '✓' : '✕'} {issueToast.msg}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.registrationsTitle}</h1>
           <p className="text-[#6B6B6B] text-sm font-cairo mt-1">
-            {filtered.length} {isRTL ? 'إجمالي' : 'total'} · {confirmedCount} {isRTL ? 'مؤكد' : 'confirmed'} · {pendingCount} {isRTL ? 'معلّق' : 'pending'}
+            {filtered.length} {isRTL ? 'إجمالي' : 'total'} · {confirmedCount} {isRTL ? 'مؤكد' : 'confirmed'} · {pendingCount} {isRTL ? 'معلّق' : 'pending'} · <span style={{ color: '#059669', fontWeight: 700 }}>{certIssuedCount} {isRTL ? 'شهادة صادرة' : 'certs issued'}</span>
           </p>
         </div>
         {/* Export buttons */}
@@ -229,6 +305,18 @@ export default function RegistrationsPage() {
             </>
           )}
 
+          {/* Issue to All button — only when a specific course is selected */}
+          {filterCourse !== 'all' && (
+            <button onClick={() => handleIssueAll(filterCourse)} disabled={issuingAll}
+              className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo transition-all flex items-center gap-1.5"
+              style={{ background: issuingAll ? 'rgba(16,185,129,0.05)' : 'rgba(16,185,129,0.10)', color: '#059669', border: '1.5px solid rgba(16,185,129,0.30)' }}>
+              {issuingAll
+                ? <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>{isRTL ? 'جارٍ الإصدار...' : 'Issuing...'}</>
+                : <>{isRTL ? '🎓 إصدار للجميع' : '🎓 Issue to All'}</>
+              }
+            </button>
+          )}
+
           {/* Clear all */}
           {hasActiveFilter && (
             <button onClick={clearFilters}
@@ -246,7 +334,7 @@ export default function RegistrationsPage() {
           <table className="w-full">
             <thead>
               <tr style={{ background: '#FFF8F4', borderBottom: '1px solid #FFE4D4' }}>
-                {[t.colStudent, t.colPhone, 'WhatsApp', t.colEmail, t.colCourse, t.colMethod, t.colStatus, t.colDate].map((h) => (
+                {[t.colStudent, t.colPhone, 'WhatsApp', t.colEmail, t.colCourse, t.colMethod, t.colStatus, t.colDate, isRTL ? 'الشهادة' : 'Certificate'].map((h) => (
                   <th key={h} className="px-5 py-3 text-xs font-bold text-[#A0A0A0] uppercase tracking-wider font-cairo whitespace-nowrap"
                     style={{ textAlign: isRTL ? 'right' : 'left' }}>
                     {h}
@@ -309,6 +397,37 @@ export default function RegistrationsPage() {
                     <td className="px-5 py-4 text-xs text-[#A0A0A0] font-cairo whitespace-nowrap">
                       {formatDateTime(reg.created_at)}
                     </td>
+                    {/* Certificate column */}
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      {reg.student_certificates?.length > 0 ? (
+                        <div className="flex items-center gap-2">
+                          <CertBadge issued={true} isRTL={isRTL} />
+                          {reg.student_certificates[0].certificate_url && (
+                            <a href={reg.student_certificates[0].certificate_url} target="_blank" rel="noopener noreferrer"
+                              className="text-xs font-bold font-cairo underline" style={{ color: '#FF5C1A' }}>
+                              PDF
+                            </a>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <CertBadge issued={false} isRTL={isRTL} />
+                          {reg.payment_status === 'confirmed' && (
+                            <button
+                              onClick={() => handleIssue(reg.id)}
+                              disabled={issuingId === reg.id}
+                              className="px-2.5 py-1 rounded-[7px] text-xs font-bold font-cairo transition-all flex items-center gap-1"
+                              style={{ background: issuingId === reg.id ? 'rgba(255,92,26,0.05)' : 'rgba(255,92,26,0.10)', color: '#FF5C1A', border: '1.5px solid rgba(255,92,26,0.25)' }}>
+                              {issuingId === reg.id
+                                ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+                                : '🎓'
+                              }
+                              {isRTL ? 'إصدار' : 'Issue'}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
@@ -326,6 +445,7 @@ export default function RegistrationsPage() {
           </div>
         )}
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }

@@ -57,10 +57,10 @@ function Modal({ title, onClose, children }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative w-full max-w-lg rounded-[20px] p-6 z-10"
-        style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 20px 60px rgba(255,92,26,0.20)' }}
+        className="relative w-full max-w-lg rounded-[20px] z-10 flex flex-col"
+        style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 20px 60px rgba(255,92,26,0.20)', maxHeight: '90vh' }}
       >
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between p-6 pb-4 flex-shrink-0">
           <h3 className="font-bold text-[#1A1A1A] text-lg font-cairo">{title}</h3>
           <button
             onClick={onClose}
@@ -70,7 +70,9 @@ function Modal({ title, onClose, children }) {
             ✕
           </button>
         </div>
-        {children}
+        <div className="overflow-y-auto flex-1 px-6 pb-6" style={{ minHeight: 0 }}>
+          {children}
+        </div>
       </div>
     </div>
   )
