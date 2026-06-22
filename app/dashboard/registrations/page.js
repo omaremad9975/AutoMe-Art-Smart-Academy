@@ -81,10 +81,17 @@ export default function RegistrationsPage() {
         body: JSON.stringify({ registrationId }),
       })
       const data = await res.json()
-      if (!res.ok) { showToast('error', data.error || 'Failed'); return }
+      if (!res.ok) { showToast('error', data.error || 'Failed'); setIssuingId(null); return }
       if (data.skipped) { showToast('success', isRTL ? 'الشهادة سبق إصدارها' : 'Certificate already issued') }
       else { showToast('success', isRTL ? 'تم إصدار الشهادة وإرسالها للطالب ✓' : 'Certificate issued & emailed ✓') }
-      await fetchRegistrations()
+      // Optimistic update — show Issued badge instantly without waiting for re-fetch
+      setRegistrations(prev => prev.map(r =>
+        r.id === registrationId
+          ? { ...r, student_certificates: [{ id: 'temp', verification_code: '', issued_at: new Date().toISOString(), certificate_url: null }] }
+          : r
+      ))
+      // Background re-fetch to sync real data (verification code, etc.)
+      fetchRegistrations()
     } catch { showToast('error', 'Network error') }
     setIssuingId(null)
   }

@@ -17,6 +17,7 @@ const t = {
     logoSub: 'أرت سمارت اكاديمي',
     langToggleLabel: 'English',
     ctaRegister: 'سجّل الآن',
+    studentPortal: '🎓 بوابة الطلاب',
 
     // Hero
     heroBadge: '🎓 أرت سمارت اكاديمي',
@@ -148,6 +149,7 @@ const t = {
     logoSub: 'Art Smart Academy',
     langToggleLabel: 'العربية',
     ctaRegister: 'Register Now',
+    studentPortal: '🎓 Student Portal',
 
     // Hero
     heroBadge: '🎓 Art Smart Academy',
@@ -1525,6 +1527,13 @@ export default function Home() {
             >
               {currentTranslations.langToggleLabel}
             </button>
+            {/* Student Portal */}
+            <a
+              href="/student/login"
+              className="px-4 py-2 text-xs font-bold text-[#6B6B6B] border border-[#E5E7EB] rounded-asa-radius-full hover:border-asa-orange hover:text-asa-orange transition-all duration-300 font-cairo whitespace-nowrap"
+            >
+              {currentTranslations.studentPortal}
+            </a>
             {/* CTA Button */}
             <button
               onClick={openModal}
@@ -1608,6 +1617,13 @@ export default function Home() {
             >
               {currentTranslations.langToggleLabel}
             </button>
+            <a
+              href="/student/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full py-3 text-sm font-bold text-[#6B6B6B] border border-[#E5E7EB] rounded-asa-radius-full hover:border-asa-orange hover:text-asa-orange transition-all duration-300 font-cairo text-center"
+            >
+              {currentTranslations.studentPortal}
+            </a>
             <button
               onClick={() => { setMobileMenuOpen(false); openModal() }}
               className="w-full py-3 bg-asa-orange hover:bg-asa-orange-light text-white font-bold text-center rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange font-cairo"

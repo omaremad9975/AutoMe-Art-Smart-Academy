@@ -57,7 +57,7 @@ export default function StudentLogin() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <img src="/logo_mark_black.png" alt="Art Smart Academy" style={{ height: '48px', width: 'auto', objectFit: 'contain', marginBottom: '12px' }} />
+          <img src="/logo_mark_black.png" alt="Art Smart Academy" style={{ height: '48px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto 12px' }} />
           <h1 style={{ color: '#111827', fontWeight: 900, fontSize: '22px', margin: '0 0 4px', fontFamily: 'Cairo, sans-serif' }}>بوابة الشهادات</h1>
           <p style={{ color: '#9CA3AF', fontSize: '13px', margin: 0, fontFamily: 'Cairo, sans-serif' }}>Student Certificate Portal</p>
         </div>
