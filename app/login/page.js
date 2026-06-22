@@ -267,10 +267,9 @@ export default function LoginPage() {
   const [step, setStep]         = useState('password')
   const [credentials, setCredentials] = useState(null) // { email, password } — in memory only
 
-  const handlePasswordSuccess = async (creds) => {
-    // 2FA temporarily disabled — sign in directly after password check
-    await supabase.auth.signInWithPassword({ email: creds.email, password: creds.password })
-    router.push('/dashboard')
+  const handlePasswordSuccess = (creds) => {
+    setCredentials(creds)
+    setStep('otp')
   }
 
   const handleBack = () => {
@@ -301,6 +300,21 @@ export default function LoginPage() {
               SMART ACADEMY
             </h1>
             <p className="text-[#6B6B6B] text-sm font-semibold mt-1 font-cairo">لوحة التحكم — Admin</p>
+          </div>
+
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 flex-1">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                style={{ background: '#FF5C1A', color: '#FFFFFF' }}>1</div>
+              <span className="text-xs font-semibold font-cairo" style={{ color: '#FF5C1A' }}>كلمة المرور</span>
+            </div>
+            <div className="flex-1 h-px" style={{ background: step === 'otp' ? '#FF5C1A' : '#FFE4D4', transition: 'background 0.3s' }} />
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                style={{ background: step === 'otp' ? '#FF5C1A' : '#FFE4D4', color: step === 'otp' ? '#FFFFFF' : '#A0A0A0', transition: 'all 0.3s' }}>2</div>
+              <span className="text-xs font-semibold font-cairo" style={{ color: step === 'otp' ? '#FF5C1A' : '#A0A0A0', transition: 'color 0.3s' }}>رمز التحقق</span>
+            </div>
           </div>
 
           <div className="h-px w-full mb-6" style={{ background: 'linear-gradient(to right, transparent, #FFE4D4, transparent)' }} />
