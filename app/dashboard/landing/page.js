@@ -128,7 +128,7 @@ function SettingsField({ label, id, type = 'text', value, onChange, placeholder,
   )
 }
 
-const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration_number: '', duration_unit: 'weeks', seats: '', is_active: true, whatsapp_group_url: '', description_ar: '', description_en: '', instructor_ar: '', instructor_en: '' }
+const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration_number: '', duration_unit: 'weeks', seats: '', is_active: true, whatsapp_group_url: '', description_ar: '', description_en: '', instructor_ar: '', instructor_en: '', image_url: '' }
 
 const SOCIAL_DEFAULTS = {
   social_facebook:  '',
@@ -162,7 +162,9 @@ function CoursesSection() {
   const [saving, setSaving] = useState(false)
   const [togglingId, setTogglingId] = useState(null)
   const [uploadingCertFor, setUploadingCertFor] = useState(null) // course id being uploaded
+  const [uploadingCourseImage, setUploadingCourseImage] = useState(false)
   const certInputRef = useRef(null)
+  const courseImageInputRef = useRef(null)
   const [pendingCertCourseId, setPendingCertCourseId] = useState(null)
 
   const fetchCourses = useCallback(async () => {
@@ -191,7 +193,7 @@ function CoursesSection() {
     const durUnit = durLower.includes('day') || durLower.includes('يوم') || durLower.includes('أيام') ? 'days'
                   : durLower.includes('month') || durLower.includes('شهر') || durLower.includes('أشهر') ? 'months'
                   : 'weeks'
-    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration_number: durNum, duration_unit: durUnit, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '', description_ar: c.description_ar || '', description_en: c.description_en || '', instructor_ar: c.instructor_ar || '', instructor_en: c.instructor_en || '' })
+    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration_number: durNum, duration_unit: durUnit, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '', description_ar: c.description_ar || '', description_en: c.description_en || '', instructor_ar: c.instructor_ar || '', instructor_en: c.instructor_en || '', image_url: c.image_url || '' })
     setSelectedCourse(c)
     setModal('edit')
   }
@@ -209,6 +211,7 @@ function CoursesSection() {
         is_active: form.is_active, whatsapp_group_url: form.whatsapp_group_url || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         instructor_ar: form.instructor_ar || null, instructor_en: form.instructor_en || null,
+        image_url: form.image_url || null,
       }
       const body = modal === 'add' ? commonFields : { id: selectedCourse.id, ...commonFields }
       const res = await fetch('/api/admin/courses', {
@@ -315,16 +318,28 @@ function CoursesSection() {
     } catch {}
   }
 
+  const handleCourseImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setUploadingCourseImage(true)
+    try {
+      const token = await getToken()
+      const ext = file.name.split('.').pop().toLowerCase()
+      const urlRes = await fetch(`/api/admin/get-upload-url?bucket=course-images&ext=${ext}`, { headers: { Authorization: `Bearer ${token}` } })
+      const urlData = await urlRes.json()
+      if (!urlRes.ok || urlData.error) { setUploadingCourseImage(false); return }
+      const uploadRes = await fetch(urlData.signedUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type, 'x-upsert': 'false' } })
+      if (uploadRes.ok) setForm((f) => ({ ...f, image_url: urlData.publicUrl }))
+    } catch {}
+    setUploadingCourseImage(false)
+  }
+
   return (
     <div className="space-y-5">
-      {/* Hidden cert upload input */}
-      <input
-        ref={certInputRef}
-        type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
-        style={{ display: 'none' }}
-        onChange={handleCertFileChange}
-      />
+      {/* Hidden inputs */}
+      <input ref={certInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf" style={{ display: 'none' }} onChange={handleCertFileChange} />
+      <input ref={courseImageInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCourseImageUpload} />
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#6B6B6B] font-cairo">
@@ -537,6 +552,33 @@ function CoursesSection() {
               />
               <p className="text-[10px] text-[#A0A0A0] font-cairo mt-1">اختياري — يُضاف تلقائياً لإيميل التأكيد إذا كان موجوداً</p>
             </div>
+            {/* Course Hero Image */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-[#6B6B6B] font-cairo">🖼️ صورة الهيرو / Hero Image</label>
+                <span className="text-[10px] text-[#A0A0A0] font-cairo">الأبعاد المثالية: 1200 × 400px</span>
+              </div>
+              {form.image_url ? (
+                <div className="relative rounded-[10px] overflow-hidden" style={{ height: '90px', border: '1.5px solid #FFE4D4' }}>
+                  <img src={form.image_url} alt="hero" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-2">
+                    <button type="button" onClick={() => courseImageInputRef.current?.click()} disabled={uploadingCourseImage} className="px-3 py-1.5 rounded-[8px] text-xs font-bold text-white font-cairo" style={{ background: 'rgba(255,92,26,0.85)' }}>
+                      {uploadingCourseImage ? '...' : 'استبدال'}
+                    </button>
+                    <button type="button" onClick={() => setForm((f) => ({ ...f, image_url: '' }))} className="px-3 py-1.5 rounded-[8px] text-xs font-bold text-white font-cairo" style={{ background: 'rgba(220,38,38,0.85)' }}>
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button type="button" onClick={() => courseImageInputRef.current?.click()} disabled={uploadingCourseImage}
+                  className="w-full py-4 rounded-[10px] text-xs font-bold font-cairo transition-all"
+                  style={{ border: '2px dashed #FFE4D4', background: '#FFF8F4', color: uploadingCourseImage ? '#A0A0A0' : '#FF5C1A' }}>
+                  {uploadingCourseImage ? 'جارٍ الرفع...' : '+ رفع صورة هيرو'}
+                </button>
+              )}
+            </div>
+
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setForm((f) => ({ ...f, is_active: !f.is_active }))}

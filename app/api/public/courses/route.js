@@ -12,7 +12,7 @@ const supabaseAdmin = createClient(
 export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('courses')
-    .select('id, name_ar, name_en, price, duration, seats, description_ar, description_en, instructor_ar, instructor_en')
+    .select('id, name_ar, name_en, price, duration, seats, description_ar, description_en, instructor_ar, instructor_en, image_url')
     .eq('is_active', true)
     .order('created_at', { ascending: true })
 

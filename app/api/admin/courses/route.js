@@ -73,6 +73,7 @@ export async function PATCH(request) {
   if (fields.description_en           !== undefined) payload.description_en            = fields.description_en
   if (fields.instructor_ar            !== undefined) payload.instructor_ar             = fields.instructor_ar
   if (fields.instructor_en            !== undefined) payload.instructor_en             = fields.instructor_en
+  if (fields.image_url                !== undefined) payload.image_url                 = fields.image_url
 
   const { data, error } = await supabaseAdmin.from('courses').update(payload).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

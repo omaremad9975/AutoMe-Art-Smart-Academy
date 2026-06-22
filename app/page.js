@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 
 // ==========================================
@@ -597,12 +597,91 @@ const COUNTRY_CODES = [
   { code: '+65',  flag: '🇸🇬', name: 'Singapore' },
 ]
 
-const PREFIX_SELECT_STYLE = {
-  flexShrink: 0, width: '115px', padding: '10px 8px',
-  borderRadius: '10px', fontSize: '13px', fontFamily: 'Cairo, sans-serif',
-  color: '#111827', outline: 'none', cursor: 'pointer', appearance: 'auto',
-  border: '1.5px solid #E5E7EB', background: '#F9FAFB',
-  transition: 'border-color 0.15s, box-shadow 0.15s',
+// ── Searchable Country Dropdown ───────────────────────────────────────────────
+function CountryDropdown({ value, onSelect }) {
+  const [open, setOpen]     = useState(false)
+  const [search, setSearch] = useState('')
+  const ref                 = useRef(null)
+  const searchRef           = useRef(null)
+
+  const selected = COUNTRY_CODES.find(c => c.code === value) || COUNTRY_CODES[0]
+  const filtered = COUNTRY_CODES.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase()) || c.code.includes(search)
+  )
+
+  useEffect(() => {
+    function outside(e) { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setSearch('') } }
+    document.addEventListener('mousedown', outside)
+    return () => document.removeEventListener('mousedown', outside)
+  }, [])
+
+  useEffect(() => { if (open) setTimeout(() => searchRef.current?.focus(), 50) }, [open])
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0, width: '120px' }}>
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '4px', padding: '0 10px', borderRadius: '10px', border: '1.5px solid #E5E7EB',
+          background: '#F9FAFB', cursor: 'pointer', fontFamily: 'Cairo, sans-serif',
+          fontSize: '13px', fontWeight: 600, color: '#111827',
+        }}
+      >
+        <span>{selected.flag} {selected.code}</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round"/></svg>
+      </button>
+
+      {/* Dropdown panel */}
+      {open && (
+        <div style={{
+          position: 'absolute', top: '46px', left: 0, zIndex: 9999,
+          background: '#FFFFFF', border: '1.5px solid #FFE4D4', borderRadius: '12px',
+          boxShadow: '0 8px 28px rgba(0,0,0,0.14)', width: '240px',
+          maxHeight: '280px', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        }}>
+          {/* Search input */}
+          <div style={{ padding: '8px 8px 4px', borderBottom: '1px solid #F3F4F6' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#F9FAFB', borderRadius: '8px', padding: '6px 10px', border: '1px solid #E5E7EB' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input
+                ref={searchRef}
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search country..."
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '12px', fontFamily: 'Cairo, sans-serif', color: '#111827', width: '100%' }}
+              />
+            </div>
+          </div>
+          {/* List */}
+          <div style={{ overflowY: 'auto', flex: 1 }}>
+            {filtered.length === 0 ? (
+              <p style={{ padding: '12px', fontSize: '12px', color: '#9CA3AF', textAlign: 'center', fontFamily: 'Cairo, sans-serif' }}>No results</p>
+            ) : filtered.map(c => (
+              <button
+                key={c.code}
+                type="button"
+                onClick={() => { onSelect(c.code); setOpen(false); setSearch('') }}
+                style={{
+                  width: '100%', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: '8px',
+                  background: value === c.code ? '#FFF8F4' : 'transparent',
+                  border: 'none', borderBottom: '1px solid #F9FAFB', cursor: 'pointer',
+                  fontFamily: 'Cairo, sans-serif', fontSize: '13px', color: '#111827',
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>{c.flag}</span>
+                <span style={{ flex: 1, textAlign: 'left', fontWeight: value === c.code ? 700 : 400 }}>{c.name}</span>
+                <span style={{ color: '#6B7280', fontWeight: 700, fontSize: '12px' }}>{c.code}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 const EMPTY_FORM = { name: '', phonePrefix: '+20', phoneLocal: '', email: '', sameWhatsapp: true, whatsappPrefix: '+20', whatsappLocal: '', courseId: '', paymentMethod: 'vodafone_cash' }
@@ -880,9 +959,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                     </ModalField>
                     <ModalField label={mt.phone} error={errors.phone}>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <select data-formkey="phonePrefix" value={form.phonePrefix} onChange={handleChange} style={PREFIX_SELECT_STYLE} onFocus={onFocusIn} onBlur={onFocusOut}>
-                          {COUNTRY_CODES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
-                        </select>
+                        <CountryDropdown value={form.phonePrefix} onSelect={(code) => setForm(f => ({ ...f, phonePrefix: code }))} />
                         <input data-formkey="phoneLocal" type="tel" inputMode="numeric" value={form.phoneLocal} onChange={handleChange}
                           placeholder="XXXXXXXXXX" style={{ ...INPUT_BASE, flex: 1 }} onFocus={onFocusIn} onBlur={onFocusOut} />
                       </div>
@@ -903,9 +980,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                     <div style={{ marginTop: '10px' }}>
                       <ModalField label={mt.whatsapp} error={errors.whatsapp}>
                         <div style={{ display: 'flex', gap: '6px' }}>
-                          <select data-formkey="whatsappPrefix" value={form.whatsappPrefix} onChange={handleChange} style={PREFIX_SELECT_STYLE} onFocus={onFocusIn} onBlur={onFocusOut}>
-                            {COUNTRY_CODES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
-                          </select>
+                          <CountryDropdown value={form.whatsappPrefix} onSelect={(code) => setForm(f => ({ ...f, whatsappPrefix: code }))} />
                           <input data-formkey="whatsappLocal" type="tel" inputMode="numeric" value={form.whatsappLocal} onChange={handleChange}
                             placeholder="XXXXXXXXXX" style={{ ...INPUT_BASE, flex: 1 }} onFocus={onFocusIn} onBlur={onFocusOut} />
                         </div>
