@@ -554,7 +554,58 @@ const PAYMENT_OPTIONS = [
   { key: 'instapay',      ar: 'إنستاباي',       en: 'InstaPay',       noteAr: 'تأكيد يدوي',    noteEn: 'Manual confirm', color: '#6B2FA0', bg: '#F5F0FF', Logo: InstaPayLogo },
 ]
 
-const EMPTY_FORM = { name: '', phone: '', email: '', sameWhatsapp: true, whatsapp: '', courseId: '', paymentMethod: 'vodafone_cash' }
+const COUNTRY_CODES = [
+  { code: '+20',  flag: '🇪🇬', name: 'Egypt' },
+  { code: '+966', flag: '🇸🇦', name: 'Saudi Arabia' },
+  { code: '+971', flag: '🇦🇪', name: 'UAE' },
+  { code: '+965', flag: '🇰🇼', name: 'Kuwait' },
+  { code: '+974', flag: '🇶🇦', name: 'Qatar' },
+  { code: '+973', flag: '🇧🇭', name: 'Bahrain' },
+  { code: '+968', flag: '🇴🇲', name: 'Oman' },
+  { code: '+962', flag: '🇯🇴', name: 'Jordan' },
+  { code: '+961', flag: '🇱🇧', name: 'Lebanon' },
+  { code: '+963', flag: '🇸🇾', name: 'Syria' },
+  { code: '+964', flag: '🇮🇶', name: 'Iraq' },
+  { code: '+218', flag: '🇱🇾', name: 'Libya' },
+  { code: '+216', flag: '🇹🇳', name: 'Tunisia' },
+  { code: '+213', flag: '🇩🇿', name: 'Algeria' },
+  { code: '+212', flag: '🇲🇦', name: 'Morocco' },
+  { code: '+249', flag: '🇸🇩', name: 'Sudan' },
+  { code: '+1',   flag: '🇺🇸', name: 'USA / Canada' },
+  { code: '+44',  flag: '🇬🇧', name: 'UK' },
+  { code: '+33',  flag: '🇫🇷', name: 'France' },
+  { code: '+49',  flag: '🇩🇪', name: 'Germany' },
+  { code: '+39',  flag: '🇮🇹', name: 'Italy' },
+  { code: '+34',  flag: '🇪🇸', name: 'Spain' },
+  { code: '+31',  flag: '🇳🇱', name: 'Netherlands' },
+  { code: '+46',  flag: '🇸🇪', name: 'Sweden' },
+  { code: '+47',  flag: '🇳🇴', name: 'Norway' },
+  { code: '+45',  flag: '🇩🇰', name: 'Denmark' },
+  { code: '+32',  flag: '🇧🇪', name: 'Belgium' },
+  { code: '+41',  flag: '🇨🇭', name: 'Switzerland' },
+  { code: '+90',  flag: '🇹🇷', name: 'Turkey' },
+  { code: '+7',   flag: '🇷🇺', name: 'Russia' },
+  { code: '+86',  flag: '🇨🇳', name: 'China' },
+  { code: '+81',  flag: '🇯🇵', name: 'Japan' },
+  { code: '+82',  flag: '🇰🇷', name: 'South Korea' },
+  { code: '+91',  flag: '🇮🇳', name: 'India' },
+  { code: '+92',  flag: '🇵🇰', name: 'Pakistan' },
+  { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
+  { code: '+27',  flag: '🇿🇦', name: 'South Africa' },
+  { code: '+55',  flag: '🇧🇷', name: 'Brazil' },
+  { code: '+61',  flag: '🇦🇺', name: 'Australia' },
+  { code: '+65',  flag: '🇸🇬', name: 'Singapore' },
+]
+
+const PREFIX_SELECT_STYLE = {
+  flexShrink: 0, width: '115px', padding: '10px 8px',
+  borderRadius: '10px', fontSize: '13px', fontFamily: 'Cairo, sans-serif',
+  color: '#111827', outline: 'none', cursor: 'pointer', appearance: 'auto',
+  border: '1.5px solid #E5E7EB', background: '#F9FAFB',
+  transition: 'border-color 0.15s, box-shadow 0.15s',
+}
+
+const EMPTY_FORM = { name: '', phonePrefix: '+20', phoneLocal: '', email: '', sameWhatsapp: true, whatsappPrefix: '+20', whatsappLocal: '', courseId: '', paymentMethod: 'vodafone_cash' }
 
 // Payment details for manual methods
 const MANUAL_PAYMENT_DETAILS = {
@@ -665,11 +716,11 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
   function validate() {
     const e = {}
     if (!form.name.trim()) e.name = mt.required
-    const phoneDigits = form.phone.replace(/\D/g, '')
-    if (!form.phone.trim()) {
+    const phoneDigits = form.phoneLocal.replace(/\D/g, '')
+    if (!form.phoneLocal.trim()) {
       e.phone = mt.required
-    } else if (phoneDigits.length < 7 || phoneDigits.length > 15) {
-      e.phone = isRTL ? 'رقم الهاتف غير صحيح (7 إلى 15 رقماً)' : 'Invalid phone number (7 to 15 digits)'
+    } else if (phoneDigits.length < 4 || phoneDigits.length > 13) {
+      e.phone = isRTL ? 'رقم الهاتف غير صحيح' : 'Invalid phone number'
     }
     if (!form.email.trim()) {
       e.email = mt.required
@@ -677,7 +728,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
       e.email = isRTL ? 'البريد الإلكتروني غير صحيح (مثال: name@gmail.com)' : 'Invalid email (e.g. name@gmail.com)'
     }
     if (hasCourses && !form.courseId) e.courseId = mt.required
-    if (!form.sameWhatsapp && !form.whatsapp.trim()) e.whatsapp = mt.required
+    if (!form.sameWhatsapp && !form.whatsappLocal.trim()) e.whatsapp = mt.required
     if (isManual && !receiptUrl) e.receipt = mt.receiptRequired
     return e
   }
@@ -695,9 +746,9 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name:          form.name,
-          phone:         form.phone,
+          phone:         form.phonePrefix + form.phoneLocal,
           email:         form.email,
-          whatsapp:      form.sameWhatsapp ? form.phone : form.whatsapp,
+          whatsapp:      form.sameWhatsapp ? (form.phonePrefix + form.phoneLocal) : (form.whatsappPrefix + form.whatsappLocal),
           courseId:      form.courseId || null,
           paymentMethod: form.paymentMethod,
           receiptUrl:    receiptUrl || null,
@@ -828,8 +879,13 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                         placeholder={mt.namePh} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
                     </ModalField>
                     <ModalField label={mt.phone} error={errors.phone}>
-                      <input data-formkey="phone" type="tel" value={form.phone} onChange={handleChange}
-                        placeholder={mt.phonePh} maxLength={11} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <select data-formkey="phonePrefix" value={form.phonePrefix} onChange={handleChange} style={PREFIX_SELECT_STYLE} onFocus={onFocusIn} onBlur={onFocusOut}>
+                          {COUNTRY_CODES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
+                        </select>
+                        <input data-formkey="phoneLocal" type="tel" inputMode="numeric" value={form.phoneLocal} onChange={handleChange}
+                          placeholder="XXXXXXXXXX" style={{ ...INPUT_BASE, flex: 1 }} onFocus={onFocusIn} onBlur={onFocusOut} />
+                      </div>
                     </ModalField>
                   </div>
                   <ModalField label={mt.email} error={errors.email}>
@@ -846,8 +902,13 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                   {!form.sameWhatsapp && (
                     <div style={{ marginTop: '10px' }}>
                       <ModalField label={mt.whatsapp} error={errors.whatsapp}>
-                        <input data-formkey="whatsapp" type="tel" value={form.whatsapp} onChange={handleChange}
-                          placeholder={mt.whatsappPh} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <select data-formkey="whatsappPrefix" value={form.whatsappPrefix} onChange={handleChange} style={PREFIX_SELECT_STYLE} onFocus={onFocusIn} onBlur={onFocusOut}>
+                            {COUNTRY_CODES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
+                          </select>
+                          <input data-formkey="whatsappLocal" type="tel" inputMode="numeric" value={form.whatsappLocal} onChange={handleChange}
+                            placeholder="XXXXXXXXXX" style={{ ...INPUT_BASE, flex: 1 }} onFocus={onFocusIn} onBlur={onFocusOut} />
+                        </div>
                       </ModalField>
                     </div>
                   )}
@@ -1653,16 +1714,19 @@ export default function Home() {
                     {course.title}
                   </h3>
 
-                  {/* Description */}
-                  {course.description && (
-                    <p className="text-asa-text-muted text-sm font-medium leading-relaxed flex-grow mb-6">
-                      {course.description}
-                    </p>
-                  )}
+                  {/* Duration Badge & Price */}
+                  <div className="flex items-center justify-between mb-5 mt-auto">
+                    <span className="text-xs px-3 py-1 rounded-asa-radius-full bg-asa-orange-tint border border-asa-border text-asa-orange font-bold font-cairo">
+                      {course.duration}
+                    </span>
+                    <span className="text-asa-orange font-extrabold text-lg md:text-xl font-cairo">
+                      {course.price}
+                    </span>
+                  </div>
 
-                  {/* Instructor Row — only if we have instructor info */}
+                  {/* Instructor Row */}
                   {course.instructor && (
-                    <div className="flex items-center gap-3 border-t border-asa-border pt-4 mb-6">
+                    <div className="flex items-center gap-3 border-t border-asa-border pt-4 mb-5">
                       <div className="w-8 h-8 rounded-full bg-asa-orange text-white flex items-center justify-center text-xs font-bold font-cairo">
                         {course.initials}
                       </div>
@@ -1672,23 +1736,21 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Duration Badge & Price */}
-                  <div className="flex items-center justify-between mb-6 mt-auto">
-                    <span className="text-xs px-3 py-1 rounded-asa-radius-full bg-asa-orange-tint border border-asa-border text-asa-orange font-bold font-cairo">
-                      {course.duration}
-                    </span>
-                    <span className="text-asa-orange font-extrabold text-lg md:text-xl font-cairo">
-                      {course.price}
-                    </span>
+                  {/* Buttons row */}
+                  <div className="flex gap-2">
+                    <a
+                      href={`/courses/${course.id}`}
+                      className="flex-1 border-2 border-asa-orange text-asa-orange text-center font-bold py-3 rounded-asa-radius-full text-sm transition-all duration-300 font-cairo hover:bg-asa-orange-tint"
+                    >
+                      {lang === 'ar' ? 'تفاصيل' : 'Details'}
+                    </a>
+                    <button
+                      onClick={openModal}
+                      className="flex-1 bg-asa-orange hover:bg-asa-orange-light text-white text-center font-bold py-3 rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange font-cairo"
+                    >
+                      {currentTranslations.coursesEnroll}
+                    </button>
                   </div>
-
-                  {/* Enroll Button */}
-                  <button
-                    onClick={openModal}
-                    className="w-full bg-asa-orange hover:bg-asa-orange-light text-white text-center font-bold py-3 rounded-asa-radius-full text-sm transition-all duration-300 shadow-asa-shadow-orange hover:shadow-[0_8px_24px_rgba(255,92,26,0.35)] font-cairo"
-                  >
-                    {currentTranslations.coursesEnroll}
-                  </button>
                 </div>
               ))}
             </div>
