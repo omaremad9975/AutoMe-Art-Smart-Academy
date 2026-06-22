@@ -405,10 +405,10 @@ const MODAL_T = {
   ar: {
     title: 'سجّل في الكورس', sub: 'أدخل بياناتك وسنتواصل معك قريباً',
     name: 'الاسم الكامل', namePh: 'مثال: محمد أحمد',
-    phone: 'رقم الهاتف', phonePh: '+20 1XX XXX XXXX',
+    phone: 'رقم الهاتف', phonePh: '+20 / +1 / ...',
     email: 'البريد الإلكتروني', emailPh: 'example@email.com',
     sameWa: 'واتساب نفس رقم الهاتف',
-    whatsapp: 'رقم واتساب', whatsappPh: '+20 1XX XXX XXXX',
+    whatsapp: 'رقم واتساب', whatsappPh: '+20 / +1 / ...',
     course: 'الكورس المطلوب', selectCourse: '— اختر الكورس —',
     payment: 'طريقة الدفع',
     submit: 'إرسال الطلب', submitting: 'جارٍ الإرسال...',
@@ -448,10 +448,10 @@ const MODAL_T = {
   en: {
     title: 'Register for a Course', sub: "Fill in your details and we'll be in touch soon",
     name: 'Full Name', namePh: 'e.g. Mohamed Ahmed',
-    phone: 'Phone Number', phonePh: '+20 1XX XXX XXXX',
+    phone: 'Phone Number', phonePh: '+20 / +1 / ...',
     email: 'Email Address', emailPh: 'example@email.com',
     sameWa: 'WhatsApp is same as phone',
-    whatsapp: 'WhatsApp Number', whatsappPh: '+20 1XX XXX XXXX',
+    whatsapp: 'WhatsApp Number', whatsappPh: '+20 / +1 / ...',
     course: 'Course', selectCourse: '— Select a course —',
     payment: 'Payment Method',
     submit: 'Submit Registration', submitting: 'Submitting...',
@@ -668,8 +668,8 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
     const phoneDigits = form.phone.replace(/\D/g, '')
     if (!form.phone.trim()) {
       e.phone = mt.required
-    } else if (phoneDigits.length !== 11) {
-      e.phone = isRTL ? 'يجب أن يكون رقم الهاتف 11 رقماً بالضبط' : 'Phone must be exactly 11 digits'
+    } else if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+      e.phone = isRTL ? 'رقم الهاتف غير صحيح (7 إلى 15 رقماً)' : 'Invalid phone number (7 to 15 digits)'
     }
     if (!form.email.trim()) {
       e.email = mt.required
@@ -1841,9 +1841,6 @@ export default function Home() {
               <h3 className="text-asa-text font-bold text-lg font-cairo mb-1">
                 {currentTranslations.step3Title}
               </h3>
-              <span className="text-asa-orange font-bold text-[10px] font-cairo leading-normal max-w-[180px] mb-2 block">
-                {currentTranslations.step3Detail}
-              </span>
               <p className="text-asa-text-muted text-xs font-semibold leading-relaxed max-w-[200px]">
                 {currentTranslations.step3Desc}
               </p>
@@ -2009,7 +2006,7 @@ export default function Home() {
                   <Icon name="youtube" className="w-5 h-5" />
                 </a>
                 <a
-                  href="https://wa.me/201000000000"
+                  href={`https://wa.me/${(siteSettings.whatsapp || '').replace(/[^0-9]/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full border border-[#FFE4D4] hover:border-asa-orange bg-white flex items-center justify-center text-[#6B6B6B] hover:text-asa-orange hover:bg-asa-orange-light/10 transition-all duration-300"
