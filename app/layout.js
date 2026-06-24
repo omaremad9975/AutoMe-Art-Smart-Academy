@@ -50,6 +50,11 @@ export const metadata = {
     description: 'اكتشف · تعلّم · ابدع — أكاديمية متخصصة للكورسات التدريبية في مصر',
     images: ['/og-image.png'],
   },
+  icons: {
+    icon: [{ url: '/favicon.png', type: 'image/png', sizes: '790x790' }],
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
   robots: {
     index: true,
     follow: true,
@@ -90,7 +95,6 @@ export default function RootLayout({ children }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.png" type="image/png" sizes="256x256" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
