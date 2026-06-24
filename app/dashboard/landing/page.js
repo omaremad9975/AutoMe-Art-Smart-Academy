@@ -408,12 +408,10 @@ function CoursesSection() {
                 <button
                   onClick={() => toggleActive(course)}
                   disabled={togglingId === course.id}
-                  className="relative inline-flex items-center h-6 w-11 rounded-full transition-colors duration-200 flex-shrink-0"
-                  style={{ background: course.is_active ? '#FF5C1A' : '#E5E7EB', minWidth: '44px' }}
+                  style={{ background: course.is_active ? '#FF5C1A' : '#E5E7EB', width: '44px', height: '24px', borderRadius: '999px', border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background 0.2s', padding: 0, overflow: 'hidden' }}
                 >
                   <span
-                    className="inline-block w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
-                    style={{ transform: course.is_active ? 'translateX(24px)' : 'translateX(4px)' }}
+                    style={{ display: 'block', width: '16px', height: '16px', borderRadius: '50%', background: '#FFFFFF', boxShadow: '0 1px 3px rgba(0,0,0,0.2)', position: 'absolute', top: '4px', transition: 'left 0.2s', left: course.is_active ? '24px' : '4px' }}
                   />
                 </button>
               </div>

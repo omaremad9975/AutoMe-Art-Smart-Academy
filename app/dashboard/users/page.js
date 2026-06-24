@@ -236,7 +236,14 @@ export default function UsersPage() {
         style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 24px rgba(255,92,26,0.06)' }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full" style={{ tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: '64px' }} />
+              <col style={{ width: 'auto' }} />
+              <col style={{ width: '120px' }} />
+              <col style={{ width: '150px' }} />
+              <col style={{ width: '100px' }} />
+            </colgroup>
             <thead>
               <tr style={{ background: '#FFF8F4', borderBottom: '1px solid #FFE4D4' }}>
                 {COLUMNS.map((h) => (
@@ -283,9 +290,9 @@ export default function UsersPage() {
                       </div>
                     </td>
                     {/* Email */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-[#1A1A1A] font-cairo">{admin.email}</span>
+                    <td className="px-5 py-4" style={{ overflow: 'hidden' }}>
+                      <div className="flex items-center gap-2" style={{ minWidth: 0 }}>
+                        <span className="text-sm font-semibold text-[#1A1A1A] font-cairo" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{admin.email}</span>
                         {admin.email === currentUserEmail && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full font-cairo" style={{ background: '#FFF0E8', color: '#FF5C1A' }}>{t.youLabel}</span>
                         )}

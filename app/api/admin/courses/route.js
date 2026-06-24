@@ -37,13 +37,13 @@ export async function POST(request) {
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { name_ar, name_en, price, duration, seats, is_active, whatsapp_group_url, description_ar, description_en, instructor_ar, instructor_en } = body
+  const { name_ar, name_en, price, duration, seats, is_active, whatsapp_group_url, description_ar, description_en, instructor_ar, instructor_en, icon_key, image_url } = body
 
   if (!name_ar || !name_en) return NextResponse.json({ error: 'Arabic and English names are required' }, { status: 400 })
 
   const { data, error } = await supabaseAdmin
     .from('courses')
-    .insert([{ name_ar, name_en, price: parseFloat(price) || 0, duration: duration || '', seats: parseInt(seats) || 0, is_active: is_active ?? true, whatsapp_group_url: whatsapp_group_url || null, description_ar: description_ar || null, description_en: description_en || null, instructor_ar: instructor_ar || null, instructor_en: instructor_en || null }])
+    .insert([{ name_ar, name_en, price: parseFloat(price) || 0, duration: duration || '', seats: parseInt(seats) || 0, is_active: is_active ?? true, whatsapp_group_url: whatsapp_group_url || null, description_ar: description_ar || null, description_en: description_en || null, instructor_ar: instructor_ar || null, instructor_en: instructor_en || null, icon_key: icon_key || 'other', image_url: image_url || null }])
     .select()
     .single()
 
@@ -74,6 +74,7 @@ export async function PATCH(request) {
   if (fields.instructor_ar            !== undefined) payload.instructor_ar             = fields.instructor_ar
   if (fields.instructor_en            !== undefined) payload.instructor_en             = fields.instructor_en
   if (fields.image_url                !== undefined) payload.image_url                 = fields.image_url
+  if (fields.icon_key                 !== undefined) payload.icon_key                  = fields.icon_key
 
   const { data, error } = await supabaseAdmin.from('courses').update(payload).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
