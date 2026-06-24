@@ -48,7 +48,15 @@ function Field({ label, type = 'text', value, onChange, placeholder, min }) {
   )
 }
 
-const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration: '', seats: '', is_active: true }
+const COURSE_ICONS = [
+  { key: 'art',       labelAr: 'فنون',           labelEn: 'Art',       emoji: '🎨', bg: '#F3E8FF', color: '#9333EA' },
+  { key: 'ai',        labelAr: 'ذكاء اصطناعي',  labelEn: 'AI',        emoji: '🤖', bg: '#DBEAFE', color: '#3B82F6' },
+  { key: 'languages', labelAr: 'لغات',           labelEn: 'Languages', emoji: '🌐', bg: '#D1FAE5', color: '#059669' },
+  { key: 'sports',    labelAr: 'رياضة',          labelEn: 'Sports',    emoji: '🏆', bg: '#FFE4E6', color: '#E11D48' },
+  { key: 'other',     labelAr: 'أخرى',           labelEn: 'Other',     emoji: '⭐', bg: '#FFF0E8', color: '#FF5C1A' },
+]
+
+const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration: '', seats: '', is_active: true, icon_key: 'other' }
 
 // ── Courses Page ───────────────────────────────────────────────────────────────
 export default function CoursesPage() {
@@ -77,7 +85,7 @@ export default function CoursesPage() {
 
   const openAdd = () => { setForm(EMPTY_FORM); setSelectedCourse(null); setModal('add') }
   const openEdit = (c) => {
-    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration: c.duration, seats: c.seats, is_active: c.is_active })
+    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration: c.duration, seats: c.seats, is_active: c.is_active, icon_key: c.icon_key || 'other' })
     setSelectedCourse(c)
     setModal('edit')
   }
@@ -93,6 +101,7 @@ export default function CoursesPage() {
       duration: form.duration,
       seats: parseInt(form.seats) || 0,
       is_active: form.is_active,
+      icon_key: form.icon_key || 'other',
     }
 
     let error
@@ -256,6 +265,29 @@ export default function CoursesPage() {
               <Field label="Duration" value={form.duration} onChange={(e) => setForm((f) => ({ ...f, duration: e.target.value }))} placeholder="8 weeks" />
               <Field label="Seats" type="number" min="0" value={form.seats} onChange={(e) => setForm((f) => ({ ...f, seats: e.target.value }))} placeholder="20" />
             </div>
+            {/* Icon Picker */}
+            <div>
+              <label className="block text-[#1A1A1A] font-bold text-sm mb-2 font-cairo">Course Category Icon</label>
+              <div className="flex gap-2 flex-wrap">
+                {COURSE_ICONS.map((ic) => (
+                  <button
+                    key={ic.key}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, icon_key: ic.key }))}
+                    className="flex flex-col items-center gap-1 px-3 py-2 rounded-[10px] transition-all duration-200 font-cairo"
+                    style={{
+                      background: form.icon_key === ic.key ? ic.bg : '#FFF8F4',
+                      border: form.icon_key === ic.key ? `2px solid ${ic.color}` : '2px solid #FFE4D4',
+                      minWidth: '60px',
+                    }}
+                  >
+                    <span style={{ fontSize: '22px' }}>{ic.emoji}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: form.icon_key === ic.key ? ic.color : '#9CA3AF' }}>{ic.labelEn}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setForm((f) => ({ ...f, is_active: !f.is_active }))}

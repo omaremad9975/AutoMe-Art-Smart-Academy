@@ -386,6 +386,14 @@ function Icon({ name, className = 'w-6 h-6', ...props }) {
   return icons[name] || null
 }
 
+const COURSE_ICON_MAP = {
+  art:       { icon: 'palette', bg: '#F3E8FF', color: '#9333EA' },
+  ai:        { icon: 'cpu',     bg: '#DBEAFE', color: '#3B82F6' },
+  languages: { icon: 'globe',   bg: '#D1FAE5', color: '#059669' },
+  sports:    { icon: 'trophy',  bg: '#FFE4E6', color: '#E11D48' },
+  other:     { icon: 'star',    bg: '#FFF0E8', color: '#FF5C1A' },
+}
+
 // ==========================================
 // MAIN LANDING PAGE COMPONENT
 // ==========================================
@@ -1463,7 +1471,9 @@ export default function Home() {
       title:       nameDisplay,
       description,
       instructor,
-      icon:        enriched.icon || 'graduation',
+      icon:        (COURSE_ICON_MAP[c.icon_key] || COURSE_ICON_MAP.other).icon,
+      iconBg:      (COURSE_ICON_MAP[c.icon_key] || COURSE_ICON_MAP.other).bg,
+      iconColor:   (COURSE_ICON_MAP[c.icon_key] || COURSE_ICON_MAP.other).color,
       initials,
       price:       isAr ? `${Number(c.price).toLocaleString('ar-EG')} جنيه` : `EGP ${Number(c.price).toLocaleString()}`,
       duration:    c.duration,
@@ -1796,7 +1806,10 @@ export default function Home() {
                   <div className="absolute top-0 left-0 right-0 h-1 bg-asa-orange" />
 
                   {/* Icon */}
-                  <div className="w-14 h-14 rounded-asa-radius-full bg-asa-orange-tint border border-asa-border flex items-center justify-center text-asa-orange shadow-[0_0_15px_rgba(255,92,26,0.12)] mb-6 self-start">
+                  <div
+                    className="w-14 h-14 rounded-asa-radius-full flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.08)] mb-6 self-start"
+                    style={{ background: course.iconBg, color: course.iconColor, border: `1px solid ${course.iconColor}33` }}
+                  >
                     <Icon name={course.icon} className="w-7 h-7" />
                   </div>
 
