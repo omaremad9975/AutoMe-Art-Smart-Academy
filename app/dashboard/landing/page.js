@@ -130,7 +130,15 @@ function SettingsField({ label, id, type = 'text', value, onChange, placeholder,
   )
 }
 
-const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration_number: '', duration_unit: 'weeks', seats: '', is_active: true, whatsapp_group_url: '', description_ar: '', description_en: '', instructor_ar: '', instructor_en: '', image_url: '' }
+const COURSE_ICONS = [
+  { key: 'art',       labelEn: 'Art',       emoji: '🎨', bg: '#F3E8FF', color: '#9333EA' },
+  { key: 'ai',        labelEn: 'AI',        emoji: '🤖', bg: '#DBEAFE', color: '#3B82F6' },
+  { key: 'languages', labelEn: 'Languages', emoji: '🌐', bg: '#D1FAE5', color: '#059669' },
+  { key: 'sports',    labelEn: 'Sports',    emoji: '🏆', bg: '#FFE4E6', color: '#E11D48' },
+  { key: 'other',     labelEn: 'Other',     emoji: '⭐', bg: '#FFF0E8', color: '#FF5C1A' },
+]
+
+const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration_number: '', duration_unit: 'weeks', seats: '', is_active: true, whatsapp_group_url: '', description_ar: '', description_en: '', instructor_ar: '', instructor_en: '', image_url: '', icon_key: 'other' }
 
 const SOCIAL_DEFAULTS = {
   social_facebook:  '',
@@ -195,7 +203,7 @@ function CoursesSection() {
     const durUnit = durLower.includes('day') || durLower.includes('يوم') || durLower.includes('أيام') ? 'days'
                   : durLower.includes('month') || durLower.includes('شهر') || durLower.includes('أشهر') ? 'months'
                   : 'weeks'
-    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration_number: durNum, duration_unit: durUnit, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '', description_ar: c.description_ar || '', description_en: c.description_en || '', instructor_ar: c.instructor_ar || '', instructor_en: c.instructor_en || '', image_url: c.image_url || '' })
+    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration_number: durNum, duration_unit: durUnit, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '', description_ar: c.description_ar || '', description_en: c.description_en || '', instructor_ar: c.instructor_ar || '', instructor_en: c.instructor_en || '', image_url: c.image_url || '', icon_key: c.icon_key || 'other' })
     setSelectedCourse(c)
     setModal('edit')
   }
@@ -213,7 +221,7 @@ function CoursesSection() {
         is_active: form.is_active, whatsapp_group_url: form.whatsapp_group_url || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         instructor_ar: form.instructor_ar || null, instructor_en: form.instructor_en || null,
-        image_url: form.image_url || null,
+        image_url: form.image_url || null, icon_key: form.icon_key || 'other',
       }
       const body = modal === 'add' ? commonFields : { id: selectedCourse.id, ...commonFields }
       const res = await fetch('/api/admin/courses', {
@@ -400,8 +408,8 @@ function CoursesSection() {
                 <button
                   onClick={() => toggleActive(course)}
                   disabled={togglingId === course.id}
-                  className="relative inline-flex items-center h-6 w-11 rounded-full transition-colors duration-200"
-                  style={{ background: course.is_active ? '#FF5C1A' : '#E5E7EB' }}
+                  className="relative inline-flex items-center h-6 w-11 rounded-full transition-colors duration-200 flex-shrink-0"
+                  style={{ background: course.is_active ? '#FF5C1A' : '#E5E7EB', minWidth: '44px' }}
                 >
                   <span
                     className="inline-block w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
@@ -503,11 +511,11 @@ function CoursesSection() {
             {/* Description */}
             <div>
               <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">📝 الوصف (عربي)</label>
-              <textarea rows={2} value={form.description_ar} onChange={(e) => setForm((f) => ({ ...f, description_ar: e.target.value }))} placeholder="وصف مختصر للكورس بالعربية..." className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none resize-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'rtl' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+              <textarea rows={Math.max(3, Math.min(12, Math.ceil((form.description_ar || '').length / 50)))} value={form.description_ar} onChange={(e) => setForm((f) => ({ ...f, description_ar: e.target.value }))} placeholder="وصف مختصر للكورس بالعربية..." className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none resize-y" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'rtl', minHeight: '72px' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
             </div>
             <div>
               <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">📝 Description (English)</label>
-              <textarea rows={2} value={form.description_en} onChange={(e) => setForm((f) => ({ ...f, description_en: e.target.value }))} placeholder="Brief course description in English..." className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none resize-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+              <textarea rows={Math.max(3, Math.min(12, Math.ceil((form.description_en || '').length / 55)))} value={form.description_en} onChange={(e) => setForm((f) => ({ ...f, description_en: e.target.value }))} placeholder="Brief course description in English..." className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none resize-y" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', minHeight: '72px' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
             </div>
 
             {/* Instructor */}
@@ -579,6 +587,29 @@ function CoursesSection() {
                   {uploadingCourseImage ? 'جارٍ الرفع...' : '+ رفع صورة هيرو'}
                 </button>
               )}
+            </div>
+
+            {/* Icon Picker */}
+            <div>
+              <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-2">🎯 Course Category Icon</label>
+              <div className="flex gap-2 flex-wrap">
+                {COURSE_ICONS.map((ic) => (
+                  <button
+                    key={ic.key}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, icon_key: ic.key }))}
+                    className="flex flex-col items-center gap-1 px-3 py-2 rounded-[10px] transition-all duration-200 font-cairo"
+                    style={{
+                      background: form.icon_key === ic.key ? ic.bg : '#FFF8F4',
+                      border: form.icon_key === ic.key ? `2px solid ${ic.color}` : '2px solid #FFE4D4',
+                      minWidth: '60px',
+                    }}
+                  >
+                    <span style={{ fontSize: '22px' }}>{ic.emoji}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: form.icon_key === ic.key ? ic.color : '#9CA3AF' }}>{ic.labelEn}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex items-center gap-3">

@@ -560,8 +560,8 @@ function InstaPayLogo() {
 
 const PAYMENT_OPTIONS = [
   { key: 'fawry',         ar: 'بطاقة',          en: 'Card',           noteAr: 'تأكيد تلقائي',  noteEn: 'Auto-confirmed', color: '#1A1F71', bg: '#EEF2FF', Logo: CardLogo },
-  { key: 'vodafone_cash', ar: 'فودافون كاش',    en: 'Vodafone Cash',  noteAr: 'تأكيد يدوي',    noteEn: 'Manual confirm', color: '#E60000', bg: '#FFF1F1', Logo: VodafoneCashLogo },
-  { key: 'instapay',      ar: 'إنستاباي',       en: 'InstaPay',       noteAr: 'تأكيد يدوي',    noteEn: 'Manual confirm', color: '#6B2FA0', bg: '#F5F0FF', Logo: InstaPayLogo },
+  { key: 'vodafone_cash', ar: 'فودافون كاش',    en: 'Vodafone Cash',  noteAr: '',               noteEn: '',               color: '#E60000', bg: '#FFF1F1', Logo: VodafoneCashLogo },
+  { key: 'instapay',      ar: 'إنستاباي',       en: 'InstaPay',       noteAr: '',               noteEn: '',               color: '#6B2FA0', bg: '#F5F0FF', Logo: InstaPayLogo },
 ]
 
 const COUNTRY_CODES = [
@@ -859,7 +859,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
 
       {/* Modal shell — two-panel */}
       <div className="relative z-10 w-full flex overflow-hidden"
-        style={{ maxWidth: '760px', maxHeight: '92vh', borderRadius: '20px', boxShadow: '0 40px 100px rgba(0,0,0,0.40)', background: '#FFFFFF' }}>
+        style={{ maxWidth: '760px', maxHeight: '95vh', borderRadius: '16px', boxShadow: '0 40px 100px rgba(0,0,0,0.40)', background: '#FFFFFF' }}>
 
         {/* ── Left brand panel (hidden on small screens) ── */}
         <div className="hidden md:flex flex-col justify-between flex-shrink-0"
@@ -907,7 +907,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
           </div>
 
           {/* Scrollable form/success body */}
-          <div style={{ overflowY: 'auto', flex: 1, padding: '20px 24px' }}>
+          <div style={{ overflowY: 'auto', flex: 1, padding: 'clamp(14px, 4vw, 24px)' }}>
 
             {submitted ? (
               /* ── SUCCESS STATE ── */
@@ -962,7 +962,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                   <p style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1.5px', fontFamily: 'Cairo, sans-serif', marginBottom: '12px' }}>
                     {isRTL ? '١ — بياناتك الشخصية' : '1 — Your Information'}
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                     <ModalField label={mt.name} error={errors.name}>
                       <input data-formkey="name" type="text" value={form.name} onChange={handleChange}
                         placeholder={mt.namePh} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
@@ -971,7 +971,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <CountryDropdown value={form.phonePrefix} onSelect={(code) => setForm(f => ({ ...f, phonePrefix: code }))} />
                         <input data-formkey="phoneLocal" type="tel" inputMode="numeric" value={form.phoneLocal} onChange={handleChange}
-                          placeholder="XXXXXXXXXX" style={{ ...INPUT_BASE, flex: 1 }} onFocus={onFocusIn} onBlur={onFocusOut} />
+                          placeholder="XXXXXXXXXX" style={{ ...INPUT_BASE, flex: 1, minWidth: 0 }} onFocus={onFocusIn} onBlur={onFocusOut} />
                       </div>
                     </ModalField>
                   </div>
@@ -1024,7 +1024,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                         <option value="">{mt.selectCourse}</option>
                         {courses.map((c) => (
                           <option key={c.id} value={c.id}>
-                            {lang === 'ar' ? c.name_ar : c.name_en} — {c.price} EGP
+                            {lang === 'ar' ? c.name_ar : c.name_en} ({Number(c.price).toLocaleString()} {lang === 'ar' ? 'جنيه' : 'EGP'})
                           </option>
                         ))}
                       </select>
@@ -1190,6 +1190,11 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                   const accentColor = form.paymentMethod === 'vodafone_cash' ? '#E60000' : '#6B2FA0'
                   const accentBg    = form.paymentMethod === 'vodafone_cash' ? '#FFF1F1' : '#F5F0FF'
                   const accentBorder = form.paymentMethod === 'vodafone_cash' ? '#FECACA' : '#DDD6FE'
+                  const selectedCoursePrice = courses.find(c => String(c.id) === String(form.courseId))?.price
+                  const priceLabel = selectedCoursePrice ? `${Number(selectedCoursePrice).toLocaleString()} ${lang === 'ar' ? 'جنيه' : 'EGP'}` : null
+                  const payInstruction = lang === 'ar'
+                    ? (priceLabel ? `حوّل ${priceLabel} ثم ارفع صورة الإيصال أدناه.` : mt.payDetailsInstruction)
+                    : (priceLabel ? `Send ${priceLabel}, then upload your payment screenshot below.` : mt.payDetailsInstruction)
                   return (
                     <>
                       <div style={{ borderTop: '1px solid #F3F4F6' }} />
@@ -1212,7 +1217,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                             </div>
                           </div>
                           <p style={{ margin: '12px 0 0', fontSize: '11px', color: '#4B5563', fontFamily: 'Cairo, sans-serif', lineHeight: 1.6, textAlign: isRTL ? 'right' : 'left' }}>
-                            {mt.payDetailsInstruction}
+                            {payInstruction}
                           </p>
                         </div>
 

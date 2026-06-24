@@ -527,8 +527,8 @@ export default function CourseDetailPage() {
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 60%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: '#FFFFFF', fontWeight: 900, fontSize: '24px', lineHeight: 1.3, marginBottom: '10px', fontFamily: 'Cairo, sans-serif', textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>{title}</h1>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-              {course.duration && <span style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(4px)', color: '#FFFFFF', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>📅 {course.duration}</span>}
-              {seatsLeft && <span style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(4px)', color: '#FFFFFF', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>👥 {seatsLeft} {isAr ? 'مقعد' : 'seats'}</span>}
+              {course.duration && <span style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(4px)', color: '#FFFFFF', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>{course.duration}</span>}
+              {seatsLeft && <span style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(4px)', color: '#FFFFFF', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>{seatsLeft} {isAr ? 'مقعد' : 'seats'}</span>}
               <span style={{ background: 'rgba(255,92,26,0.85)', color: '#FFFFFF', padding: '4px 16px', borderRadius: '20px', fontSize: '14px', fontWeight: 900, fontFamily: 'Cairo, sans-serif' }}>{course.price} {isAr ? 'جنيه' : 'EGP'}</span>
             </div>
           </div>
@@ -538,8 +538,8 @@ export default function CourseDetailPage() {
           <div style={{ fontSize: '48px', marginBottom: '12px' }}>{icon}</div>
           <h1 style={{ color: '#FFFFFF', fontWeight: 900, fontSize: '24px', lineHeight: 1.3, marginBottom: '10px', fontFamily: 'Cairo, sans-serif' }}>{title}</h1>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            {course.duration && <span style={{ background: 'rgba(255,255,255,0.18)', color: '#FFFFFF', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>📅 {course.duration}</span>}
-            {seatsLeft && <span style={{ background: 'rgba(255,255,255,0.18)', color: '#FFFFFF', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>👥 {seatsLeft} {isAr ? 'مقعد' : 'seats'}</span>}
+            {course.duration && <span style={{ background: 'rgba(255,255,255,0.18)', color: '#FFFFFF', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>{course.duration}</span>}
+            {seatsLeft && <span style={{ background: 'rgba(255,255,255,0.18)', color: '#FFFFFF', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, fontFamily: 'Cairo, sans-serif' }}>{seatsLeft} {isAr ? 'مقعد' : 'seats'}</span>}
             <span style={{ background: 'rgba(255,255,255,0.25)', color: '#FFFFFF', padding: '4px 16px', borderRadius: '20px', fontSize: '14px', fontWeight: 900, fontFamily: 'Cairo, sans-serif' }}>{course.price} {isAr ? 'جنيه' : 'EGP'}</span>
           </div>
         </div>
