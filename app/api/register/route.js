@@ -48,11 +48,12 @@ export async function POST(request) {
     const paymentMethod = sanitize(body.paymentMethod, 50)
     const receiptUrl    = body.receiptUrl ? sanitize(body.receiptUrl, 1000) : null
 
-    // Per-email limit: 3 registrations per email per hour (prevents one person spamming)
-    if (email) {
-      const { allowed: emailAllowed } = rateLimit({ key: `register-email:${email}`, limit: 3, windowMs: 60 * 60 * 1000 })
+    // Per email+course limit: 2 attempts per email per course per hour
+    // Prevents spamming one course but allows registering for multiple courses freely
+    if (email && courseId) {
+      const { allowed: emailAllowed } = rateLimit({ key: `register-email-course:${email}:${courseId}`, limit: 2, windowMs: 60 * 60 * 1000 })
       if (!emailAllowed) {
-        return NextResponse.json({ error: 'This email has too many recent registrations. Please try again later.' }, { status: 429 })
+        return NextResponse.json({ error: 'You have already submitted a registration for this course recently. Please wait before trying again.' }, { status: 429 })
       }
     }
 
