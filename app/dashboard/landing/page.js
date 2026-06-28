@@ -1184,7 +1184,7 @@ export default function LandingPage() {
     <>
       <Toast toast={toast} />
 
-      <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
         <div>
           <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.landingTitle}</h1>
           <p className="text-[#6B6B6B] text-sm font-cairo mt-1">{t.landingSub}</p>
