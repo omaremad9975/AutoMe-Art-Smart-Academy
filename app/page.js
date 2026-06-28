@@ -250,7 +250,7 @@ const t = {
       },
       {
         stars: 5,
-        quote: 'I attended the AI International Conference and left with ideas and skills I never expected. Art Smart Academy's team is incredibly professional.',
+        quote: "I attended the AI International Conference and left with ideas and skills I never expected. Art Smart Academy's team is incredibly professional.",
         name: 'Mona Youssef',
         course: 'AI International Conference',
         initials: 'MY'
