@@ -110,16 +110,33 @@ export default function MyCertificates() {
   useEffect(() => {
     const token = localStorage.getItem('student_token')
     const storedEmail = localStorage.getItem('student_email')
-    if (!token) { router.replace('/student/login'); return }
+    if (!token) { router.replace('/student/login?reason=session'); return }
     try {
       const payload = JSON.parse(atob(token))
-      if (payload.exp < Date.now()) { localStorage.removeItem('student_token'); router.replace('/student/login'); return }
+      if (payload.exp < Date.now()) {
+        localStorage.removeItem('student_token')
+        router.replace('/student/login?reason=expired')
+        return
+      }
+      // Old-format token (no sig field) — invalidated by security upgrade
+      if (!payload.sig) {
+        localStorage.removeItem('student_token')
+        router.replace('/student/login?reason=expired')
+        return
+      }
       setEmail(storedEmail || payload.email)
-    } catch { router.replace('/student/login'); return }
+    } catch { router.replace('/student/login?reason=session'); return }
 
     fetch('/api/student/my-certificates', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => { setCertificates(data.certificates || []); setLoading(false) })
+      .then(r => {
+        if (r.status === 401) {
+          localStorage.removeItem('student_token')
+          router.replace('/student/login?reason=expired')
+          return null
+        }
+        return r.json()
+      })
+      .then(data => { if (data) { setCertificates(data.certificates || []); setLoading(false) } })
       .catch(() => setLoading(false))
   }, [router])
 

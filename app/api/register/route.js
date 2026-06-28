@@ -28,12 +28,12 @@ async function getAcademySettings() {
 
 export async function POST(request) {
   try {
-    // Rate limit: 5 registrations per IP per 10 minutes
+    // Rate limit per IP — 20 per 15 min (generous to handle internet cafés / shared Wi-Fi)
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim()
               || request.headers.get('x-real-ip')
               || 'unknown'
-    const { allowed } = rateLimit({ key: `register:${ip}`, limit: 5, windowMs: 10 * 60 * 1000 })
-    if (!allowed) {
+    const { allowed: ipAllowed } = rateLimit({ key: `register:${ip}`, limit: 20, windowMs: 15 * 60 * 1000 })
+    if (!ipAllowed) {
       return NextResponse.json({ error: 'Too many requests. Please wait a few minutes.' }, { status: 429 })
     }
 
@@ -47,6 +47,14 @@ export async function POST(request) {
     const courseId      = parseInt(body.courseId, 10)
     const paymentMethod = sanitize(body.paymentMethod, 50)
     const receiptUrl    = body.receiptUrl ? sanitize(body.receiptUrl, 1000) : null
+
+    // Per-email limit: 3 registrations per email per hour (prevents one person spamming)
+    if (email) {
+      const { allowed: emailAllowed } = rateLimit({ key: `register-email:${email}`, limit: 3, windowMs: 60 * 60 * 1000 })
+      if (!emailAllowed) {
+        return NextResponse.json({ error: 'This email has too many recent registrations. Please try again later.' }, { status: 429 })
+      }
+    }
 
     // ── Validate ───────────────────────────────────────────────────────────────
     if (!name || !phone || !email || !courseId || !paymentMethod) {

@@ -1302,7 +1302,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
 function ConferenceCarousel({ lang }) {
   const [photos, setPhotos]   = useState(FALLBACK_PHOTOS)
   const [current, setCurrent] = useState(0)
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(true)
   const containerRef          = useRef(null)
   const isRTL = lang === 'ar'
 
@@ -1416,6 +1416,16 @@ export default function Home() {
         setModalCoursesLoading(false)
       })
       .catch(() => setModalCoursesLoading(false))
+  }, [])
+
+  // Auto-open modal if redirected from old /register links (?register=1)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('register') === '1') {
+      setShowModal(true)
+      // Clean the URL without reloading
+      window.history.replaceState({}, '', '/')
+    }
   }, [])
 
   useEffect(() => {

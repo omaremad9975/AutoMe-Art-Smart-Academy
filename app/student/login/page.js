@@ -10,13 +10,24 @@ export default function StudentLogin() {
   const [code, setCode]         = useState('')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
+  const [notice, setNotice]     = useState('')
 
-  // Redirect if already logged in
+  // Show session-expired notice if redirected from portal
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const reason = params.get('reason')
+    if (reason === 'expired') setNotice('انتهت صلاحية جلستك. من فضلك سجّل دخولك مجدداً.')
+    if (reason === 'session') setNotice('يرجى تسجيل الدخول للمتابعة.')
+    if (reason) window.history.replaceState({}, '', '/student/login')
+  }, [])
+
+  // Redirect if already logged in with a valid new-format token
   useEffect(() => {
     try {
       const token = localStorage.getItem('student_token')
       if (!token) return
       const payload = JSON.parse(atob(token))
+      if (!payload.sig) { localStorage.removeItem('student_token'); return } // old format
       if (payload.exp > Date.now()) router.replace('/student/my-certificates')
     } catch {}
   }, [router])
@@ -61,6 +72,13 @@ export default function StudentLogin() {
           <h1 style={{ color: '#111827', fontWeight: 900, fontSize: '22px', margin: '0 0 4px', fontFamily: 'Cairo, sans-serif' }}>بوابة الشهادات</h1>
           <p style={{ color: '#9CA3AF', fontSize: '13px', margin: 0, fontFamily: 'Cairo, sans-serif' }}>Student Certificate Portal</p>
         </div>
+
+        {/* Session notice */}
+        {notice && (
+          <div style={{ background: '#FFF7ED', border: '1px solid #FDBA74', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', color: '#9A3412', fontSize: '14px', fontFamily: 'Cairo, sans-serif', textAlign: 'center', direction: 'rtl' }}>
+            {notice}
+          </div>
+        )}
 
         {/* Card */}
         <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '32px', border: '1px solid #FFE4D4', boxShadow: '0 20px 60px rgba(255,92,26,0.12)' }}>
