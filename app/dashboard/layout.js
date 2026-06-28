@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { DashboardLangProvider, useDashboardLang } from '@/lib/dashboard-lang'
@@ -78,11 +79,13 @@ function Sidebar({ pathname, onNavigate, user, userRole, onLogout, isExpanded, p
         className="flex items-center px-4 py-5 gap-3 flex-shrink-0"
         style={{ borderBottom: '1px solid #FFE4D4', minHeight: '72px' }}
       >
-        <img
+        <Image
           src="/logo_mark_black.png"
           alt="Art Smart Academy"
+          width={50}
+          height={24}
           className="flex-shrink-0 object-contain"
-          style={{ height: '24px', width: '24px' }}
+          style={{ height: '24px', width: 'auto' }}
         />
         <div className="flex items-center flex-1 min-w-0" style={{ opacity: isExpanded ? 1 : 0, transition: 'opacity 0.15s', pointerEvents: isExpanded ? 'auto' : 'none' }}>
           <div className="flex flex-col overflow-hidden">

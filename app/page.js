@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+import Image from 'next/image'
 
 // ==========================================
 // BILINGUAL TRANSLATION DATA
@@ -867,7 +867,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
           {/* Logo area */}
           <div>
             <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.18)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', padding: '6px' }}>
-              <img src="/logo_mark_blue.png" alt="Art Smart Academy" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+              <Image src="/logo_mark_white.png" alt="Art Smart Academy" width={44} height={21} style={{ objectFit: 'contain', width: '100%', height: '100%' }} />
             </div>
             <h3 style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '17px', lineHeight: 1.3, marginBottom: '8px', fontFamily: 'Cairo, sans-serif' }}>
               Art Smart Academy
@@ -1302,6 +1302,8 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
 function ConferenceCarousel({ lang }) {
   const [photos, setPhotos]   = useState(FALLBACK_PHOTOS)
   const [current, setCurrent] = useState(0)
+  const [visible, setVisible] = useState(false)
+  const containerRef          = useRef(null)
   const isRTL = lang === 'ar'
 
   useEffect(() => {
@@ -1311,21 +1313,33 @@ function ConferenceCarousel({ lang }) {
       .catch(() => {})
   }, [])
 
+  // Pause auto-advance when carousel is off-screen
+  useEffect(() => {
+    if (!containerRef.current) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0.2 }
+    )
+    observer.observe(containerRef.current)
+    return () => observer.disconnect()
+  }, [])
+
   const total = photos.length
   const prev  = () => setCurrent((c) => (c - 1 + total) % total)
   const next  = () => setCurrent((c) => (c + 1) % total)
 
   useEffect(() => {
+    if (!visible) return
     const timer = setInterval(() => setCurrent((c) => (c + 1) % total), 4500)
     return () => clearInterval(timer)
-  }, [total])
+  }, [total, visible])
 
   const caption = isRTL
     ? (photos[current]?.caption_ar || photos[current]?.caption_en || '')
     : (photos[current]?.caption_en || photos[current]?.caption_ar || '')
 
   return (
-    <div className="relative max-w-3xl mx-auto">
+    <div ref={containerRef} className="relative max-w-3xl mx-auto">
       {/* Main image */}
       <div className="relative rounded-asa-radius-xl overflow-hidden shadow-asa-shadow-orange" style={{ aspectRatio: '16/9' }}>
         {photos.map((photo, i) => (
@@ -1392,20 +1406,13 @@ export default function Home() {
   const openModal = () => setShowModal(true)
   const closeModal = () => setShowModal(false)
 
-  // Fetch live settings via public API (service role bypasses RLS)
+  // Single fetch for both courses + settings — reduces network round trips on first load
   useEffect(() => {
-    fetch('/api/public/settings')
+    fetch('/api/public/init')
       .then((r) => r.json())
-      .then(({ settings }) => { if (settings) setSiteSettings(settings) })
-      .catch(() => {})
-  }, [])
-
-  // Fetch active courses via service-role API (bypasses RLS — always reliable)
-  useEffect(() => {
-    fetch('/api/public/courses')
-      .then((r) => r.json())
-      .then(({ courses }) => {
+      .then(({ courses, settings }) => {
         if (courses) setModalCourses(courses)
+        if (settings) setSiteSettings(settings)
         setModalCoursesLoading(false)
       })
       .catch(() => setModalCoursesLoading(false))
@@ -1504,7 +1511,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           {/* Logo & Brand */}
           <a href="#hero" className="flex items-center gap-3 group">
-            <img src="/logo_mark_blue.png" alt="Art Smart Academy Logo" className="h-9 w-auto object-contain group-hover:opacity-70 transition-opacity duration-300" style={{ filter: 'brightness(0) saturate(100%)' }} />
+            <Image src="/logo_mark_black.png" alt="Art Smart Academy Logo" width={76} height={36} className="object-contain group-hover:opacity-70 transition-opacity duration-300" />
             <div className="flex flex-col text-start">
               <span className="text-[#1A1A1A] font-extrabold text-sm md:text-base tracking-wider uppercase font-cairo">
                 {currentTranslations.logoText}
@@ -1574,7 +1581,7 @@ export default function Home() {
         <div className="fixed inset-0 z-[110] bg-[#FFF8F4]/97 backdrop-blur-lg flex flex-col p-6 border-b border-[#FFE4D4]">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <img src="/logo_mark_blue.png" alt="Logo" className="h-8 w-auto object-contain" style={{ filter: 'brightness(0) saturate(100%)' }} />
+              <Image src="/logo_mark_black.png" alt="Logo" width={68} height={32} className="object-contain" />
               <div className="flex flex-col">
                 <span className="text-[#1A1A1A] font-extrabold text-sm tracking-wider uppercase font-cairo">
                   {currentTranslations.logoText}
@@ -1696,7 +1703,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6 relative z-20 text-center flex flex-col items-center justify-center">
           {/* Logo Mark */}
           <div className="mb-5 animate-float">
-            <img src="/logo_mark_blue.png" className="h-16 w-auto mx-auto object-contain" alt="Art Smart Academy Logo" style={{ filter: 'brightness(0) saturate(100%)' }} />
+            <Image src="/logo_mark_black.png" width={134} height={64} className="mx-auto object-contain" alt="Art Smart Academy Logo" />
           </div>
 
           {/* Label Badge */}
@@ -1916,7 +1923,7 @@ export default function Home() {
               {/* Center card */}
               <div className="w-36 h-36 rounded-asa-radius-xl bg-asa-bg border border-asa-border flex items-center justify-center relative z-10 shadow-asa-shadow-card">
                 <div className="w-16 h-16 rounded-full bg-asa-orange flex items-center justify-center shadow-asa-shadow-orange animate-pulse">
-                  <img src="/logo_mark_white.png" alt="Logo" className="w-8 h-auto" />
+                  <Image src="/logo_mark_white.png" alt="Logo" width={32} height={15} />
                 </div>
               </div>
 
@@ -2130,7 +2137,7 @@ export default function Home() {
             {/* Column 1: Brand details */}
             <div className="flex flex-col items-start">
               <div className="flex items-center gap-3 mb-4">
-                <img src="/logo_mark_blue.png" alt="Logo" className="h-8 w-auto" style={{ filter: 'brightness(0) saturate(100%)' }} />
+                <Image src="/logo_mark_black.png" alt="Logo" width={68} height={32} />
                 <span className="text-[#1A1A1A] font-extrabold text-lg tracking-wider uppercase font-cairo">
                   {currentTranslations.logoText}
                 </span>

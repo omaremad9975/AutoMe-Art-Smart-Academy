@@ -1,19 +1,30 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { sendRegistrationEmail } from '@/lib/email'
 import { rateLimit } from '@/lib/rate-limit'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // Strip HTML tags and limit length — prevents XSS in stored/displayed data
 function sanitize(value, maxLen = 300) {
   return String(value || '').replace(/<[^>]*>/g, '').trim().slice(0, maxLen)
 }
 
-// Service-role client — bypasses RLS so we can reliably insert + read settings
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-)
+// In-memory settings cache — academy phone/email almost never change,
+// no need to hit the DB on every registration submission.
+let settingsCache = null
+let settingsCacheAt = 0
+const SETTINGS_TTL = 5 * 60 * 1000 // 5 minutes
+
+async function getAcademySettings() {
+  if (settingsCache && Date.now() - settingsCacheAt < SETTINGS_TTL) {
+    return settingsCache
+  }
+  const { data } = await supabaseAdmin.from('settings').select('key, value').in('key', ['phone', 'email'])
+  const map = {}
+  ;(data || []).forEach((s) => { map[s.key] = s.value })
+  settingsCache  = map
+  settingsCacheAt = Date.now()
+  return map
+}
 
 export async function POST(request) {
   try {
@@ -97,14 +108,8 @@ export async function POST(request) {
       .eq('id', courseId)
       .single()
 
-    // ── Fetch academy settings for email footer ────────────────────────────────
-    const { data: settings } = await supabaseAdmin
-      .from('settings')
-      .select('key, value')
-      .in('key', ['phone', 'email'])
-
-    const settingsMap = {}
-    settings?.forEach((s) => { settingsMap[s.key] = s.value })
+    // ── Fetch academy settings (cached — avoids a DB hit on every registration) ─
+    const settingsMap = await getAcademySettings()
 
     const courseName  = course?.name_ar || course?.name_en || 'الكورس'
     const coursePrice = course?.price ? `${course.price}` : ''

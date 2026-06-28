@@ -1,27 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-)
+import { NextResponse } from 'next/server'
+import { supabaseAdmin, verifyCaller } from '@/lib/supabase-admin'
+import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Art Smart Academy <onboarding@resend.dev>'
 const BASE_URL   = process.env.NEXT_PUBLIC_BASE_URL || 'https://auto-me-art-smart-academy-4pil0ulx2-auto-me-s-projects.vercel.app'
-
-async function verifyCaller(request) {
-  const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-  if (!token) return null
-  const { data: { user } } = await supabaseAdmin.auth.getUser(token)
-  if (!user) return null
-  const { data: admin } = await supabaseAdmin
-    .from('admins').select('role').eq('email', user.email).single()
-  if (!admin || admin.role === 'marketing') return null
-  return admin
-}
 
 async function issueOne(registrationId) {
   // 1. Get registration + course info

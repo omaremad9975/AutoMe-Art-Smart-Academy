@@ -16,5 +16,5 @@ export async function GET() {
 
   const map = {}
   ;(data || []).forEach((r) => { map[r.key] = r.value })
-  return NextResponse.json({ settings: map })
+  return NextResponse.json({ settings: map }, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } })
 }

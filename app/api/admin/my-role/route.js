@@ -1,13 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+
 import { NextResponse } from 'next/server'
+import { supabaseAdmin, verifyCaller } from '@/lib/supabase-admin'
 
 // Service role client — bypasses RLS entirely
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-)
-
 // GET — returns the role of the currently authenticated user
 export async function GET(request) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '')

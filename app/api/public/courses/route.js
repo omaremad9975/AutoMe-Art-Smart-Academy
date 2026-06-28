@@ -20,5 +20,5 @@ export async function GET() {
     console.error('[public/courses]', error.message)
     return NextResponse.json({ courses: [] })
   }
-  return NextResponse.json({ courses: data || [] })
+  return NextResponse.json({ courses: data || [] }, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } })
 }

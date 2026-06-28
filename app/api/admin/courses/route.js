@@ -1,21 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
+
 import { NextResponse } from 'next/server'
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-)
-
-async function verifyCaller(request) {
-  const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-  if (!token) return null
-  const { data: { user } } = await supabaseAdmin.auth.getUser(token)
-  if (!user) return null
-  const { data: admin } = await supabaseAdmin.from('admins').select('role').eq('email', user.email).single()
-  if (!admin || admin.role === 'marketing') return null
-  return admin
-}
+import { supabaseAdmin, verifyCaller } from '@/lib/supabase-admin'
 
 // GET — list all courses
 export async function GET(request) {

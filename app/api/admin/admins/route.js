@@ -1,28 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+
 import { NextResponse } from 'next/server'
+import { supabaseAdmin, verifyCaller } from '@/lib/supabase-admin'
 
 // Uses service role key — bypasses RLS on the admins table entirely.
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-)
-
-async function verifyCaller(request) {
-  const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-  if (!token) return null
-  const { data: { user } } = await supabaseAdmin.auth.getUser(token)
-  if (!user) return null
-  // Service role bypasses RLS — this lookup always works regardless of policies
-  const { data: admin } = await supabaseAdmin
-    .from('admins')
-    .select('role')
-    .eq('email', user.email)
-    .single()
-  if (!admin || admin.role === 'marketing') return null
-  return admin
-}
-
 // GET — list all admins
 export async function GET(request) {
   const admin = await verifyCaller(request)
