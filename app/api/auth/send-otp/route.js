@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { rateLimit } from '@/lib/rate-limit'
 
 // ── Two separate clients — avoids session bleed ───────────────────────────────
 // Auth client (anon key) — only used to verify email+password
@@ -27,6 +28,15 @@ function generateCode() {
 // POST { email, password }
 export async function POST(request) {
   try {
+    // Rate limit: 5 attempts per IP per 15 minutes
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim()
+              || request.headers.get('x-real-ip')
+              || 'unknown'
+    const { allowed } = rateLimit({ key: `send-otp:${ip}`, limit: 5, windowMs: 15 * 60 * 1000 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests. Please wait 15 minutes before trying again.' }, { status: 429 })
+    }
+
     const { email, password } = await request.json()
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })

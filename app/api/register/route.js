@@ -1,6 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { sendRegistrationEmail } from '@/lib/email'
+import { rateLimit } from '@/lib/rate-limit'
+
+// Strip HTML tags and limit length — prevents XSS in stored/displayed data
+function sanitize(value, maxLen = 300) {
+  return String(value || '').replace(/<[^>]*>/g, '').trim().slice(0, maxLen)
+}
 
 // Service-role client — bypasses RLS so we can reliably insert + read settings
 const supabaseAdmin = createClient(
@@ -11,8 +17,25 @@ const supabaseAdmin = createClient(
 
 export async function POST(request) {
   try {
+    // Rate limit: 5 registrations per IP per 10 minutes
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim()
+              || request.headers.get('x-real-ip')
+              || 'unknown'
+    const { allowed } = rateLimit({ key: `register:${ip}`, limit: 5, windowMs: 10 * 60 * 1000 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests. Please wait a few minutes.' }, { status: 429 })
+    }
+
     const body = await request.json()
-    const { name, phone, email, whatsapp, courseId, paymentMethod, receiptUrl } = body
+
+    // ── Sanitize all text inputs ───────────────────────────────────────────────
+    const name          = sanitize(body.name, 200)
+    const phone         = sanitize(body.phone, 30)
+    const email         = sanitize(body.email, 200).toLowerCase()
+    const whatsapp      = sanitize(body.whatsapp, 30)
+    const courseId      = body.courseId
+    const paymentMethod = sanitize(body.paymentMethod, 50)
+    const receiptUrl    = body.receiptUrl ? sanitize(body.receiptUrl, 1000) : null
 
     // ── Validate ───────────────────────────────────────────────────────────────
     if (!name || !phone || !email || !courseId || !paymentMethod) {

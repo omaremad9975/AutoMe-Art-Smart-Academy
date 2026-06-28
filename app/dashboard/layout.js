@@ -233,10 +233,26 @@ function DashboardInner({ children }) {
         const res = await fetch('/api/admin/my-role', {
           headers: { Authorization: `Bearer ${session.access_token}` },
         })
+        if (!res.ok) {
+          // Role fetch failed — sign out and redirect, do NOT grant fallback access
+          await supabase.auth.signOut()
+          await fetch('/api/auth/logout', { method: 'POST' })
+          router.replace('/login')
+          return
+        }
         const result = await res.json()
-        setUserRole(result.role || 'admin')
+        if (!result.role) {
+          await supabase.auth.signOut()
+          await fetch('/api/auth/logout', { method: 'POST' })
+          router.replace('/login')
+          return
+        }
+        setUserRole(result.role)
       } catch {
-        setUserRole('admin') // fallback
+        // Network error — do NOT grant fallback access
+        await supabase.auth.signOut()
+        router.replace('/login')
+        return
       }
       setAuthChecked(true)
     }
@@ -262,6 +278,7 @@ function DashboardInner({ children }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
+    await fetch('/api/auth/logout', { method: 'POST' }) // clears HttpOnly cookie
     router.replace('/login')
   }
 
