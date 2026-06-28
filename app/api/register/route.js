@@ -33,7 +33,7 @@ export async function POST(request) {
     const phone         = sanitize(body.phone, 30)
     const email         = sanitize(body.email, 200).toLowerCase()
     const whatsapp      = sanitize(body.whatsapp, 30)
-    const courseId      = body.courseId
+    const courseId      = parseInt(body.courseId, 10)
     const paymentMethod = sanitize(body.paymentMethod, 50)
     const receiptUrl    = body.receiptUrl ? sanitize(body.receiptUrl, 1000) : null
 
@@ -41,10 +41,21 @@ export async function POST(request) {
     if (!name || !phone || !email || !courseId || !paymentMethod) {
       return NextResponse.json({ error: 'All required fields must be filled' }, { status: 400 })
     }
+    if (isNaN(courseId) || courseId <= 0) {
+      return NextResponse.json({ error: 'Invalid course selected' }, { status: 400 })
+    }
     // Receipt is required for manual payment methods
     const manualMethods = ['vodafone_cash', 'instapay']
     if (manualMethods.includes(paymentMethod) && !receiptUrl) {
       return NextResponse.json({ error: 'Receipt screenshot is required for this payment method' }, { status: 400 })
+    }
+    // Validate receiptUrl is from our own Supabase storage — reject external URLs
+    if (receiptUrl) {
+      const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '')
+      const isOwnStorage = receiptUrl.startsWith(`https://${supabaseHost}/storage/v1/object/`)
+      if (!isOwnStorage) {
+        return NextResponse.json({ error: 'Invalid receipt URL' }, { status: 400 })
+      }
     }
     const validMethods = ['fawry', 'vodafone_cash', 'instapay']
     if (!validMethods.includes(paymentMethod)) {

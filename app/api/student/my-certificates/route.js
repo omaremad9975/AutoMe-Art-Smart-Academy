@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { createHmac } from 'crypto'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -11,8 +12,14 @@ function verifyToken(request) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '')
   if (!token) return null
   try {
-    const payload = JSON.parse(Buffer.from(token, 'base64').toString('utf8'))
-    if (!payload.email || !payload.exp || Date.now() > payload.exp) return null
+    const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'))
+    if (!payload.email || !payload.exp || !payload.sig) return null
+    if (Date.now() > payload.exp) return null
+    // Verify HMAC signature — rejects any token not issued by this server
+    const expectedSig = createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
+      .update(`${payload.email}:${payload.exp}`)
+      .digest('hex')
+    if (payload.sig !== expectedSig) return null
     return payload.email
   } catch {
     return null

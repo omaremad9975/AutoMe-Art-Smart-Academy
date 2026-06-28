@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { rateLimit } from '@/lib/rate-limit'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -18,6 +19,15 @@ function generateCode() {
 // POST { email }
 export async function POST(request) {
   try {
+    // Rate limit: 5 attempts per IP per 15 minutes
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim()
+              || request.headers.get('x-real-ip')
+              || 'unknown'
+    const { allowed } = rateLimit({ key: `student-send-otp:${ip}`, limit: 5, windowMs: 15 * 60 * 1000 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests. Please wait 15 minutes.' }, { status: 429 })
+    }
+
     const { email } = await request.json()
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
 
