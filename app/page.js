@@ -104,23 +104,23 @@ const t = {
     testimonialsList: [
       {
         stars: 5,
-        quote: 'تجربة ممتازة وتدريب على أعلى مستوى. المحتوى مميز جداً والمدربين محترفين ومستعدين للمساعدة في أي وقت.',
+        quote: 'المؤتمر الدولي للذكاء الاصطناعي كان تجربة استثنائية. استفدت من المحتوى العلمي والتواصل مع خبراء من مختلف أنحاء العالم.',
         name: 'كريم أحمد',
-        course: 'التفكير الإبداعي',
+        course: 'المؤتمر الدولي للذكاء الاصطناعي',
         initials: 'ك أ'
       },
       {
         stars: 5,
-        quote: 'كورس الذكاء الاصطناعي كان مذهلاً! تعلّمت الكثير من الجوانب العملية والتقنيات الحديثة وكيفية تطبيقها.',
+        quote: 'مشاركتي في المؤتمر الدولي للذكاء الاصطناعي فتحت أمامي آفاقاً جديدة. العروض التقديمية والنقاشات كانت على أعلى مستوى.',
         name: 'مريم علي',
-        course: 'الذكاء الاصطناعي',
+        course: 'المؤتمر الدولي للذكاء الاصطناعي',
         initials: 'م ع'
       },
       {
         stars: 5,
-        quote: 'كورس اللغة الصينية ممتاز جداً والمنهج مبسط وممتع. ابنتي استمتعت وتطورت لغتها بشكل ملحوظ وسريع.',
+        quote: 'حضرت المؤتمر الدولي للذكاء الاصطناعي وخرجت بأفكار ومهارات لم أتوقعها. فريق أرت سمارت أكاديمي محترف جداً في التنظيم.',
         name: 'منى يوسف',
-        course: 'اللغة الصينية',
+        course: 'المؤتمر الدولي للذكاء الاصطناعي',
         initials: 'م ي'
       }
     ],
@@ -236,23 +236,23 @@ const t = {
     testimonialsList: [
       {
         stars: 5,
-        quote: 'Excellent experience and top-tier training. The content is outstanding and the trainers are highly professional and supportive.',
+        quote: 'The AI International Conference was an exceptional experience. I gained so much from the scientific content and networking with experts from around the world.',
         name: 'Karim Ahmed',
-        course: 'Creative Thinking',
+        course: 'AI International Conference',
         initials: 'KA'
       },
       {
         stars: 5,
-        quote: 'The AI course was amazing! I learned a lot of practical aspects, modern techniques, and how to apply them.',
+        quote: 'Attending the AI International Conference opened new horizons for me. The presentations and discussions were at the highest level.',
         name: 'Mariam Ali',
-        course: 'Artificial Intelligence',
+        course: 'AI International Conference',
         initials: 'MA'
       },
       {
         stars: 5,
-        quote: 'The Chinese language course is very excellent and the curriculum is simple and fun. My daughter enjoyed it and improved rapidly.',
+        quote: 'I attended the AI International Conference and left with ideas and skills I never expected. Art Smart Academy's team is incredibly professional.',
         name: 'Mona Youssef',
-        course: 'Chinese Language',
+        course: 'AI International Conference',
         initials: 'MY'
       }
     ],
@@ -808,8 +808,8 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
     const phoneDigits = form.phoneLocal.replace(/\D/g, '')
     if (!form.phoneLocal.trim()) {
       e.phone = mt.required
-    } else if (phoneDigits.length < 4 || phoneDigits.length > 13) {
-      e.phone = isRTL ? 'رقم الهاتف غير صحيح' : 'Invalid phone number'
+    } else if (phoneDigits.length < 7 || phoneDigits.length > 11) {
+      e.phone = isRTL ? 'رقم الهاتف يجب أن يكون بين 7 و 11 رقم' : 'Phone must be 7–11 digits'
     }
     if (!form.email.trim()) {
       e.email = mt.required
@@ -971,7 +971,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <CountryDropdown value={form.phonePrefix} onSelect={(code) => setForm(f => ({ ...f, phonePrefix: code }))} />
                         <input data-formkey="phoneLocal" type="tel" inputMode="numeric" value={form.phoneLocal} onChange={handleChange}
-                          placeholder="XXXXXXXXXX" style={{ ...INPUT_BASE, flex: 1, minWidth: 0 }} onFocus={onFocusIn} onBlur={onFocusOut} />
+                          placeholder="XXXXXXXXXX" maxLength={11} style={{ ...INPUT_BASE, flex: 1, minWidth: 0 }} onFocus={onFocusIn} onBlur={onFocusOut} />
                       </div>
                     </ModalField>
                   </div>
