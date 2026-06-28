@@ -258,7 +258,7 @@ export default function PaymentsPage() {
   const TABLE_COLUMNS = ['Student', 'Email', 'Phone', 'Product', 'Type', 'Amount', 'Method', 'TRN ID', 'REF ID', 'Receipt', 'Status', 'Date', 'Conf']
 
   return (
-    <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+    <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>

@@ -197,7 +197,7 @@ export default function RegistrationsPage() {
   const certIssuedCount = filtered.filter(r => r.student_certificates?.length > 0).length
 
   return (
-    <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+    <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
 
       {/* Toast */}
       {issueToast && (
