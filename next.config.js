@@ -1,17 +1,11 @@
 /** @type {import('next').NextConfig} */
 
 const securityHeaders = [
-  // Prevents the site from being embedded in an iframe (clickjacking protection)
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-  // Stops browser from guessing content type (MIME sniffing protection)
   { key: 'X-Content-Type-Options', value: 'nosniff' },
-  // Controls how much referrer info is sent
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  // Restricts access to powerful browser features
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-  // Forces HTTPS for 1 year
   { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-  // Content Security Policy — controls what resources the browser can load
   {
     key: 'Content-Security-Policy',
     value: [
