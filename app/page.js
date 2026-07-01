@@ -2286,48 +2286,4 @@ export default function Home() {
               </h3>
               <ul className="flex flex-col gap-4">
                 <li className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white border border-[#FFE4D4] flex items-center justify-center text-asa-orange flex-shrink-0">
-                    <Icon name="phone" className="w-4 h-4" />
-                  </div>
-                  <span className="text-[#6B6B6B] text-sm font-semibold font-cairo">{siteSettings.phone || currentTranslations.footerPhone}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white border border-[#FFE4D4] flex items-center justify-center text-asa-orange flex-shrink-0">
-                    <Icon name="mail" className="w-4 h-4" />
-                  </div>
-                  <span className="text-[#6B6B6B] text-sm font-semibold font-cairo">{siteSettings.email || currentTranslations.footerEmail}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white border border-[#FFE4D4] flex items-center justify-center text-asa-orange flex-shrink-0">
-                    <Icon name="mapPin" className="w-4 h-4" />
-                  </div>
-                  <span className="text-[#6B6B6B] text-sm font-semibold font-cairo">{currentTranslations.footerAddress}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Copyright bar */}
-          <div className="pt-4 border-t border-[#FFE4D4] flex justify-center items-center">
-            <span className="text-[#A0A0A0] text-xs font-semibold font-cairo text-center">
-              {currentTranslations.footerCopyright}
-            </span>
-          </div>
-        </div>
-      </footer>
-
-      {/* Registration Modal */}
-      {showModal && (
-        <RegistrationModal
-          onClose={closeModal}
-          lang={lang}
-          isRTL={isRTL}
-          courses={modalCourses}
-          coursesLoading={modalCoursesLoading}
-        />
-      )}
-    </main>
-  )
-}
-
-// coursesData removed — courses now render dynamically from Supabase via /api/public/courses
+                  <div className="w-8 h-8 rounded-full bg-white border border-[#FFE4D4] flex items-center justify-center text-asa-orange 

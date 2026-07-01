@@ -29,10 +29,4 @@ const nextConfig = {
     return [
       {
         source: '/(.*)',
-        headers: securityHeaders,
-      },
-    ]
-  },
-}
-
-module.exports = nextConfig
+    

@@ -789,6 +789,8 @@ function GallerySection({ showToast }) {
   const [videoModal, setVideoModal]   = useState(false)
   const [videoUrl, setVideoUrl]       = useState('')
   const [videoAdding, setVideoAdding] = useState(false)
+  const [dragSrc, setDragSrc]         = useState(null)
+  const [dragOver, setDragOver]       = useState(null)
 
   const fetchPhotos = useCallback(async () => {
     setLoading(true)
@@ -857,7 +859,7 @@ function GallerySection({ showToast }) {
       const res = await fetch('/api/admin/gallery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ video_url: videoUrl.trim(), sort_order: photos.length }),
+        body: JSON.stringify({ url: videoUrl.trim(), video_url: videoUrl.trim(), sort_order: photos.length }),
       })
       const data = await res.json()
       if (data.photo) setPhotos((prev) => [...prev, data.photo])
@@ -868,6 +870,29 @@ function GallerySection({ showToast }) {
       showToast('error', 'Error', err?.message)
     }
     setVideoAdding(false)
+  }
+
+  const handleDrop = async (dropIndex) => {
+    if (dragSrc === null || dragSrc === dropIndex) { setDragSrc(null); setDragOver(null); return }
+    const reordered = [...photos]
+    const [moved] = reordered.splice(dragSrc, 1)
+    reordered.splice(dropIndex, 0, moved)
+    setPhotos(reordered)
+    setDragSrc(null)
+    setDragOver(null)
+    try {
+      const token = await getToken()
+      await Promise.all(reordered.map((p, i) =>
+        fetch('/api/admin/gallery', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ id: p.id, sort_order: i }),
+        })
+      ))
+      showToast('success', isRTL ? 'تم حفظ الترتيب' : 'Order Saved', '')
+    } catch (err) {
+      showToast('error', 'Error', err?.message)
+    }
   }
 
   const handleDelete = async (photo) => {
@@ -978,11 +1003,26 @@ function GallerySection({ showToast }) {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {photos.map((photo) => {
+              {photos.map((photo, idx) => {
                 const ytId = photo.video_url?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)?.[1]
                 const thumbSrc = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : photo.url
                 return (
-                <div key={photo.id} className="relative rounded-[12px] overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                <div
+                  key={photo.id}
+                  className="relative rounded-[12px] overflow-hidden"
+                  style={{
+                    aspectRatio: '16/9',
+                    cursor: 'grab',
+                    outline: dragOver === idx ? '2.5px solid #FF5C1A' : '2.5px solid transparent',
+                    opacity: dragSrc === idx ? 0.45 : 1,
+                    transition: 'opacity 0.15s, outline 0.15s',
+                  }}
+                  draggable
+                  onDragStart={() => setDragSrc(idx)}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(idx) }}
+                  onDrop={() => handleDrop(idx)}
+                  onDragEnd={() => { setDragSrc(null); setDragOver(null) }}
+                >
                   <img src={thumbSrc} alt={photo.caption_en || ''} className="w-full h-full object-cover" />
                   {ytId && (
                     <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.25)' }}>
@@ -1156,149 +1196,4 @@ function AcademyInfoSection({ showToast }) {
         setSavedInfo(info)
         showToast('success',
           isRTL ? 'تم الحفظ بنجاح' : 'Changes Saved',
-          isRTL ? 'تم تحديث معلومات الأكاديمية وستظهر في الموقع فوراً' : 'Academy info updated and will reflect on the site immediately'
-        )
-      }
-    } catch (err) {
-      showToast('error',
-        isRTL ? 'خطأ في الشبكة' : 'Network Error',
-        err?.message || (isRTL ? 'تعذّر الاتصال بالخادم' : 'Could not reach the server')
-      )
-    }
-    setSaving(false)
-  }
-
-  const set = (key) => (e) => setInfo((s) => ({ ...s, [key]: e.target.value }))
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-14 rounded-[12px] animate-pulse" style={{ background: '#FFE4D4' }} />)}
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-      <div className="rounded-[16px] overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
-        <div className="px-6 py-4" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4', textAlign: isRTL ? 'right' : 'left' }}>
-          <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">{isRTL ? 'معلومات الأكاديمية' : 'Academy Information'}</h2>
-          <p className="text-xs text-[#A0A0A0] font-cairo">{isRTL ? 'هذه المعلومات تظهر في الموقع مباشرةً بعد الحفظ' : 'These details appear live on the website after saving'}</p>
-        </div>
-        <div className="p-6 space-y-5">
-          <SettingsField
-            id="academy_name"
-            label={isRTL ? 'اسم الأكاديمية' : 'Academy Name'}
-            value={info.academy_name}
-            onChange={set('academy_name')}
-            placeholder="Art Smart Academy | أرت سمارت اكاديمي"
-            isRTL={isRTL}
-            currentValue={savedInfo.academy_name}
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <SettingsField
-              id="phone"
-              label={isRTL ? 'رقم الهاتف' : 'Phone Number'}
-              type="tel"
-              value={info.phone}
-              onChange={set('phone')}
-              placeholder="+20 100 000 0000"
-              isRTL={isRTL}
-              currentValue={savedInfo.phone}
-            />
-            <SettingsField
-              id="whatsapp"
-              label={isRTL ? 'واتساب' : 'WhatsApp'}
-              type="tel"
-              value={info.whatsapp}
-              onChange={set('whatsapp')}
-              placeholder="+20 100 000 0000"
-              isRTL={isRTL}
-              currentValue={savedInfo.whatsapp}
-            />
-          </div>
-          <SettingsField
-            id="email"
-            label={isRTL ? 'البريد الإلكتروني' : 'Email Address'}
-            type="email"
-            value={info.email}
-            onChange={set('email')}
-            placeholder="info@artsmartacademy.com"
-            isRTL={isRTL}
-            currentValue={savedInfo.email}
-          />
-        </div>
-      </div>
-
-      <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-8 py-3 rounded-[10px] text-sm font-bold text-white font-cairo transition-all duration-200"
-          style={{ background: saving ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)', boxShadow: saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
-          onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,92,26,0.40)' } }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
-        >
-          {saving ? (isRTL ? 'جارٍ الحفظ...' : 'Saving...') : (isRTL ? 'حفظ التغييرات' : 'Save Changes')}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ── Main Page ──────────────────────────────────────────────────────────────────
-export default function LandingPage() {
-  const { t, isRTL } = useDashboardLang()
-  const [activeTab, setActiveTab] = useState('courses')
-  const [toast, setToast] = useState(null)
-  const toastTimer = useRef(null)
-
-  const showToast = (type, title, description) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current)
-    setToast({ type, title, description })
-    toastTimer.current = setTimeout(() => setToast(null), 4500)
-  }
-
-  const tabs = [
-    { key: 'courses', label: t.tabCourses },
-    { key: 'social',  label: t.tabSocial },
-    { key: 'academy', label: isRTL ? 'معلومات الأكاديمية' : 'Academy Info' },
-    { key: 'gallery', label: isRTL ? 'معرض الصور' : 'Gallery' },
-  ]
-
-  return (
-    <>
-      <Toast toast={toast} />
-
-      <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
-        <div>
-          <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.landingTitle}</h1>
-          <p className="text-[#6B6B6B] text-sm font-cairo mt-1">{t.landingSub}</p>
-        </div>
-
-        {/* Tab Bar */}
-        <div className="flex gap-2 p-1 rounded-[12px] w-fit" style={{ background: '#FFF0E8', border: '1px solid #FFE4D4' }}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className="px-5 py-2.5 rounded-[10px] text-sm font-bold font-cairo transition-all duration-200"
-              style={{
-                background: activeTab === tab.key ? '#FFFFFF' : 'transparent',
-                color: activeTab === tab.key ? '#FF5C1A' : '#6B6B6B',
-                boxShadow: activeTab === tab.key ? '0 2px 8px rgba(255,92,26,0.12)' : 'none',
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {activeTab === 'courses' && <CoursesSection />}
-        {activeTab === 'social'  && <SocialSection showToast={showToast} />}
-        {activeTab === 'academy' && <AcademyInfoSection showToast={showToast} />}
-        {activeTab === 'gallery' && <GallerySection showToast={showToast} />}
-      </div>
-    </>
-  )
-}
+          isRTL ? 'تم تحديث معلومات الأكاديمية وستظهر في الموقع فوراً' : '
