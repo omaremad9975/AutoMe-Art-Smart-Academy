@@ -16,4 +16,5 @@ export async function GET() {
     .order('created_at', { ascending: true })
 
   if (error) return NextResponse.json({ photos: [] })
-  return NextResponse.json({ photos: data || [] }, { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=1
+  return NextResponse.json({ photos: data || [] }, { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120' } })
+}
