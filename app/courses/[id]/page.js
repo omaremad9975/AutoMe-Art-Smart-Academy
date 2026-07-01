@@ -501,8 +501,10 @@ export default function CourseDetailPage() {
   const instructor  = isAr ? (course.instructor_ar || enriched.instructor_ar || '') : (course.instructor_en || enriched.instructor_en || '')
   const instructorBio = isAr ? (course.instructor_bio_ar || '') : (course.instructor_bio_en || '')
   const goals       = (isAr ? course.goals_ar : course.goals_en) || []
+  const requirements = (isAr ? course.requirements_ar : course.requirements_en) || []
   const audience    = isAr ? (course.audience_ar || '') : (course.audience_en || '')
   const schedule    = isAr ? (course.schedule_ar || '') : (course.schedule_en || '')
+  const language    = isAr ? (course.language_ar || '') : (course.language_en || '')
   const seatsLeft   = course.seats > 0 ? course.seats : null
 
   return (
@@ -551,10 +553,10 @@ export default function CourseDetailPage() {
 
       {/* Content */}
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 20px 80px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {(audience || schedule) && (
+        {(audience || schedule || language) && (
           <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)', overflow: 'hidden' }}>
             {audience && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 22px', borderBottom: schedule ? '1px solid #FFF0E8' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 22px', borderBottom: (schedule || language) ? '1px solid #FFF0E8' : 'none' }}>
                 <span style={{ fontSize: '18px', flexShrink: 0 }}>👥</span>
                 <div style={{ textAlign: isAr ? 'right' : 'left' }}>
                   <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'لمن هذا الكورس' : "Who It's For"}</p>
@@ -563,11 +565,20 @@ export default function CourseDetailPage() {
               </div>
             )}
             {schedule && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 22px', borderBottom: language ? '1px solid #FFF0E8' : 'none' }}>
                 <span style={{ fontSize: '18px', flexShrink: 0 }}>📅</span>
                 <div style={{ textAlign: isAr ? 'right' : 'left' }}>
                   <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'الموعد' : 'Schedule'}</p>
                   <p style={{ color: '#111827', fontSize: '14px', fontWeight: 700, fontFamily: 'Cairo, sans-serif', margin: 0 }}>{schedule}</p>
+                </div>
+              </div>
+            )}
+            {language && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 22px' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>🗣️</span>
+                <div style={{ textAlign: isAr ? 'right' : 'left' }}>
+                  <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'لغة الشرح' : 'Language'}</p>
+                  <p style={{ color: '#111827', fontSize: '14px', fontWeight: 700, fontFamily: 'Cairo, sans-serif', margin: 0 }}>{language}</p>
                 </div>
               </div>
             )}
@@ -589,6 +600,21 @@ export default function CourseDetailPage() {
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="#FF5C1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
                   <p style={{ color: '#374151', fontSize: '14px', lineHeight: 1.6, fontFamily: 'Cairo, sans-serif', margin: 0 }}>{goal}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {requirements.length > 0 && (
+          <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '22px 24px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
+            <h2 style={{ color: '#FF5C1A', fontWeight: 800, fontSize: '14px', marginBottom: '14px', fontFamily: 'Cairo, sans-serif' }}>{isAr ? '🎒 متطلبات الكورس' : '🎒 Requirements'}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {requirements.map((req, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(255,92,26,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="#FF5C1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <p style={{ color: '#374151', fontSize: '14px', lineHeight: 1.6, fontFamily: 'Cairo, sans-serif', margin: 0 }}>{req}</p>
                 </div>
               ))}
             </div>

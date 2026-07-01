@@ -32,6 +32,10 @@ CREATE TABLE IF NOT EXISTS courses (
   audience_en              TEXT,
   schedule_ar              TEXT,
   schedule_en              TEXT,
+  requirements_ar          TEXT[] DEFAULT '{}',
+  requirements_en          TEXT[] DEFAULT '{}',
+  language_ar              TEXT,
+  language_en              TEXT,
   created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -51,6 +55,10 @@ CREATE TABLE IF NOT EXISTS courses (
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS audience_en TEXT;
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS schedule_ar TEXT;
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS schedule_en TEXT;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS requirements_ar TEXT[] DEFAULT '{}';
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS requirements_en TEXT[] DEFAULT '{}';
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS language_ar TEXT;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS language_en TEXT;
 
 -- ============================================================
 -- TABLE: registrations
