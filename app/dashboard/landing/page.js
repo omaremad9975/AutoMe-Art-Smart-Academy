@@ -1002,16 +1002,14 @@ function GallerySection({ showToast }) {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+\            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {photos.map((photo, idx) => {
                 const ytId = photo.video_url?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)?.[1]
                 const thumbSrc = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : photo.url
                 return (
                 <div
                   key={photo.id}
-                <div
-                  key={photo.id}
-                  className="relative rounded-[12px]"
+                  className="relative rounded-[12px] overflow-hidden"
                   style={{ aspectRatio: '16/9', outline: dragOver === idx ? '2.5px solid #FF5C1A' : '2.5px solid transparent', opacity: dragSrc === idx ? 0.45 : 1, transition: 'opacity 0.15s, outline 0.15s', userSelect: 'none' }}
                   draggable
                   onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; setDragSrc(idx) }}
@@ -1019,33 +1017,28 @@ function GallerySection({ showToast }) {
                   onDrop={(e) => { e.preventDefault(); handleDrop(idx) }}
                   onDragEnd={() => { setDragSrc(null); setDragOver(null) }}
                 >
-                  {/* Drag handle */}
-                  <div style={{ position: 'absolute', top: '6px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, cursor: 'grab', background: 'rgba(0,0,0,0.45)', borderRadius: '6px', padding: '3px 8px', display: 'flex', gap: '3px', alignItems: 'center' }}>
+                  {/* Drag handle — grab to reorder */}
+                  <div style={{ position: 'absolute', top: '6px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, cursor: 'grab', background: 'rgba(0,0,0,0.50)', borderRadius: '6px', padding: '4px 10px', display: 'flex', gap: '3px', alignItems: 'center' }}>
                     {[0,1,2].map(r => <div key={r} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>{[0,1].map(d => <div key={d} style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#fff' }} />)}</div>)}
                   </div>
-                  <div className="rounded-[12px] overflow-hidden w-full h-full absolute inset-0">
-                >
                   <img src={thumbSrc} alt={photo.caption_en || ''} className="w-full h-full object-cover" />
                   {ytId && (
                     <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.25)' }}>
                       <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,92,26,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '16px', paddingLeft: '3px' }}>▶</div>
                     </div>
                   )}
-                  {/* Always-visible action buttons — top corners */}
+                  {/* Edit caption button */}
                   <button
                     onClick={() => setCaptionModal({ id: photo.id, caption_ar: photo.caption_ar || '', caption_en: photo.caption_en || '' })}
                     title={isRTL ? 'تعديل التسمية' : 'Edit Caption'}
-                    style={{ position: 'absolute', top: '6px', left: '6px', width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,92,26,0.88)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}
-                  >
-                    ✏️
-                  </button>
+                    style={{ position: 'absolute', top: '6px', left: '6px', width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,92,26,0.88)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', zIndex: 10 }}
+                  >✏️</button>
+                  {/* Delete button */}
                   <button
                     onClick={() => handleDelete(photo)}
                     title={isRTL ? 'حذف' : 'Delete'}
-                    style={{ position: 'absolute', top: '6px', right: '6px', width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(220,38,38,0.88)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}
-                  >
-                    🗑️
-                  </button>
+                    style={{ position: 'absolute', top: '6px', right: '6px', width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(220,38,38,0.88)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', zIndex: 10 }}
+                  >🗑️</button>
                   {/* Caption badge */}
                   {(photo.caption_ar || photo.caption_en) && (
                     <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-black/50">
@@ -1054,10 +1047,10 @@ function GallerySection({ showToast }) {
                       </p>
                     </div>
                   )}
-                  </div>
                 </div>
-              )
+                )
               })}
+            </div>
             </div>
           )}
         </div>
