@@ -1009,13 +1009,21 @@ function GallerySection({ showToast }) {
                 return (
                 <div
                   key={photo.id}
-                  className="relative rounded-[12px] overflow-hidden"
-                  style={{ aspectRatio: '16/9', cursor: 'grab', outline: dragOver === idx ? '2.5px solid #FF5C1A' : '2.5px solid transparent', opacity: dragSrc === idx ? 0.45 : 1, transition: 'opacity 0.15s, outline 0.15s' }}
+                <div
+                  key={photo.id}
+                  className="relative rounded-[12px]"
+                  style={{ aspectRatio: '16/9', outline: dragOver === idx ? '2.5px solid #FF5C1A' : '2.5px solid transparent', opacity: dragSrc === idx ? 0.45 : 1, transition: 'opacity 0.15s, outline 0.15s', userSelect: 'none' }}
                   draggable
-                  onDragStart={() => setDragSrc(idx)}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(idx) }}
-                  onDrop={() => handleDrop(idx)}
+                  onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; setDragSrc(idx) }}
+                  onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOver(idx) }}
+                  onDrop={(e) => { e.preventDefault(); handleDrop(idx) }}
                   onDragEnd={() => { setDragSrc(null); setDragOver(null) }}
+                >
+                  {/* Drag handle */}
+                  <div style={{ position: 'absolute', top: '6px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, cursor: 'grab', background: 'rgba(0,0,0,0.45)', borderRadius: '6px', padding: '3px 8px', display: 'flex', gap: '3px', alignItems: 'center' }}>
+                    {[0,1,2].map(r => <div key={r} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>{[0,1].map(d => <div key={d} style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#fff' }} />)}</div>)}
+                  </div>
+                  <div className="rounded-[12px] overflow-hidden w-full h-full absolute inset-0">
                 >
                   <img src={thumbSrc} alt={photo.caption_en || ''} className="w-full h-full object-cover" />
                   {ytId && (
@@ -1046,6 +1054,7 @@ function GallerySection({ showToast }) {
                       </p>
                     </div>
                   )}
+                  </div>
                 </div>
               )
               })}
