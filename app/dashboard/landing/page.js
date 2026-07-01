@@ -1002,7 +1002,7 @@ function GallerySection({ showToast }) {
               </button>
             </div>
           ) : (
-\            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {photos.map((photo, idx) => {
                 const ytId = photo.video_url?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)?.[1]
                 const thumbSrc = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : photo.url
