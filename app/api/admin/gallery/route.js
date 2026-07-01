@@ -22,12 +22,12 @@ export async function POST(request) {
   const admin = await verifyCaller(request)
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { url, caption_ar, caption_en, sort_order } = await request.json()
-  if (!url) return NextResponse.json({ error: 'URL is required' }, { status: 400 })
+  const { url, caption_ar, caption_en, sort_order, video_url } = await request.json()
+  if (!url && !video_url) return NextResponse.json({ error: 'URL or video_url is required' }, { status: 400 })
 
   const { data, error } = await supabaseAdmin
     .from('gallery_photos')
-    .insert({ url, caption_ar: caption_ar || '', caption_en: caption_en || '', sort_order: sort_order || 0 })
+    .insert({ url: url || null, caption_ar: caption_ar || '', caption_en: caption_en || '', sort_order: sort_order || 0, video_url: video_url || null })
     .select()
     .single()
 
@@ -40,13 +40,14 @@ export async function PATCH(request) {
   const admin = await verifyCaller(request)
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { id, caption_ar, caption_en, sort_order } = await request.json()
+  const { id, caption_ar, caption_en, sort_order, video_url } = await request.json()
   if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
   const updates = {}
   if (caption_ar !== undefined) updates.caption_ar = caption_ar
   if (caption_en !== undefined) updates.caption_en = caption_en
   if (sort_order !== undefined) updates.sort_order = sort_order
+  if (video_url !== undefined) updates.video_url = video_url
 
   const { error } = await supabaseAdmin
     .from('gallery_photos')

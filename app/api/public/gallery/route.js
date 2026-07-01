@@ -11,7 +11,7 @@ const supabaseAdmin = createClient(
 export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('gallery_photos')
-    .select('id, url, caption_ar, caption_en')
+    .select('id, url, caption_ar, caption_en, video_url')
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true })
 

@@ -1299,6 +1299,12 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
   )
 }
 
+function getYouTubeId(url) {
+  if (!url) return null
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  return m ? m[1] : null
+}
+
 function ConferenceCarousel({ lang }) {
   const [photos, setPhotos]   = useState(FALLBACK_PHOTOS)
   const [current, setCurrent] = useState(0)
@@ -1328,11 +1334,14 @@ function ConferenceCarousel({ lang }) {
   const prev  = () => setCurrent((c) => (c - 1 + total) % total)
   const next  = () => setCurrent((c) => (c + 1) % total)
 
+  const currentIsVideo = !!getYouTubeId(photos[current]?.video_url)
+
+  // Pause auto-advance when off-screen OR when current slide is a video
   useEffect(() => {
-    if (!visible) return
+    if (!visible || currentIsVideo) return
     const timer = setInterval(() => setCurrent((c) => (c + 1) % total), 4500)
     return () => clearInterval(timer)
-  }, [total, visible])
+  }, [total, visible, currentIsVideo])
 
   const caption = isRTL
     ? (photos[current]?.caption_ar || photos[current]?.caption_en || '')
@@ -1342,15 +1351,40 @@ function ConferenceCarousel({ lang }) {
     <div ref={containerRef} className="relative max-w-3xl mx-auto">
       {/* Main image */}
       <div className="relative rounded-asa-radius-xl overflow-hidden shadow-asa-shadow-orange" style={{ aspectRatio: '16/9' }}>
-        {photos.map((photo, i) => (
-          <img
-            key={photo.id || i}
-            src={photo.url || photo.src}
-            alt={photo.caption_en || photo.caption_ar || ''}
-            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-            style={{ opacity: i === current ? 1 : 0 }}
-          />
-        ))}
+        {photos.map((photo, i) => {
+          const ytId = getYouTubeId(photo.video_url)
+          const isActive = i === current
+          if (ytId) {
+            return isActive ? (
+              <iframe
+                key={`v-${photo.id || i}`}
+                src={`https://www.youtube.com/embed/${ytId}?rel=0`}
+                className="absolute inset-0 w-full h-full"
+                style={{ border: 'none' }}
+                allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                title={photo.caption_en || photo.caption_ar || 'Video'}
+              />
+            ) : (
+              <img
+                key={`vt-${photo.id || i}`}
+                src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
+                alt={photo.caption_en || photo.caption_ar || ''}
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ opacity: 0 }}
+              />
+            )
+          }
+          return (
+            <img
+              key={photo.id || i}
+              src={photo.url || photo.src}
+              alt={photo.caption_en || photo.caption_ar || ''}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+              style={{ opacity: isActive ? 1 : 0 }}
+            />
+          )
+        })}
         {/* Gradient overlay at bottom for caption */}
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
         {/* Caption */}
@@ -1377,14 +1411,25 @@ function ConferenceCarousel({ lang }) {
       </div>
       {/* Dot indicators */}
       <div className="flex justify-center gap-2 mt-4">
-        {photos.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`h-2 rounded-full transition-all duration-300 ${i === current ? 'bg-asa-orange w-6' : 'bg-asa-border w-2 hover:bg-asa-orange/40'}`}
-            aria-label={`Go to photo ${i + 1}`}
-          />
-        ))}
+        {photos.map((photo, i) => {
+          const ytId = getYouTubeId(photo.video_url)
+          return ytId ? (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`transition-all duration-300 rounded-full flex items-center justify-center text-white font-bold ${i === current ? 'bg-asa-orange w-7 h-7 text-xs' : 'bg-asa-border w-5 h-5 text-[9px] hover:bg-asa-orange/60'}`}
+              aria-label={`Go to video ${i + 1}`}
+              style={{ flexShrink: 0 }}
+            >▶</button>
+          ) : (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${i === current ? 'bg-asa-orange w-6' : 'bg-asa-border w-2 hover:bg-asa-orange/40'}`}
+              aria-label={`Go to photo ${i + 1}`}
+            />
+          )
+        })}
       </div>
     </div>
   )

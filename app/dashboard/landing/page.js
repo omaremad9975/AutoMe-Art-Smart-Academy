@@ -786,6 +786,9 @@ function GallerySection({ showToast }) {
   const fileInputRef = useRef(null)
 
   const [galleryError, setGalleryError] = useState(null)
+  const [videoModal, setVideoModal]   = useState(false)
+  const [videoUrl, setVideoUrl]       = useState('')
+  const [videoAdding, setVideoAdding] = useState(false)
 
   const fetchPhotos = useCallback(async () => {
     setLoading(true)
@@ -843,6 +846,28 @@ function GallerySection({ showToast }) {
       showToast('error', 'Error', err?.message)
     }
     setUploading(false)
+  }
+
+  const handleAddVideo = async () => {
+    const ytMatch = videoUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+    if (!ytMatch) { showToast('error', 'Invalid URL', isRTL ? 'رابط يوتيوب غير صحيح' : 'Please enter a valid YouTube URL'); return }
+    setVideoAdding(true)
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/gallery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ video_url: videoUrl.trim(), sort_order: photos.length }),
+      })
+      const data = await res.json()
+      if (data.photo) setPhotos((prev) => [...prev, data.photo])
+      showToast('success', isRTL ? 'تمت الإضافة' : 'Video Added', isRTL ? 'تمت إضافة الفيديو إلى المعرض' : 'Video added to the gallery')
+      setVideoModal(false)
+      setVideoUrl('')
+    } catch (err) {
+      showToast('error', 'Error', err?.message)
+    }
+    setVideoAdding(false)
   }
 
   const handleDelete = async (photo) => {
@@ -905,14 +930,23 @@ function GallerySection({ showToast }) {
               {isRTL ? 'صور المؤتمر والفعاليات التي تظهر في الصفحة الرئيسية' : 'Conference and event photos shown in the home page carousel'}
             </p>
           </div>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-sm font-bold text-white font-cairo transition-all"
-            style={{ background: uploading ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)', boxShadow: uploading ? 'none' : '0 4px 12px rgba(255,92,26,0.25)' }}
-          >
-            {uploading ? (isRTL ? 'جارٍ الرفع...' : 'Uploading...') : (isRTL ? '+ رفع صور' : '+ Upload Photos')}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setVideoModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-sm font-bold font-cairo transition-all"
+              style={{ background: '#FFF0EB', color: '#FF5C1A', border: '1.5px solid #FFD0B8' }}
+            >
+              ▶ {isRTL ? '+ إضافة فيديو' : '+ Add Video'}
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-sm font-bold text-white font-cairo transition-all"
+              style={{ background: uploading ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)', boxShadow: uploading ? 'none' : '0 4px 12px rgba(255,92,26,0.25)' }}
+            >
+              {uploading ? (isRTL ? 'جارٍ الرفع...' : 'Uploading...') : (isRTL ? '+ رفع صور' : '+ Upload Photos')}
+            </button>
+          </div>
         </div>
 
         <div className="p-6">
@@ -944,9 +978,17 @@ function GallerySection({ showToast }) {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {photos.map((photo) => (
+              {photos.map((photo) => {
+                const ytId = photo.video_url?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)?.[1]
+                const thumbSrc = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : photo.url
+                return (
                 <div key={photo.id} className="relative rounded-[12px] overflow-hidden" style={{ aspectRatio: '16/9' }}>
-                  <img src={photo.url} alt={photo.caption_en || ''} className="w-full h-full object-cover" />
+                  <img src={thumbSrc} alt={photo.caption_en || ''} className="w-full h-full object-cover" />
+                  {ytId && (
+                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.25)' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,92,26,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '16px', paddingLeft: '3px' }}>▶</div>
+                    </div>
+                  )}
                   {/* Always-visible action buttons — top corners */}
                   <button
                     onClick={() => setCaptionModal({ id: photo.id, caption_ar: photo.caption_ar || '', caption_en: photo.caption_en || '' })}
@@ -971,11 +1013,55 @@ function GallerySection({ showToast }) {
                     </div>
                   )}
                 </div>
-              ))}
+              )
+              })}
             </div>
           )}
         </div>
       </div>
+
+      {/* Add Video modal */}
+      {videoModal && (
+        <Modal title={isRTL ? 'إضافة فيديو يوتيوب' : 'Add YouTube Video'} onClose={() => { setVideoModal(false); setVideoUrl('') }}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[#1A1A1A] font-bold text-sm mb-1.5 font-cairo">
+                {isRTL ? 'رابط الفيديو' : 'YouTube Video URL'}
+              </label>
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none"
+                style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }}
+                onFocus={(e) => { e.target.style.borderColor = '#FF5C1A' }}
+                onBlur={(e) => { e.target.style.borderColor = '#FFE4D4' }}
+              />
+              <p className="text-xs text-[#A0A0A0] font-cairo mt-1">
+                {isRTL ? 'ادعم: youtube.com/watch?v=... أو youtu.be/...' : 'Supports: youtube.com/watch?v=... or youtu.be/...'}
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { setVideoModal(false); setVideoUrl('') }}
+                className="px-4 py-2 rounded-[10px] text-sm font-bold font-cairo"
+                style={{ background: '#F9FAFB', color: '#6B7280', border: '1.5px solid #E5E7EB' }}
+              >
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </button>
+              <button
+                onClick={handleAddVideo}
+                disabled={videoAdding || !videoUrl.trim()}
+                className="px-4 py-2 rounded-[10px] text-sm font-bold text-white font-cairo"
+                style={{ background: (videoAdding || !videoUrl.trim()) ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}
+              >
+                {videoAdding ? (isRTL ? 'جارٍ الإضافة...' : 'Adding...') : (isRTL ? 'إضافة الفيديو' : 'Add Video')}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Caption edit modal */}
       {captionModal && (
