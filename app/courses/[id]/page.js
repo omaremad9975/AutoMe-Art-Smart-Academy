@@ -559,7 +559,7 @@ export default function CourseDetailPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 22px', borderBottom: (schedule || language) ? '1px solid #FFF0E8' : 'none' }}>
                 <span style={{ fontSize: '18px', flexShrink: 0 }}>👥</span>
                 <div style={{ textAlign: isAr ? 'right' : 'left' }}>
-                  <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'لمن هذا الكورس' : "Who It's For"}</p>
+                  <p style={{ color: '#FF5C1A', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'لمن هذا الكورس' : "Who It's For"}</p>
                   <p style={{ color: '#111827', fontSize: '14px', fontWeight: 700, fontFamily: 'Cairo, sans-serif', margin: 0 }}>{audience}</p>
                 </div>
               </div>
@@ -568,7 +568,7 @@ export default function CourseDetailPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 22px', borderBottom: language ? '1px solid #FFF0E8' : 'none' }}>
                 <span style={{ fontSize: '18px', flexShrink: 0 }}>📅</span>
                 <div style={{ textAlign: isAr ? 'right' : 'left' }}>
-                  <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'الموعد' : 'Schedule'}</p>
+                  <p style={{ color: '#FF5C1A', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'الموعد' : 'Schedule'}</p>
                   <p style={{ color: '#111827', fontSize: '14px', fontWeight: 700, fontFamily: 'Cairo, sans-serif', margin: 0 }}>{schedule}</p>
                 </div>
               </div>
@@ -577,7 +577,7 @@ export default function CourseDetailPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 22px' }}>
                 <span style={{ fontSize: '18px', flexShrink: 0 }}>🗣️</span>
                 <div style={{ textAlign: isAr ? 'right' : 'left' }}>
-                  <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'لغة الشرح' : 'Language'}</p>
+                  <p style={{ color: '#FF5C1A', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'لغة الشرح' : 'Language'}</p>
                   <p style={{ color: '#111827', fontSize: '14px', fontWeight: 700, fontFamily: 'Cairo, sans-serif', margin: 0 }}>{language}</p>
                 </div>
               </div>
@@ -586,13 +586,13 @@ export default function CourseDetailPage() {
         )}
         {description && (
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '22px 24px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
-            <h2 style={{ color: '#FF5C1A', fontWeight: 800, fontSize: '14px', marginBottom: '10px', fontFamily: 'Cairo, sans-serif' }}>{isAr ? '📋 عن الكورس' : '📋 About This Course'}</h2>
+            <h2 style={{ color: '#FF5C1A', fontWeight: 800, fontSize: '14px', marginBottom: '10px', fontFamily: 'Cairo, sans-serif', textAlign: isAr ? 'right' : 'left', direction: isAr ? 'rtl' : 'ltr' }}>{isAr ? '📋 عن الكورس' : '📋 About This Course'}</h2>
             <p style={{ color: '#374151', fontSize: '14px', lineHeight: 1.8, fontFamily: 'Cairo, sans-serif' }}>{description}</p>
           </div>
         )}
         {goals.length > 0 && (
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '22px 24px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
-            <h2 style={{ color: '#FF5C1A', fontWeight: 800, fontSize: '14px', marginBottom: '14px', fontFamily: 'Cairo, sans-serif' }}>{isAr ? '🎯 أهداف الكورس' : '🎯 Course Goals'}</h2>
+            <h2 style={{ color: '#FF5C1A', fontWeight: 800, fontSize: '14px', marginBottom: '14px', fontFamily: 'Cairo, sans-serif', textAlign: isAr ? 'right' : 'left', direction: isAr ? 'rtl' : 'ltr' }}>{isAr ? '🎯 أهداف الكورس' : '🎯 Course Goals'}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {goals.map((goal, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
@@ -607,7 +607,7 @@ export default function CourseDetailPage() {
         )}
         {requirements.length > 0 && (
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '22px 24px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
-            <h2 style={{ color: '#FF5C1A', fontWeight: 800, fontSize: '14px', marginBottom: '14px', fontFamily: 'Cairo, sans-serif' }}>{isAr ? '🎒 متطلبات الكورس' : '🎒 Requirements'}</h2>
+            <h2 style={{ color: '#FF5C1A', fontWeight: 800, fontSize: '14px', marginBottom: '14px', fontFamily: 'Cairo, sans-serif', textAlign: isAr ? 'right' : 'left', direction: isAr ? 'rtl' : 'ltr' }}>{isAr ? '🎒 متطلبات الكورس' : '🎒 Requirements'}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {requirements.map((req, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
@@ -628,7 +628,7 @@ export default function CourseDetailPage() {
               <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 800, fontFamily: 'Cairo, sans-serif', flexShrink: 0 }}>{getInitials(instructor)}</div>
             )}
             <div style={{ textAlign: isAr ? 'right' : 'left' }}>
-              <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', marginBottom: '2px' }}>{isAr ? 'المدرب / المدربة' : 'Instructor'}</p>
+              <p style={{ color: '#FF5C1A', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', marginBottom: '2px' }}>{isAr ? 'المدرب / المدربة' : 'Instructor'}</p>
               <p style={{ color: '#111827', fontSize: '15px', fontWeight: 800, fontFamily: 'Cairo, sans-serif' }}>{instructor}</p>
               {instructorBio && <p style={{ color: '#6B7280', fontSize: '12px', fontFamily: 'Cairo, sans-serif', margin: '2px 0 0' }}>{instructorBio}</p>}
             </div>
