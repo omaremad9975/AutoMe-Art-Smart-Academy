@@ -61,4 +61,29 @@ export async function PATCH(request) {
   if (fields.image_url                !== undefined) payload.image_url                 = fields.image_url
   if (fields.icon_key                 !== undefined) payload.icon_key                  = fields.icon_key
   if (fields.goals_ar                 !== undefined) payload.goals_ar                  = Array.isArray(fields.goals_ar) ? fields.goals_ar : []
-  if (fields.goals_en                 !== undefined) payload.goals_en                  = Array.isArray(fie
+  if (fields.goals_en                 !== undefined) payload.goals_en                  = Array.isArray(fields.goals_en) ? fields.goals_en : []
+  if (fields.instructor_photo_url     !== undefined) payload.instructor_photo_url      = fields.instructor_photo_url
+  if (fields.instructor_bio_ar        !== undefined) payload.instructor_bio_ar         = fields.instructor_bio_ar
+  if (fields.instructor_bio_en        !== undefined) payload.instructor_bio_en         = fields.instructor_bio_en
+  if (fields.audience_ar              !== undefined) payload.audience_ar               = fields.audience_ar
+  if (fields.audience_en              !== undefined) payload.audience_en               = fields.audience_en
+  if (fields.schedule_ar              !== undefined) payload.schedule_ar               = fields.schedule_ar
+  if (fields.schedule_en              !== undefined) payload.schedule_en               = fields.schedule_en
+
+  const { data, error } = await supabaseAdmin.from('courses').update(payload).eq('id', id).select().single()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ course: data })
+}
+
+// DELETE — delete course
+export async function DELETE(request) {
+  const admin = await verifyCaller(request)
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { id } = await request.json()
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+
+  const { error } = await supabaseAdmin.from('courses').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}

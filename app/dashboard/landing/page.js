@@ -204,7 +204,7 @@ const COURSE_ICONS = [
   { key: 'other',     labelEn: 'Other',     emoji: '⭐', bg: '#FFF0E8', color: '#FF5C1A' },
 ]
 
-const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration_number: '', duration_unit: 'weeks', seats: '', is_active: true, whatsapp_group_url: '', description_ar: '', description_en: '', instructor_ar: '', instructor_en: '', image_url: '', icon_key: 'other', goals_ar: [], goals_en: [], instructor_photo_url: '', instructor_bio_ar: '', instructor_bio_en: '', audience_ar: '', audience_en: '', schedule_ar: '', schedule_en: '' }
+const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration_number: '', duration_unit: 'weeks', seats: '', is_active: true, whatsapp_group_url: '', description_ar: '', description_en: '', instructor_ar: '', instructor_en: '', image_url: '', icon_key: 'other', goals_ar: [], goals_en: [], instructor_photo_url: '', instructor_bio_ar: '', instructor_bio_en: '', audience_ar: '', audience_en: '', schedule_ar: '', schedule_en: '', requirements_ar: [], requirements_en: [], language_ar: '', language_en: '' }
 
 const SOCIAL_DEFAULTS = {
   social_facebook:  '',
@@ -271,7 +271,7 @@ function CoursesSection() {
     const durUnit = durLower.includes('day') || durLower.includes('يوم') || durLower.includes('أيام') ? 'days'
                   : durLower.includes('month') || durLower.includes('شهر') || durLower.includes('أشهر') ? 'months'
                   : 'weeks'
-    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration_number: durNum, duration_unit: durUnit, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '', description_ar: c.description_ar || '', description_en: c.description_en || '', instructor_ar: c.instructor_ar || '', instructor_en: c.instructor_en || '', image_url: c.image_url || '', icon_key: c.icon_key || 'other', goals_ar: c.goals_ar || [], goals_en: c.goals_en || [], instructor_photo_url: c.instructor_photo_url || '', instructor_bio_ar: c.instructor_bio_ar || '', instructor_bio_en: c.instructor_bio_en || '', audience_ar: c.audience_ar || '', audience_en: c.audience_en || '', schedule_ar: c.schedule_ar || '', schedule_en: c.schedule_en || '' })
+    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration_number: durNum, duration_unit: durUnit, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '', description_ar: c.description_ar || '', description_en: c.description_en || '', instructor_ar: c.instructor_ar || '', instructor_en: c.instructor_en || '', image_url: c.image_url || '', icon_key: c.icon_key || 'other', goals_ar: c.goals_ar || [], goals_en: c.goals_en || [], instructor_photo_url: c.instructor_photo_url || '', instructor_bio_ar: c.instructor_bio_ar || '', instructor_bio_en: c.instructor_bio_en || '', audience_ar: c.audience_ar || '', audience_en: c.audience_en || '', schedule_ar: c.schedule_ar || '', schedule_en: c.schedule_en || '', requirements_ar: c.requirements_ar || [], requirements_en: c.requirements_en || [], language_ar: c.language_ar || '', language_en: c.language_en || '' })
     setSelectedCourse(c)
     setModal('edit')
   }
@@ -295,6 +295,8 @@ function CoursesSection() {
         instructor_bio_ar: form.instructor_bio_ar || null, instructor_bio_en: form.instructor_bio_en || null,
         audience_ar: form.audience_ar || null, audience_en: form.audience_en || null,
         schedule_ar: form.schedule_ar || null, schedule_en: form.schedule_en || null,
+        requirements_ar: form.requirements_ar || [], requirements_en: form.requirements_en || [],
+        language_ar: form.language_ar || null, language_en: form.language_en || null,
       }
       const body = modal === 'add' ? commonFields : { id: selectedCourse.id, ...commonFields }
       const res = await fetch('/api/admin/courses', {
@@ -623,6 +625,36 @@ function CoursesSection() {
                 placeholder="e.g. Learn design fundamentals"
                 isRTL={false}
               />
+            </div>
+
+            {/* Requirements */}
+            <div className="grid grid-cols-2 gap-3">
+              <GoalsEditor
+                label="🎒 متطلبات الكورس (عربي)"
+                items={form.requirements_ar}
+                onChange={(items) => setForm((f) => ({ ...f, requirements_ar: items }))}
+                placeholder="مثال: لابتوب أو موبايل"
+                isRTL={true}
+              />
+              <GoalsEditor
+                label="🎒 Requirements (English)"
+                items={form.requirements_en}
+                onChange={(items) => setForm((f) => ({ ...f, requirements_en: items }))}
+                placeholder="e.g. Laptop or mobile phone"
+                isRTL={false}
+              />
+            </div>
+
+            {/* Language */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">🗣️ لغة الشرح (عربي)</label>
+                <input value={form.language_ar} onChange={(e) => setForm((f) => ({ ...f, language_ar: e.target.value }))} placeholder="مثال: عربي + إنجليزي" className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'rtl' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">🗣️ Language (English)</label>
+                <input value={form.language_en} onChange={(e) => setForm((f) => ({ ...f, language_en: e.target.value }))} placeholder="e.g. Arabic + English" className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+              </div>
             </div>
 
             {/* Instructor */}
@@ -1269,30 +1301,242 @@ function GallerySection({ showToast }) {
         </Modal>
       )}
 
-      {/* Add Video modal */}
-      {videoModal && (
-        <Modal title={isRTL ? 'إضافة فيديو يوتيوب' : 'Add YouTube Video'} onClose={() => { setVideoModal(false); setVideoUrl('') }}>
+      {/* Caption edit modal */}
+      {captionModal && (
+        <Modal title={isRTL ? 'تعديل التسمية التوضيحية' : 'Edit Caption'} onClose={() => setCaptionModal(null)}>
           <div className="space-y-4">
             <div>
-              <label className="block text-[#1A1A1A] font-bold text-sm mb-1.5 font-cairo">
-                {isRTL ? 'رابط الفيديو' : 'YouTube Video URL'}
-              </label>
+              <label className="block text-[#1A1A1A] font-bold text-sm mb-1.5 font-cairo">Caption (Arabic)</label>
               <input
-                type="url"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=..."
+                type="text"
+                value={captionModal.caption_ar}
+                onChange={(e) => setCaptionModal((m) => ({ ...m, caption_ar: e.target.value }))}
+                placeholder="وصف الصورة بالعربية"
+                className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none"
+                style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'rtl' }}
+                onFocus={(e) => { e.target.style.borderColor = '#FF5C1A' }}
+                onBlur={(e) => { e.target.style.borderColor = '#FFE4D4' }}
+              />
+            </div>
+            <div>
+              <label className="block text-[#1A1A1A] font-bold text-sm mb-1.5 font-cairo">Caption (English)</label>
+              <input
+                type="text"
+                value={captionModal.caption_en}
+                onChange={(e) => setCaptionModal((m) => ({ ...m, caption_en: e.target.value }))}
+                placeholder="Photo caption in English"
                 className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none"
                 style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }}
                 onFocus={(e) => { e.target.style.borderColor = '#FF5C1A' }}
                 onBlur={(e) => { e.target.style.borderColor = '#FFE4D4' }}
               />
-              <p className="text-xs text-[#A0A0A0] font-cairo mt-1">
-                {isRTL ? 'ادعم: youtube.com/watch?v=... أو youtu.be/...' : 'Supports: youtube.com/watch?v=... or youtu.be/...'}
-              </p>
             </div>
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => { setVideoModal(false); setVideoUrl('') }} className="px-4 py-2 rounded-[10px] text-sm font-bold font-cairo" style={{ background: '#F9FAFB', color: '#6B7280', border: '1.5px solid #E5E7EB' }}>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setCaptionModal(null)} className="flex-1 py-2.5 rounded-[10px] text-sm font-bold text-[#6B6B6B] font-cairo" style={{ border: '1.5px solid #FFE4D4' }}>
                 {isRTL ? 'إلغاء' : 'Cancel'}
               </button>
-              <button onClick
+              <button onClick={handleSaveCaptions} className="flex-1 py-2.5 rounded-[10px] text-sm font-bold text-white font-cairo" style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
+                {isRTL ? 'حفظ' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
+// ── Academy Info Section ────────────────────────────────────────────────────────
+function AcademyInfoSection({ showToast }) {
+  const { isRTL } = useDashboardLang()
+  const [info, setInfo]             = useState(ACADEMY_DEFAULTS)
+  const [savedInfo, setSavedInfo]   = useState(ACADEMY_DEFAULTS)
+  const [loading, setLoading]       = useState(true)
+  const [saving, setSaving]         = useState(false)
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = await getToken()
+        const res = await fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } })
+        const result = await res.json()
+        if (result.settings) {
+          const patch = Object.fromEntries(
+            Object.keys(ACADEMY_DEFAULTS)
+              .filter((k) => result.settings[k] !== undefined)
+              .map((k) => [k, result.settings[k]])
+          )
+          setInfo((prev) => ({ ...prev, ...patch }))
+          setSavedInfo((prev) => ({ ...prev, ...patch }))
+        }
+      } catch {}
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(info),
+      })
+      const result = await res.json()
+      if (!res.ok || result.error) {
+        showToast('error',
+          isRTL ? 'فشل الحفظ' : 'Save Failed',
+          result.error || (isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred')
+        )
+      } else {
+        setSavedInfo(info)
+        showToast('success',
+          isRTL ? 'تم الحفظ بنجاح' : 'Changes Saved',
+          isRTL ? 'تم تحديث معلومات الأكاديمية وستظهر في الموقع فوراً' : 'Academy info updated and will reflect on the site immediately'
+        )
+      }
+    } catch (err) {
+      showToast('error',
+        isRTL ? 'خطأ في الشبكة' : 'Network Error',
+        err?.message || (isRTL ? 'تعذّر الاتصال بالخادم' : 'Could not reach the server')
+      )
+    }
+    setSaving(false)
+  }
+
+  const set = (key) => (e) => setInfo((s) => ({ ...s, [key]: e.target.value }))
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-14 rounded-[12px] animate-pulse" style={{ background: '#FFE4D4' }} />)}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <div className="rounded-[16px] overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4', textAlign: isRTL ? 'right' : 'left' }}>
+          <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">{isRTL ? 'معلومات الأكاديمية' : 'Academy Information'}</h2>
+          <p className="text-xs text-[#A0A0A0] font-cairo">{isRTL ? 'هذه المعلومات تظهر في الموقع مباشرةً بعد الحفظ' : 'These details appear live on the website after saving'}</p>
+        </div>
+        <div className="p-6 space-y-5">
+          <SettingsField
+            id="academy_name"
+            label={isRTL ? 'اسم الأكاديمية' : 'Academy Name'}
+            value={info.academy_name}
+            onChange={set('academy_name')}
+            placeholder="Art Smart Academy | أرت سمارت اكاديمي"
+            isRTL={isRTL}
+            currentValue={savedInfo.academy_name}
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <SettingsField
+              id="phone"
+              label={isRTL ? 'رقم الهاتف' : 'Phone Number'}
+              type="tel"
+              value={info.phone}
+              onChange={set('phone')}
+              placeholder="+20 100 000 0000"
+              isRTL={isRTL}
+              currentValue={savedInfo.phone}
+            />
+            <SettingsField
+              id="whatsapp"
+              label={isRTL ? 'واتساب' : 'WhatsApp'}
+              type="tel"
+              value={info.whatsapp}
+              onChange={set('whatsapp')}
+              placeholder="+20 100 000 0000"
+              isRTL={isRTL}
+              currentValue={savedInfo.whatsapp}
+            />
+          </div>
+          <SettingsField
+            id="email"
+            label={isRTL ? 'البريد الإلكتروني' : 'Email Address'}
+            type="email"
+            value={info.email}
+            onChange={set('email')}
+            placeholder="info@artsmartacademy.com"
+            isRTL={isRTL}
+            currentValue={savedInfo.email}
+          />
+        </div>
+      </div>
+
+      <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-8 py-3 rounded-[10px] text-sm font-bold text-white font-cairo transition-all duration-200"
+          style={{ background: saving ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)', boxShadow: saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
+          onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,92,26,0.40)' } }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
+        >
+          {saving ? (isRTL ? 'جارٍ الحفظ...' : 'Saving...') : (isRTL ? 'حفظ التغييرات' : 'Save Changes')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Main Page ──────────────────────────────────────────────────────────────────
+export default function LandingPage() {
+  const { t, isRTL } = useDashboardLang()
+  const [activeTab, setActiveTab] = useState('courses')
+  const [toast, setToast] = useState(null)
+  const toastTimer = useRef(null)
+
+  const showToast = (type, title, description) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setToast({ type, title, description })
+    toastTimer.current = setTimeout(() => setToast(null), 4500)
+  }
+
+  const tabs = [
+    { key: 'courses', label: t.tabCourses },
+    { key: 'social',  label: t.tabSocial },
+    { key: 'academy', label: isRTL ? 'معلومات الأكاديمية' : 'Academy Info' },
+    { key: 'gallery', label: isRTL ? 'معرض الصور' : 'Gallery' },
+  ]
+
+  return (
+    <>
+      <Toast toast={toast} />
+
+      <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
+        <div>
+          <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.landingTitle}</h1>
+          <p className="text-[#6B6B6B] text-sm font-cairo mt-1">{t.landingSub}</p>
+        </div>
+
+        {/* Tab Bar */}
+        <div className="flex gap-2 p-1 rounded-[12px] w-fit" style={{ background: '#FFF0E8', border: '1px solid #FFE4D4' }}>
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className="px-5 py-2.5 rounded-[10px] text-sm font-bold font-cairo transition-all duration-200"
+              style={{
+                background: activeTab === tab.key ? '#FFFFFF' : 'transparent',
+                color: activeTab === tab.key ? '#FF5C1A' : '#6B6B6B',
+                boxShadow: activeTab === tab.key ? '0 2px 8px rgba(255,92,26,0.12)' : 'none',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'courses' && <CoursesSection />}
+        {activeTab === 'social'  && <SocialSection showToast={showToast} />}
+        {activeTab === 'academy' && <AcademyInfoSection showToast={showToast} />}
+        {activeTab === 'gallery' && <GallerySection showToast={showToast} />}
+      </div>
+    </>
+  )
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 
 const MODAL_T = {
@@ -892,4 +892,3 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
 }
 
 export { MODAL_T, PAYMENT_OPTIONS, COUNTRY_CODES, CountryDropdown, RegistrationModal }
-                                                                                                                        
