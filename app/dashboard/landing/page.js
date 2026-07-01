@@ -1051,7 +1051,6 @@ function GallerySection({ showToast }) {
                 )
               })}
             </div>
-            </div>
           )}
         </div>
       </div>
