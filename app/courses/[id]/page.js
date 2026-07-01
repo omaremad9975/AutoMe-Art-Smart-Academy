@@ -554,7 +554,7 @@ export default function CourseDetailPage() {
           </div>
         )}
         {instructor && (
-          <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '18px 22px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)', display: 'flex', alignItems: 'center', gap: '12px', flexDirection: isAr ? 'row-reverse' : 'row' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '18px 22px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)', display: 'flex', alignItems: 'center', gap: '12px', flexDirection: 'row' }}>
             <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 800, fontFamily: 'Cairo, sans-serif', flexShrink: 0 }}>{getInitials(instructor)}</div>
             <div style={{ textAlign: isAr ? 'right' : 'left' }}>
               <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', marginBottom: '2px' }}>{isAr ? 'المدرب / المدربة' : 'Instructor'}</p>
@@ -573,3 +573,4 @@ export default function CourseDetailPage() {
     </div>
   )
 }
+                       
