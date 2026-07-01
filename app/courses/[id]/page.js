@@ -499,7 +499,10 @@ export default function CourseDetailPage() {
   const title       = isAr ? course.name_ar : (course.name_en || course.name_ar)
   const description = isAr ? (course.description_ar || enriched.description_ar || '') : (course.description_en || enriched.description_en || '')
   const instructor  = isAr ? (course.instructor_ar || enriched.instructor_ar || '') : (course.instructor_en || enriched.instructor_en || '')
+  const instructorBio = isAr ? (course.instructor_bio_ar || '') : (course.instructor_bio_en || '')
   const goals       = (isAr ? course.goals_ar : course.goals_en) || []
+  const audience    = isAr ? (course.audience_ar || '') : (course.audience_en || '')
+  const schedule    = isAr ? (course.schedule_ar || '') : (course.schedule_en || '')
   const seatsLeft   = course.seats > 0 ? course.seats : null
 
   return (
@@ -548,6 +551,28 @@ export default function CourseDetailPage() {
 
       {/* Content */}
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 20px 80px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {(audience || schedule) && (
+          <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)', overflow: 'hidden' }}>
+            {audience && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 22px', borderBottom: schedule ? '1px solid #FFF0E8' : 'none' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>👥</span>
+                <div style={{ textAlign: isAr ? 'right' : 'left' }}>
+                  <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'لمن هذا الكورس' : "Who It's For"}</p>
+                  <p style={{ color: '#111827', fontSize: '14px', fontWeight: 700, fontFamily: 'Cairo, sans-serif', margin: 0 }}>{audience}</p>
+                </div>
+              </div>
+            )}
+            {schedule && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 22px' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>📅</span>
+                <div style={{ textAlign: isAr ? 'right' : 'left' }}>
+                  <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', margin: '0 0 2px' }}>{isAr ? 'الموعد' : 'Schedule'}</p>
+                  <p style={{ color: '#111827', fontSize: '14px', fontWeight: 700, fontFamily: 'Cairo, sans-serif', margin: 0 }}>{schedule}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         {description && (
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '22px 24px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
             <h2 style={{ color: '#FF5C1A', fontWeight: 800, fontSize: '14px', marginBottom: '10px', fontFamily: 'Cairo, sans-serif' }}>{isAr ? '📋 عن الكورس' : '📋 About This Course'}</h2>
@@ -571,4 +596,26 @@ export default function CourseDetailPage() {
         )}
         {instructor && (
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '18px 22px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)', display: 'flex', alignItems: 'center', gap: '12px', flexDirection: 'row' }}>
-      
+            {course.instructor_photo_url ? (
+              <img src={course.instructor_photo_url} alt={instructor} style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+            ) : (
+              <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 800, fontFamily: 'Cairo, sans-serif', flexShrink: 0 }}>{getInitials(instructor)}</div>
+            )}
+            <div style={{ textAlign: isAr ? 'right' : 'left' }}>
+              <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', marginBottom: '2px' }}>{isAr ? 'المدرب / المدربة' : 'Instructor'}</p>
+              <p style={{ color: '#111827', fontSize: '15px', fontWeight: 800, fontFamily: 'Cairo, sans-serif' }}>{instructor}</p>
+              {instructorBio && <p style={{ color: '#6B7280', fontSize: '12px', fontFamily: 'Cairo, sans-serif', margin: '2px 0 0' }}>{instructorBio}</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Registration form — same design as landing page modal */}
+        <RegistrationForm course={course} lang={lang} />
+      </div>
+
+      <div style={{ background: '#111827', padding: '16px 24px', textAlign: 'center' }}>
+        <p style={{ color: '#6B7280', fontSize: '12px', fontFamily: 'Cairo, sans-serif' }}>© 2026 Art Smart Academy</p>
+      </div>
+    </div>
+  )
+}

@@ -25,6 +25,13 @@ CREATE TABLE IF NOT EXISTS courses (
   instructor_en            TEXT,
   goals_ar                 TEXT[] DEFAULT '{}',
   goals_en                 TEXT[] DEFAULT '{}',
+  instructor_photo_url     TEXT,
+  instructor_bio_ar        TEXT,
+  instructor_bio_en        TEXT,
+  audience_ar              TEXT,
+  audience_en              TEXT,
+  schedule_ar              TEXT,
+  schedule_en              TEXT,
   created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -37,6 +44,13 @@ CREATE TABLE IF NOT EXISTS courses (
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS instructor_en TEXT;
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS goals_ar TEXT[] DEFAULT '{}';
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS goals_en TEXT[] DEFAULT '{}';
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS instructor_photo_url TEXT;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS instructor_bio_ar TEXT;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS instructor_bio_en TEXT;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS audience_ar TEXT;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS audience_en TEXT;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS schedule_ar TEXT;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS schedule_en TEXT;
 
 -- ============================================================
 -- TABLE: registrations
@@ -199,10 +213,4 @@ CREATE POLICY "Authenticated write settings"
 -- Seed existing conference photos so they appear in the Gallery dashboard
 INSERT INTO gallery_photos (url, caption_ar, caption_en, sort_order) VALUES
   ('/conference/conf1.jpg',    'صورة جماعية مع المشاركين والمنظمين',          'Group photo with all conference attendees and organizers', 0),
-  ('/conference/IMG_2259.jpg', 'طلاب أرت سمارت في المؤتمر',                   'Students representing Art Smart Academy at the conference', 1),
-  ('/conference/IMG_2308.jpg', 'اجتماع رسمي مع كبار المشاركين',               'Official meeting with conference dignitaries', 2),
-  ('/conference/conf2.jpg',    'جلسات وعروض المؤتمر',                         'Conference sessions and presentations', 3),
-  ('/conference/conf3.jpg',    'أبرز لحظات المؤتمر الدولي للذكاء الاصطناعي', 'Highlights from the International AI Conference', 4)
-ON CONFLICT DO NOTHING;
-INSERT INTO courses (name_ar, name_en, price, duration, seats, is_active) VALUES
-  ('التفكير الإبداعي',   'Creative Thinking',      2500, '8 أ
+  ('/conference/IMG_2259.jpg', 'طلاب أرت سمارت في المؤتمر',               

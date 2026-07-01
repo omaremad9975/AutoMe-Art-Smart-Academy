@@ -204,7 +204,7 @@ const COURSE_ICONS = [
   { key: 'other',     labelEn: 'Other',     emoji: '⭐', bg: '#FFF0E8', color: '#FF5C1A' },
 ]
 
-const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration_number: '', duration_unit: 'weeks', seats: '', is_active: true, whatsapp_group_url: '', description_ar: '', description_en: '', instructor_ar: '', instructor_en: '', image_url: '', icon_key: 'other', goals_ar: [], goals_en: [] }
+const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration_number: '', duration_unit: 'weeks', seats: '', is_active: true, whatsapp_group_url: '', description_ar: '', description_en: '', instructor_ar: '', instructor_en: '', image_url: '', icon_key: 'other', goals_ar: [], goals_en: [], instructor_photo_url: '', instructor_bio_ar: '', instructor_bio_en: '', audience_ar: '', audience_en: '', schedule_ar: '', schedule_en: '' }
 
 const SOCIAL_DEFAULTS = {
   social_facebook:  '',
@@ -239,8 +239,10 @@ function CoursesSection() {
   const [togglingId, setTogglingId] = useState(null)
   const [uploadingCertFor, setUploadingCertFor] = useState(null) // course id being uploaded
   const [uploadingCourseImage, setUploadingCourseImage] = useState(false)
+  const [uploadingInstructorPhoto, setUploadingInstructorPhoto] = useState(false)
   const certInputRef = useRef(null)
   const courseImageInputRef = useRef(null)
+  const instructorPhotoInputRef = useRef(null)
   const [pendingCertCourseId, setPendingCertCourseId] = useState(null)
 
   const fetchCourses = useCallback(async () => {
@@ -269,7 +271,7 @@ function CoursesSection() {
     const durUnit = durLower.includes('day') || durLower.includes('يوم') || durLower.includes('أيام') ? 'days'
                   : durLower.includes('month') || durLower.includes('شهر') || durLower.includes('أشهر') ? 'months'
                   : 'weeks'
-    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration_number: durNum, duration_unit: durUnit, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '', description_ar: c.description_ar || '', description_en: c.description_en || '', instructor_ar: c.instructor_ar || '', instructor_en: c.instructor_en || '', image_url: c.image_url || '', icon_key: c.icon_key || 'other', goals_ar: c.goals_ar || [], goals_en: c.goals_en || [] })
+    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration_number: durNum, duration_unit: durUnit, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '', description_ar: c.description_ar || '', description_en: c.description_en || '', instructor_ar: c.instructor_ar || '', instructor_en: c.instructor_en || '', image_url: c.image_url || '', icon_key: c.icon_key || 'other', goals_ar: c.goals_ar || [], goals_en: c.goals_en || [], instructor_photo_url: c.instructor_photo_url || '', instructor_bio_ar: c.instructor_bio_ar || '', instructor_bio_en: c.instructor_bio_en || '', audience_ar: c.audience_ar || '', audience_en: c.audience_en || '', schedule_ar: c.schedule_ar || '', schedule_en: c.schedule_en || '' })
     setSelectedCourse(c)
     setModal('edit')
   }
@@ -289,6 +291,10 @@ function CoursesSection() {
         instructor_ar: form.instructor_ar || null, instructor_en: form.instructor_en || null,
         image_url: form.image_url || null, icon_key: form.icon_key || 'other',
         goals_ar: form.goals_ar || [], goals_en: form.goals_en || [],
+        instructor_photo_url: form.instructor_photo_url || null,
+        instructor_bio_ar: form.instructor_bio_ar || null, instructor_bio_en: form.instructor_bio_en || null,
+        audience_ar: form.audience_ar || null, audience_en: form.audience_en || null,
+        schedule_ar: form.schedule_ar || null, schedule_en: form.schedule_en || null,
       }
       const body = modal === 'add' ? commonFields : { id: selectedCourse.id, ...commonFields }
       const res = await fetch('/api/admin/courses', {
@@ -412,11 +418,29 @@ function CoursesSection() {
     setUploadingCourseImage(false)
   }
 
+  const handleInstructorPhotoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setUploadingInstructorPhoto(true)
+    try {
+      const token = await getToken()
+      const ext = file.name.split('.').pop().toLowerCase()
+      const urlRes = await fetch(`/api/admin/get-upload-url?bucket=instructor-photos&ext=${ext}`, { headers: { Authorization: `Bearer ${token}` } })
+      const urlData = await urlRes.json()
+      if (!urlRes.ok || urlData.error) { setUploadingInstructorPhoto(false); return }
+      const uploadRes = await fetch(urlData.signedUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type, 'x-upsert': 'false' } })
+      if (uploadRes.ok) setForm((f) => ({ ...f, instructor_photo_url: urlData.publicUrl }))
+    } catch {}
+    setUploadingInstructorPhoto(false)
+  }
+
   return (
     <div className="space-y-5">
       {/* Hidden inputs */}
       <input ref={certInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf" style={{ display: 'none' }} onChange={handleCertFileChange} />
       <input ref={courseImageInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCourseImageUpload} />
+      <input ref={instructorPhotoInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" style={{ display: 'none' }} onChange={handleInstructorPhotoUpload} />
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#6B6B6B] font-cairo">
@@ -610,6 +634,68 @@ function CoursesSection() {
               <div>
                 <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">👤 Instructor Name (EN)</label>
                 <input value={form.instructor_en} onChange={(e) => setForm((f) => ({ ...f, instructor_en: e.target.value }))} placeholder="Dr. Mohamed Ahmed" className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+              </div>
+            </div>
+
+            {/* Instructor Photo */}
+            <div>
+              <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">📷 صورة المدرب / Instructor Photo</label>
+              <div className="flex items-center gap-3">
+                {form.instructor_photo_url ? (
+                  <div className="relative rounded-full overflow-hidden flex-shrink-0" style={{ width: '64px', height: '64px', border: '1.5px solid #FFE4D4' }}>
+                    <img src={form.instructor_photo_url} alt="instructor" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: '64px', height: '64px', background: '#FFF8F4', border: '1.5px dashed #FFE4D4', fontSize: '10px', color: '#A0A0A0' }}>
+                    {uploadingInstructorPhoto ? '...' : 'No photo'}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => instructorPhotoInputRef.current?.click()} disabled={uploadingInstructorPhoto} className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo" style={{ background: '#FFF0E8', color: '#FF5C1A' }}>
+                    {uploadingInstructorPhoto ? 'جارٍ الرفع...' : (form.instructor_photo_url ? 'استبدال / Replace' : '+ رفع صورة / Upload')}
+                  </button>
+                  {form.instructor_photo_url && (
+                    <button type="button" onClick={() => setForm((f) => ({ ...f, instructor_photo_url: '' }))} className="px-3 py-1.5 rounded-[8px] text-xs font-bold font-cairo" style={{ background: 'rgba(220,38,38,0.08)', color: '#DC2626' }}>
+                      حذف / Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Instructor Bio */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">🎓 نبذة عن المدرب (عربي)</label>
+                <input value={form.instructor_bio_ar} onChange={(e) => setForm((f) => ({ ...f, instructor_bio_ar: e.target.value }))} placeholder="مثال: خبير تصميم بخبرة ١٠ سنوات" className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'rtl' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">🎓 Instructor Bio (English)</label>
+                <input value={form.instructor_bio_en} onChange={(e) => setForm((f) => ({ ...f, instructor_bio_en: e.target.value }))} placeholder="e.g. Design expert with 10 years experience" className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+              </div>
+            </div>
+
+            {/* Audience (who it's for) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">👥 لمن هذا الكورس (عربي)</label>
+                <input value={form.audience_ar} onChange={(e) => setForm((f) => ({ ...f, audience_ar: e.target.value }))} placeholder="مثال: من ١٢ إلى ١٨ سنة - مستوى مبتدئ" className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'rtl' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">👥 Who It's For (English)</label>
+                <input value={form.audience_en} onChange={(e) => setForm((f) => ({ ...f, audience_en: e.target.value }))} placeholder="e.g. Ages 12-18 - Beginner level" className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+              </div>
+            </div>
+
+            {/* Schedule */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">📅 الموعد / الجدول (عربي)</label>
+                <input value={form.schedule_ar} onChange={(e) => setForm((f) => ({ ...f, schedule_ar: e.target.value }))} placeholder="مثال: يبدأ ١٥ يوليو - الأحد والثلاثاء ٦ مساءً" className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'rtl' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">📅 Schedule (English)</label>
+                <input value={form.schedule_en} onChange={(e) => setForm((f) => ({ ...f, schedule_en: e.target.value }))} placeholder="e.g. Starts July 15 - Sun & Tue 6PM" className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
               </div>
             </div>
 
@@ -1209,176 +1295,4 @@ function GallerySection({ showToast }) {
               <button onClick={() => { setVideoModal(false); setVideoUrl('') }} className="px-4 py-2 rounded-[10px] text-sm font-bold font-cairo" style={{ background: '#F9FAFB', color: '#6B7280', border: '1.5px solid #E5E7EB' }}>
                 {isRTL ? 'إلغاء' : 'Cancel'}
               </button>
-              <button onClick={handleAddVideo} disabled={videoAdding || !videoUrl.trim()} className="px-4 py-2 rounded-[10px] text-sm font-bold text-white font-cairo" style={{ background: (videoAdding || !videoUrl.trim()) ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
-                {videoAdding ? (isRTL ? 'جارٍ الإضافة...' : 'Adding...') : (isRTL ? 'إضافة الفيديو' : 'Add Video')}
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Caption edit modal */}
-      {captionModal && (
-        <Modal title={isRTL ? 'تعديل التسمية التوضيحية' : 'Edit Caption'} onClose={() => setCaptionModal(null)}>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-[#1A1A1A] font-bold text-sm mb-1.5 font-cairo">Caption (Arabic)</label>
-              <input
-                type="text"
-                value={captionModal.caption_ar}
-                onChange={(e) => setCaptionModal((m) => ({ ...m, caption_ar: e.target.value }))}
-                placeholder="وصف الصورة بالعربية"
-                className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none"
-                style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'rtl' }}
-                onFocus={(e) => { e.target.style.borderColor = '#FF5C1A' }}
-                onBlur={(e) => { e.target.style.borderColor = '#FFE4D4' }}
-              />
-            </div>
-            <div>
-              <label className="block text-[#1A1A1A] font-bold text-sm mb-1.5 font-cairo">Caption (English)</label>
-              <input
-                type="text"
-                value={captionModal.caption_en}
-                onChange={(e) => setCaptionModal((m) => ({ ...m, caption_en: e.target.value }))}
-                placeholder="Photo caption in English"
-                className="w-full px-4 py-2.5 rounded-[10px] text-sm font-cairo text-[#1A1A1A] outline-none"
-                style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: 'ltr' }}
-                onFocus={(e) => { e.target.style.borderColor = '#FF5C1A' }}
-                onBlur={(e) => { e.target.style.borderColor = '#FFE4D4' }}
-              />
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setCaptionModal(null)} className="flex-1 py-2.5 rounded-[10px] text-sm font-bold text-[#6B6B6B] font-cairo" style={{ border: '1.5px solid #FFE4D4' }}>
-                {isRTL ? 'إلغاء' : 'Cancel'}
-              </button>
-              <button onClick={handleSaveCaptions} className="flex-1 py-2.5 rounded-[10px] text-sm font-bold text-white font-cairo" style={{ background: 'linear-gradient(135deg, #FF5C1A, #FF7A40)' }}>
-                {isRTL ? 'حفظ' : 'Save'}
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </div>
-  )
-}
-
-// ── Academy Info Section ────────────────────────────────────────────────────────
-function AcademyInfoSection({ showToast }) {
-  const { isRTL } = useDashboardLang()
-  const [info, setInfo]             = useState(ACADEMY_DEFAULTS)
-  const [savedInfo, setSavedInfo]   = useState(ACADEMY_DEFAULTS)
-  const [loading, setLoading]       = useState(true)
-  const [saving, setSaving]         = useState(false)
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const token = await getToken()
-        const res = await fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } })
-        const result = await res.json()
-        if (result.settings) {
-          const patch = Object.fromEntries(
-            Object.keys(ACADEMY_DEFAULTS)
-              .filter((k) => result.settings[k] !== undefined)
-              .map((k) => [k, result.settings[k]])
-          )
-          setInfo((prev) => ({ ...prev, ...patch }))
-          setSavedInfo((prev) => ({ ...prev, ...patch }))
-        }
-      } catch {}
-      setLoading(false)
-    }
-    load()
-  }, [])
-
-  const handleSave = async () => {
-    setSaving(true)
-    try {
-      const token = await getToken()
-      const res = await fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(info),
-      })
-      const result = await res.json()
-      if (!res.ok || result.error) {
-        showToast('error',
-          isRTL ? 'فشل الحفظ' : 'Save Failed',
-          result.error || (isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred')
-        )
-      } else {
-        setSavedInfo(info)
-        showToast('success',
-          isRTL ? 'تم الحفظ بنجاح' : 'Changes Saved',
-          isRTL ? 'تم تحديث معلومات الأكاديمية وستظهر في الموقع فوراً' : 'Academy info updated and will reflect on the site immediately'
-        )
-      }
-    } catch (err) {
-      showToast('error',
-        isRTL ? 'خطأ في الشبكة' : 'Network Error',
-        err?.message || (isRTL ? 'تعذّر الاتصال بالخادم' : 'Could not reach the server')
-      )
-    }
-    setSaving(false)
-  }
-
-  const set = (key) => (e) => setInfo((s) => ({ ...s, [key]: e.target.value }))
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-14 rounded-[12px] animate-pulse" style={{ background: '#FFE4D4' }} />)}
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-      <div className="rounded-[16px] overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
-        <div className="px-6 py-4" style={{ borderBottom: '1px solid #FFE4D4', background: '#FFF8F4', textAlign: isRTL ? 'right' : 'left' }}>
-          <h2 className="font-bold text-[#1A1A1A] text-sm font-cairo">{isRTL ? 'معلومات الأكاديمية' : 'Academy Information'}</h2>
-          <p className="text-xs text-[#A0A0A0] font-cairo">{isRTL ? 'هذه المعلومات تظهر في الموقع مباشرةً بعد الحفظ' : 'These details appear live on the website after saving'}</p>
-        </div>
-        <div className="p-6 space-y-5">
-          <SettingsField
-            id="academy_name"
-            label={isRTL ? 'اسم الأكاديمية' : 'Academy Name'}
-            value={info.academy_name}
-            onChange={set('academy_name')}
-            placeholder="Art Smart Academy | أرت سمارت اكاديمي"
-            isRTL={isRTL}
-            currentValue={savedInfo.academy_name}
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <SettingsField
-              id="phone"
-              label={isRTL ? 'رقم الهاتف' : 'Phone Number'}
-              type="tel"
-              value={info.phone}
-              onChange={set('phone')}
-              placeholder="+20 100 000 0000"
-              isRTL={isRTL}
-              currentValue={savedInfo.phone}
-            />
-            <SettingsField
-              id="whatsapp"
-              label={isRTL ? 'واتساب' : 'WhatsApp'}
-              type="tel"
-              value={info.whatsapp}
-              onChange={set('whatsapp')}
-              placeholder="+20 100 000 0000"
-              isRTL={isRTL}
-              currentValue={savedInfo.whatsapp}
-            />
-          </div>
-          <SettingsField
-            id="email"
-            label={isRTL ? 'البريد الإلكتروني' : 'Email Address'}
-            type="email"
-            value={info.email}
-            onChange={set('email')}
-            placeholder="info@artsmartacademy.com"
-            isRTL={isRTL}
-            currentValue={savedInfo.email}
-          />
-   
+              <button onClick
