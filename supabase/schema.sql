@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS courses (
   description_en           TEXT,
   instructor_ar            TEXT,
   instructor_en            TEXT,
+  goals_ar                 TEXT[] DEFAULT '{}',
+  goals_en                 TEXT[] DEFAULT '{}',
   created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -33,6 +35,8 @@ CREATE TABLE IF NOT EXISTS courses (
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS description_en TEXT;
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS instructor_ar TEXT;
 -- ALTER TABLE courses ADD COLUMN IF NOT EXISTS instructor_en TEXT;
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS goals_ar TEXT[] DEFAULT '{}';
+-- ALTER TABLE courses ADD COLUMN IF NOT EXISTS goals_en TEXT[] DEFAULT '{}';
 
 -- ============================================================
 -- TABLE: registrations
@@ -201,7 +205,4 @@ INSERT INTO gallery_photos (url, caption_ar, caption_en, sort_order) VALUES
   ('/conference/conf3.jpg',    'أبرز لحظات المؤتمر الدولي للذكاء الاصطناعي', 'Highlights from the International AI Conference', 4)
 ON CONFLICT DO NOTHING;
 INSERT INTO courses (name_ar, name_en, price, duration, seats, is_active) VALUES
-  ('التفكير الإبداعي',   'Creative Thinking',      2500, '8 أسابيع',  20, TRUE),
-  ('الذكاء الاصطناعي',  'Artificial Intelligence', 3000, '10 أسابيع', 15, TRUE),
-  ('اللغة الصينية',      'Chinese Language',        2200, '12 أسبوعًا', 12, TRUE)
-ON CONFLICT DO NOTHING;
+  ('التفكير الإبداعي',   'Creative Thinking',      2500, '8 أ

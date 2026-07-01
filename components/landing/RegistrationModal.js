@@ -573,7 +573,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                   </ModalField>
 
                   {/* WhatsApp toggle */}
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px', flexDirection: 'row' }}>
                     <input data-formkey="sameWhatsapp" type="checkbox" checked={form.sameWhatsapp} onChange={handleChange}
                       style={{ width: '15px', height: '15px', accentColor: '#FF5C1A', cursor: 'pointer' }} />
                     <span style={{ fontSize: '12px', color: '#6B7280', fontFamily: 'Cairo, sans-serif' }}>{mt.sameWa}</span>
@@ -651,7 +651,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                               textAlign: isRTL ? 'right' : 'left',
                               transition: 'all 0.15s',
                               boxShadow: (!disabled && sel) ? `0 2px 12px ${color}20` : 'none',
-                              flexDirection: isRTL ? 'row-reverse' : 'row',
+                              flexDirection: 'row',
                               opacity: disabled ? 0.55 : 1,
                             }}>
                             {/* Logo */}
@@ -695,7 +695,7 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                       </p>
 
                       {/* Visa/MC logos */}
-                      <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexDirection: 'row' }}>
                         <div style={{ background: '#F3F4F6', borderRadius: '8px', padding: '6px 12px', display: 'flex', alignItems: 'center' }}>
                           <CardLogo />
                         </div>
@@ -798,12 +798,12 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
                         {/* Account details box */}
                         <div style={{ background: accentBg, border: `1.5px solid ${accentBorder}`, borderRadius: '12px', padding: '14px 16px', marginBottom: '14px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
                               <span style={{ fontSize: '11px', color: '#6B7280', fontFamily: 'Cairo, sans-serif' }}>{mt.payDetailsHolder}</span>
                               <span style={{ fontSize: '13px', fontWeight: 700, color: accentColor, fontFamily: 'Cairo, sans-serif', direction: 'ltr' }}>{details.holder}</span>
                             </div>
                             <div style={{ height: '1px', background: accentBorder }} />
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
                               <span style={{ fontSize: '11px', color: '#6B7280', fontFamily: 'Cairo, sans-serif' }}>{mt.payDetailsNumber}</span>
                               <span style={{ fontSize: '15px', fontWeight: 800, color: accentColor, fontFamily: 'monospace', letterSpacing: '1px', direction: 'ltr' }}>{details.number}</span>
                             </div>
@@ -892,3 +892,4 @@ function RegistrationModal({ onClose, lang, isRTL, courses, coursesLoading }) {
 }
 
 export { MODAL_T, PAYMENT_OPTIONS, COUNTRY_CODES, CountryDropdown, RegistrationModal }
+                                                                                                                        

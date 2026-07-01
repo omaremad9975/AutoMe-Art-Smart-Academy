@@ -263,7 +263,7 @@ function RegistrationForm({ course, lang }) {
             ? ['مدربون خبراء متخصصون', 'شهادات معتمدة', 'مجتمع إبداعي متميز']
             : ['Expert certified trainers', 'Accredited certificates', 'Creative community']
           ).map((item, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexDirection: 'row' }}>
               <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'rgba(255,255,255,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
@@ -298,7 +298,7 @@ function RegistrationForm({ course, lang }) {
               <div style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '12px', padding: '14px 16px', textAlign: isRTL ? 'right' : 'left' }}>
                 <p style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1.5px', fontFamily: 'Cairo, sans-serif', margin: '0 0 10px' }}>{mt.nextTitle}</p>
                 {[mt.nextEmail, mt.nextContact, mt.nextSpam].map((txt, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flexDirection: isRTL ? 'row-reverse' : 'row', marginBottom: i < 2 ? '6px' : 0 }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flexDirection: 'row', marginBottom: i < 2 ? '6px' : 0 }}>
                     <span style={{ fontSize: '13px', flexShrink: 0 }}>{['📬','📞','📁'][i]}</span>
                     <p style={{ fontSize: '12px', color: '#374151', fontFamily: 'Cairo, sans-serif', lineHeight: 1.5, margin: 0 }}>{txt}</p>
                   </div>
@@ -328,7 +328,7 @@ function RegistrationForm({ course, lang }) {
                 <ModalField label={mt.email} error={errors.email}>
                   <input data-formkey="email" type="email" value={form.email} onChange={handleChange} placeholder={mt.emailPh} style={INPUT_BASE} onFocus={onFocusIn} onBlur={onFocusOut} />
                 </ModalField>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px', flexDirection: 'row' }}>
                   <input data-formkey="sameWhatsapp" type="checkbox" checked={form.sameWhatsapp} onChange={handleChange} style={{ width: '15px', height: '15px', accentColor: '#FF5C1A', cursor: 'pointer' }} />
                   <span style={{ fontSize: '12px', color: '#6B7280', fontFamily: 'Cairo, sans-serif' }}>{mt.sameWa}</span>
                 </label>
@@ -370,7 +370,7 @@ function RegistrationForm({ course, lang }) {
                     const disabled = key === 'fawry'
                     return (
                       <button key={key} type="button" onClick={disabled ? undefined : setPayment(key)} disabled={disabled}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px', borderRadius: '12px', border: disabled ? '2px solid #E5E7EB' : sel ? `2px solid ${color}` : '2px solid #E5E7EB', background: disabled ? '#F3F4F6' : sel ? bg : '#F9FAFB', cursor: disabled ? 'not-allowed' : 'pointer', textAlign: isRTL ? 'right' : 'left', transition: 'all 0.15s', boxShadow: (!disabled && sel) ? `0 2px 12px ${color}20` : 'none', flexDirection: isRTL ? 'row-reverse' : 'row', opacity: disabled ? 0.55 : 1 }}>
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px', borderRadius: '12px', border: disabled ? '2px solid #E5E7EB' : sel ? `2px solid ${color}` : '2px solid #E5E7EB', background: disabled ? '#F3F4F6' : sel ? bg : '#F9FAFB', cursor: disabled ? 'not-allowed' : 'pointer', textAlign: isRTL ? 'right' : 'left', transition: 'all 0.15s', boxShadow: (!disabled && sel) ? `0 2px 12px ${color}20` : 'none', flexDirection: 'row', opacity: disabled ? 0.55 : 1 }}>
                         <div style={{ width: '56px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Logo /></div>
                         <div style={{ flex: 1 }}>
                           <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', fontFamily: 'Cairo, sans-serif', color: disabled ? '#9CA3AF' : sel ? color : '#111827' }}>{lang === 'ar' ? ar : en}</p>
@@ -394,12 +394,12 @@ function RegistrationForm({ course, lang }) {
                     <p style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1.5px', fontFamily: 'Cairo, sans-serif', marginBottom: '12px' }}>{mt.payDetailsTitle}</p>
                     <div style={{ background: accentBg, border: `1.5px solid ${accentBorder}`, borderRadius: '12px', padding: '14px 16px', marginBottom: '14px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
                           <span style={{ fontSize: '11px', color: '#6B7280', fontFamily: 'Cairo, sans-serif' }}>{mt.payDetailsHolder}</span>
                           <span style={{ fontSize: '13px', fontWeight: 700, color: accentColor, fontFamily: 'Cairo, sans-serif', direction: 'ltr' }}>{details.holder}</span>
                         </div>
                         <div style={{ height: '1px', background: accentBorder }} />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
                           <span style={{ fontSize: '11px', color: '#6B7280', fontFamily: 'Cairo, sans-serif' }}>{mt.payDetailsNumber}</span>
                           <span style={{ fontSize: '15px', fontWeight: 800, color: accentColor, fontFamily: 'monospace', letterSpacing: '1px', direction: 'ltr' }}>{details.number}</span>
                         </div>
@@ -499,6 +499,7 @@ export default function CourseDetailPage() {
   const title       = isAr ? course.name_ar : (course.name_en || course.name_ar)
   const description = isAr ? (course.description_ar || enriched.description_ar || '') : (course.description_en || enriched.description_en || '')
   const instructor  = isAr ? (course.instructor_ar || enriched.instructor_ar || '') : (course.instructor_en || enriched.instructor_en || '')
+  const goals       = (isAr ? course.goals_ar : course.goals_en) || []
   const seatsLeft   = course.seats > 0 ? course.seats : null
 
   return (
@@ -553,24 +554,21 @@ export default function CourseDetailPage() {
             <p style={{ color: '#374151', fontSize: '14px', lineHeight: 1.8, fontFamily: 'Cairo, sans-serif' }}>{description}</p>
           </div>
         )}
-        {instructor && (
-          <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '18px 22px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)', display: 'flex', alignItems: 'center', gap: '12px', flexDirection: 'row' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg,#FF5C1A,#FF7A40)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 800, fontFamily: 'Cairo, sans-serif', flexShrink: 0 }}>{getInitials(instructor)}</div>
-            <div style={{ textAlign: isAr ? 'right' : 'left' }}>
-              <p style={{ color: '#9CA3AF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Cairo, sans-serif', marginBottom: '2px' }}>{isAr ? 'المدرب / المدربة' : 'Instructor'}</p>
-              <p style={{ color: '#111827', fontSize: '15px', fontWeight: 800, fontFamily: 'Cairo, sans-serif' }}>{instructor}</p>
+        {goals.length > 0 && (
+          <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '22px 24px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)' }}>
+            <h2 style={{ color: '#FF5C1A', fontWeight: 800, fontSize: '14px', marginBottom: '14px', fontFamily: 'Cairo, sans-serif' }}>{isAr ? '🎯 أهداف الكورس' : '🎯 Course Goals'}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {goals.map((goal, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(255,92,26,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="#FF5C1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <p style={{ color: '#374151', fontSize: '14px', lineHeight: 1.6, fontFamily: 'Cairo, sans-serif', margin: 0 }}>{goal}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}
-
-        {/* Registration form — same design as landing page modal */}
-        <RegistrationForm course={course} lang={lang} />
-      </div>
-
-      <div style={{ background: '#111827', padding: '16px 24px', textAlign: 'center' }}>
-        <p style={{ color: '#6B7280', fontSize: '12px', fontFamily: 'Cairo, sans-serif' }}>© 2026 Art Smart Academy</p>
-      </div>
-    </div>
-  )
-}
-                       
+        {instructor && (
+          <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '18px 22px', border: '1px solid #FFE4D4', boxShadow: '0 4px 20px rgba(255,92,26,0.06)', display: 'flex', alignItems: 'center', gap: '12px', flexDirection: 'row' }}>
+      

@@ -22,13 +22,13 @@ export async function POST(request) {
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { name_ar, name_en, price, duration, seats, is_active, whatsapp_group_url, description_ar, description_en, instructor_ar, instructor_en, icon_key, image_url } = body
+  const { name_ar, name_en, price, duration, seats, is_active, whatsapp_group_url, description_ar, description_en, instructor_ar, instructor_en, icon_key, image_url, goals_ar, goals_en } = body
 
   if (!name_ar || !name_en) return NextResponse.json({ error: 'Arabic and English names are required' }, { status: 400 })
 
   const { data, error } = await supabaseAdmin
     .from('courses')
-    .insert([{ name_ar, name_en, price: parseFloat(price) || 0, duration: duration || '', seats: parseInt(seats) || 0, is_active: is_active ?? true, whatsapp_group_url: whatsapp_group_url || null, description_ar: description_ar || null, description_en: description_en || null, instructor_ar: instructor_ar || null, instructor_en: instructor_en || null, icon_key: icon_key || 'other', image_url: image_url || null }])
+    .insert([{ name_ar, name_en, price: parseFloat(price) || 0, duration: duration || '', seats: parseInt(seats) || 0, is_active: is_active ?? true, whatsapp_group_url: whatsapp_group_url || null, description_ar: description_ar || null, description_en: description_en || null, instructor_ar: instructor_ar || null, instructor_en: instructor_en || null, icon_key: icon_key || 'other', image_url: image_url || null, goals_ar: Array.isArray(goals_ar) ? goals_ar : [], goals_en: Array.isArray(goals_en) ? goals_en : [] }])
     .select()
     .single()
 
@@ -60,6 +60,8 @@ export async function PATCH(request) {
   if (fields.instructor_en            !== undefined) payload.instructor_en             = fields.instructor_en
   if (fields.image_url                !== undefined) payload.image_url                 = fields.image_url
   if (fields.icon_key                 !== undefined) payload.icon_key                  = fields.icon_key
+  if (fields.goals_ar                 !== undefined) payload.goals_ar                  = Array.isArray(fields.goals_ar) ? fields.goals_ar : []
+  if (fields.goals_en                 !== undefined) payload.goals_en                  = Array.isArray(fields.goals_en) ? fields.goals_en : []
 
   const { data, error } = await supabaseAdmin.from('courses').update(payload).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -69,12 +71,4 @@ export async function PATCH(request) {
 // DELETE — delete course
 export async function DELETE(request) {
   const admin = await verifyCaller(request)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { id } = await request.json()
-  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
-
-  const { error } = await supabaseAdmin.from('courses').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
-}
+  if

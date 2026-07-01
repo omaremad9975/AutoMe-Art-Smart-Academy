@@ -98,6 +98,72 @@ function Field({ label, type = 'text', value, onChange, placeholder, min }) {
   )
 }
 
+// ── Goals Editor (add/remove list, used for course goals AR/EN) ────────────────
+function GoalsEditor({ label, items, onChange, placeholder, isRTL }) {
+  const [draft, setDraft] = useState('')
+
+  const addItem = () => {
+    const val = draft.trim()
+    if (!val) return
+    onChange([...(items || []), val])
+    setDraft('')
+  }
+  const removeItem = (idx) => {
+    onChange((items || []).filter((_, i) => i !== idx))
+  }
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); addItem() }
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">{label}</label>
+      <div className="flex gap-2" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className="flex-1 px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none"
+          style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', direction: isRTL ? 'rtl' : 'ltr' }}
+          onFocus={(e) => e.target.style.borderColor = '#FF5C1A'}
+          onBlur={(e) => e.target.style.borderColor = '#FFE4D4'}
+        />
+        <button
+          type="button"
+          onClick={addItem}
+          className="px-4 py-2.5 rounded-[10px] text-sm font-bold font-cairo whitespace-nowrap"
+          style={{ background: '#FF5C1A', color: '#FFFFFF' }}
+        >
+          {isRTL ? '+ إضافة' : '+ Add'}
+        </button>
+      </div>
+      {items?.length > 0 && (
+        <div className="flex flex-col gap-1.5 mt-2">
+          {items.map((goal, idx) => (
+            <div
+              key={idx}
+              className="flex items-center justify-between px-3 py-2 rounded-[8px]"
+              style={{ background: '#FFF8F4', border: '1px solid #FFE4D4', direction: isRTL ? 'rtl' : 'ltr' }}
+            >
+              <span className="text-sm font-cairo text-[#1A1A1A]">✅ {goal}</span>
+              <button
+                type="button"
+                onClick={() => removeItem(idx)}
+                className="text-xs font-bold px-2 py-0.5 rounded-full"
+                style={{ color: '#DC2626', background: 'rgba(220,38,38,0.08)' }}
+                title={isRTL ? 'حذف' : 'Remove'}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Settings Field (with current-value indicator) ──────────────────────────────
 function SettingsField({ label, id, type = 'text', value, onChange, placeholder, isRTL, currentValue }) {
   const isDirty = currentValue !== undefined && value !== currentValue
@@ -138,7 +204,7 @@ const COURSE_ICONS = [
   { key: 'other',     labelEn: 'Other',     emoji: '⭐', bg: '#FFF0E8', color: '#FF5C1A' },
 ]
 
-const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration_number: '', duration_unit: 'weeks', seats: '', is_active: true, whatsapp_group_url: '', description_ar: '', description_en: '', instructor_ar: '', instructor_en: '', image_url: '', icon_key: 'other' }
+const EMPTY_FORM = { name_ar: '', name_en: '', price: '', duration_number: '', duration_unit: 'weeks', seats: '', is_active: true, whatsapp_group_url: '', description_ar: '', description_en: '', instructor_ar: '', instructor_en: '', image_url: '', icon_key: 'other', goals_ar: [], goals_en: [] }
 
 const SOCIAL_DEFAULTS = {
   social_facebook:  '',
@@ -203,7 +269,7 @@ function CoursesSection() {
     const durUnit = durLower.includes('day') || durLower.includes('يوم') || durLower.includes('أيام') ? 'days'
                   : durLower.includes('month') || durLower.includes('شهر') || durLower.includes('أشهر') ? 'months'
                   : 'weeks'
-    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration_number: durNum, duration_unit: durUnit, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '', description_ar: c.description_ar || '', description_en: c.description_en || '', instructor_ar: c.instructor_ar || '', instructor_en: c.instructor_en || '', image_url: c.image_url || '', icon_key: c.icon_key || 'other' })
+    setForm({ name_ar: c.name_ar, name_en: c.name_en, price: c.price, duration_number: durNum, duration_unit: durUnit, seats: c.seats, is_active: c.is_active, whatsapp_group_url: c.whatsapp_group_url || '', description_ar: c.description_ar || '', description_en: c.description_en || '', instructor_ar: c.instructor_ar || '', instructor_en: c.instructor_en || '', image_url: c.image_url || '', icon_key: c.icon_key || 'other', goals_ar: c.goals_ar || [], goals_en: c.goals_en || [] })
     setSelectedCourse(c)
     setModal('edit')
   }
@@ -222,6 +288,7 @@ function CoursesSection() {
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         instructor_ar: form.instructor_ar || null, instructor_en: form.instructor_en || null,
         image_url: form.image_url || null, icon_key: form.icon_key || 'other',
+        goals_ar: form.goals_ar || [], goals_en: form.goals_en || [],
       }
       const body = modal === 'add' ? commonFields : { id: selectedCourse.id, ...commonFields }
       const res = await fetch('/api/admin/courses', {
@@ -514,6 +581,24 @@ function CoursesSection() {
             <div>
               <label className="block text-xs font-bold text-[#6B6B6B] font-cairo mb-1.5">📝 Description (English)</label>
               <textarea rows={Math.max(3, Math.min(12, Math.ceil((form.description_en || '').length / 55)))} value={form.description_en} onChange={(e) => setForm((f) => ({ ...f, description_en: e.target.value }))} placeholder="Brief course description in English..." className="w-full px-3 py-2.5 rounded-[10px] text-sm font-cairo outline-none resize-y" style={{ border: '1.5px solid #FFE4D4', background: '#FFF8F4', minHeight: '72px' }} onFocus={(e) => e.target.style.borderColor = '#FF5C1A'} onBlur={(e) => e.target.style.borderColor = '#FFE4D4'} />
+            </div>
+
+            {/* Goals */}
+            <div className="grid grid-cols-2 gap-3">
+              <GoalsEditor
+                label="🎯 أهداف الكورس (عربي)"
+                items={form.goals_ar}
+                onChange={(items) => setForm((f) => ({ ...f, goals_ar: items }))}
+                placeholder="مثال: تعلم أساسيات التصميم"
+                isRTL={true}
+              />
+              <GoalsEditor
+                label="🎯 Course Goals (English)"
+                items={form.goals_en}
+                onChange={(items) => setForm((f) => ({ ...f, goals_en: items }))}
+                placeholder="e.g. Learn design fundamentals"
+                isRTL={false}
+              />
             </div>
 
             {/* Instructor */}
@@ -1296,78 +1381,4 @@ function AcademyInfoSection({ showToast }) {
             isRTL={isRTL}
             currentValue={savedInfo.email}
           />
-        </div>
-      </div>
-
-      <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-8 py-3 rounded-[10px] text-sm font-bold text-white font-cairo transition-all duration-200"
-          style={{ background: saving ? '#FFB89A' : 'linear-gradient(135deg, #FF5C1A, #FF7A40)', boxShadow: saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
-          onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,92,26,0.40)' } }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = saving ? 'none' : '0 4px 16px rgba(255,92,26,0.30)' }}
-        >
-          {saving ? (isRTL ? 'جارٍ الحفظ...' : 'Saving...') : (isRTL ? 'حفظ التغييرات' : 'Save Changes')}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ── Main Page ──────────────────────────────────────────────────────────────────
-export default function LandingPage() {
-  const { t, isRTL } = useDashboardLang()
-  const [activeTab, setActiveTab] = useState('courses')
-  const [toast, setToast] = useState(null)
-  const toastTimer = useRef(null)
-
-  const showToast = (type, title, description) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current)
-    setToast({ type, title, description })
-    toastTimer.current = setTimeout(() => setToast(null), 4500)
-  }
-
-  const tabs = [
-    { key: 'courses', label: t.tabCourses },
-    { key: 'social',  label: t.tabSocial },
-    { key: 'academy', label: isRTL ? 'معلومات الأكاديمية' : 'Academy Info' },
-    { key: 'gallery', label: isRTL ? 'معرض الصور' : 'Gallery' },
-  ]
-
-  return (
-    <>
-      <Toast toast={toast} />
-
-      <div className="space-y-6" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
-        <div>
-          <h1 className="text-[#1A1A1A] font-extrabold text-2xl font-cairo">{t.landingTitle}</h1>
-          <p className="text-[#6B6B6B] text-sm font-cairo mt-1">{t.landingSub}</p>
-        </div>
-
-        {/* Tab Bar */}
-        <div className="flex gap-2 p-1 rounded-[12px] w-fit" style={{ background: '#FFF0E8', border: '1px solid #FFE4D4' }}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className="px-5 py-2.5 rounded-[10px] text-sm font-bold font-cairo transition-all duration-200"
-              style={{
-                background: activeTab === tab.key ? '#FFFFFF' : 'transparent',
-                color: activeTab === tab.key ? '#FF5C1A' : '#6B6B6B',
-                boxShadow: activeTab === tab.key ? '0 2px 8px rgba(255,92,26,0.12)' : 'none',
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {activeTab === 'courses' && <CoursesSection />}
-        {activeTab === 'social'  && <SocialSection showToast={showToast} />}
-        {activeTab === 'academy' && <AcademyInfoSection showToast={showToast} />}
-        {activeTab === 'gallery' && <GallerySection showToast={showToast} />}
-      </div>
-    </>
-  )
-}
+   
